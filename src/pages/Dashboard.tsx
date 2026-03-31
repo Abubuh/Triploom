@@ -58,7 +58,7 @@ function Dashboard() {
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Navbar */}
       <nav className="flex items-center justify-between px-8 py-6 max-w-6xl mx-auto border-b border-gray-800">
-        <h1 className="text-2xl font-bold">TravelMind ✈️</h1>
+        <h1 className="text-2xl font-bold">Triploom ✈️</h1>
         <div className="flex items-center gap-4">
           <span className="text-gray-400 text-sm">
             Hola, {profile?.name || "Viajero"} 👋

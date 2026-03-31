@@ -7,7 +7,7 @@ function Landing() {
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Navbar */}
       <nav className="flex items-center justify-between px-8 py-6 max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold text-white">TravelMind ✈️</h1>
+        <h1 className="text-2xl font-bold text-white">Triploom ✈️</h1>
         <div className="flex gap-4">
           <button
             onClick={() => navigate("/auth")}
@@ -37,7 +37,7 @@ function Landing() {
           Dinos el destino, tu presupuesto y tu estilo de viaje —
         </p>
         <p className="text-gray-400 text-xl mb-10 max-w-2xl">
-          TravelMind se encarga de todo lo demás.
+          Triploom se encarga de todo lo demás.
         </p>
         <button
           onClick={() => navigate("/auth")}

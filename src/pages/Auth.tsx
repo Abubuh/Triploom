@@ -56,7 +56,7 @@ function Auth() {
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="bg-gray-900 rounded-2xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-white mb-2">TravelMind ✈️</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">Triploom ✈️</h1>
         <p className="text-gray-400 mb-8">
           {isLogin ? "Bienvenido de vuelta" : "Crea tu cuenta"}
         </p>

@@ -19,6 +19,8 @@ function CreateTrip() {
     country: "",
     days: 1,
   });
+  const [attractions, setAttractions] = useState<string[]>([]);
+  const [attractionInput, setAttractionInput] = useState("");
 
   const store = useTripStore();
 
@@ -40,6 +42,12 @@ function CreateTrip() {
     if (!newDestination.city) return;
     store.addDestination(newDestination);
     setNewDestination({ city: "", country: "", days: 1 });
+  };
+
+  const handleAddAttraction = () => {
+    if (!attractionInput.trim()) return;
+    setAttractions((prev) => [...prev, attractionInput.trim()]);
+    setAttractionInput("");
   };
 
   const handleSubmit = async () => {
@@ -97,6 +105,7 @@ function CreateTrip() {
       budget: store.budget,
       food_preferences: store.foodPreferences,
       activity_preferences: store.activityPreferences,
+      attractions_preferences: attractions,
       travel_pace: store.travelPace,
     });
 
@@ -113,7 +122,7 @@ function CreateTrip() {
           className="text-2xl font-bold cursor-pointer"
           onClick={() => navigate("/dashboard")}
         >
-          TravelMind ✈️
+          Triploom ✈️
         </h1>
         <button
           onClick={() => navigate("/dashboard")}
@@ -476,6 +485,50 @@ function CreateTrip() {
                   </button>
                 ))}
               </div>
+            </div>
+            <div>
+              <label className="text-white font-semibold mb-3 block">
+                ¿Qué lugares te gustaría visitar?
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={attractionInput}
+                  onChange={(e) => setAttractionInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddAttraction()}
+                  placeholder="Ej: Chichén Itzá"
+                  className="flex-1 bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={handleAddAttraction}
+                  disabled={!attractionInput.trim()}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-3 rounded-lg font-semibold transition"
+                >
+                  ✓ Confirmar
+                </button>
+              </div>
+              {attractions.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {attractions.map((a, i) => (
+                    <span
+                      key={i}
+                      className="flex items-center gap-1 bg-gray-800 text-gray-300 text-sm px-3 py-1 rounded-full"
+                    >
+                      {a}
+                      <button
+                        onClick={() =>
+                          setAttractions((prev) =>
+                            prev.filter((_, idx) => idx !== i),
+                          )
+                        }
+                        className="text-gray-500 hover:text-red-400 transition ml-1"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

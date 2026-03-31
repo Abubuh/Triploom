@@ -21,6 +21,7 @@ export interface MemberPreferences {
   budget: number;
   food_preferences: string[];
   activity_preferences: string[];
+  attractions_preferences: string[];
   travel_pace: "relaxed" | "moderate" | "intense";
 }
 

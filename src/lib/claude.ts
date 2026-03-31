@@ -19,7 +19,7 @@ export const generateItinerary = async ({
     .map((m) => {
       const prefs = m.member_preferences;
       if (!prefs) return `- ${m.profiles.name}: sin preferencias registradas`;
-      return `- ${m.profiles.name}: presupuesto $${prefs.budget} MXN, ritmo ${prefs.travel_pace}, comida: ${prefs.food_preferences.join(", ") || "sin preferencia"}, actividades: ${prefs.activity_preferences.join(", ") || "sin preferencia"}`;
+      return `- ${m.profiles.name}: presupuesto $${prefs.budget} MXN, ritmo ${prefs.travel_pace}, comida: ${prefs.food_preferences.join(", ") || "sin preferencia"}, actividades: ${prefs.activity_preferences.join(", ") || "sin preferencia"}, lugares de interés: ${prefs.attractions_preferences?.join(", ") || "sin preferencia"}`;
     })
     .join("\n");
 
@@ -100,6 +100,5 @@ Responde ÚNICAMENTE con un JSON válido con esta estructura exacta, sin texto a
     return day;
   });
 
-  return parsed;
   return parsed;
 };

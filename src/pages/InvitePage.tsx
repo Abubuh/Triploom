@@ -89,7 +89,7 @@ function InvitePage() {
       .update({ used_by: currentUser.id, used_at: new Date().toISOString() })
       .eq("token", token);
 
-    navigate(`/trips/${invite!.trip_id}`);
+    navigate(`/preferences/${invite!.trip_id}`);
   };
 
   if (loading)

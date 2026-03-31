@@ -9,6 +9,7 @@ import CreateTrip from "./pages/CreateTrip";
 import TripDetail from "./pages/TripDetail";
 import ResetPassword from "./pages/Resetpassword";
 import InvitePage from "./pages/InvitePage";
+import TravelerPreferences from "./pages/TravelerPreferences";
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -61,6 +62,10 @@ function App() {
         />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/invite/:token" element={<InvitePage />} />
+        <Route
+          path="/preferences/:tripId"
+          element={session ? <TravelerPreferences /> : <Navigate to="/auth" />}
+        />
       </Routes>
     </BrowserRouter>
   );

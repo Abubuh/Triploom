@@ -93,8 +93,6 @@ function TripDetail() {
         setMembers(combined as unknown as Member[]);
       }
 
-      if (membersData) setMembers(membersData as unknown as Member[]);
-
       // Fetch mi presupuesto personal
       if (user) {
         const { data: myPrefs } = await supabase
@@ -261,7 +259,7 @@ function TripDetail() {
           className="text-2xl font-bold cursor-pointer"
           onClick={() => navigate("/dashboard")}
         >
-          TravelMind ✈️
+          Triploom ✈️
         </h1>
         <button
           onClick={() => navigate("/dashboard")}
@@ -377,16 +375,6 @@ function TripDetail() {
 
                 {m.member_preferences && (
                   <div className="space-y-3 border-t border-gray-800 pt-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">Presupuesto</span>
-                      <span className="font-semibold">
-                        ${m.member_preferences.budget?.toLocaleString()} MXN
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">Ritmo</span>
-                      <span>{paceLabel(m.member_preferences.travel_pace)}</span>
-                    </div>
                     {m.member_preferences.food_preferences?.length > 0 && (
                       <div>
                         <p className="text-gray-400 text-sm mb-2">Comida</p>
