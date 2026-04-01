@@ -6,6 +6,12 @@ import { generateItinerary } from "../lib/claude";
 import { GeneratedItinerary } from "../types/trip.types";
 import { ExpenseDrawer } from "../components/ExpenseDrawer";
 import { DocumentDrawer } from "../components/DocumentDrawer";
+import {
+  FOOD_OPTIONS,
+  ACTIVITY_OPTIONS,
+  PACE_OPTIONS,
+} from "../constants/tripOptions";
+
 function TripDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -23,6 +29,23 @@ function TripDetail() {
   const [expenseDrawerOpen, setExpenseDrawerOpen] = useState(false);
   const [myBudget, setMyBudget] = useState<number | null>(null);
   const [documentDrawerOpen, setDocumentDrawerOpen] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [warnings, setWarnings] = useState<string[]>([]);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [editingPrefs, setEditingPrefs] = useState(false);
+  const [editForm, setEditForm] = useState({
+    budget: 0,
+    foodPreferences: [] as string[],
+    activityPreferences: [] as string[],
+    attractionsPreferences: [] as string[],
+    travelPace: "moderate" as "relaxed" | "moderate" | "intense",
+  });
+  const [attractionInput, setAttractionInput] = useState("");
+  const [editingAccommodation, setEditingAccommodation] = useState<
+    number | null
+  >(null);
+  const [editingDay, setEditingDay] = useState<number | null>(null);
+
   useEffect(() => {
     const fetchData = async () => {
       const {
@@ -125,7 +148,7 @@ function TripDetail() {
   const handleUpdateActivity = async (
     dayIndex: number,
     activityIndex: number,
-    field: "title" | "description",
+    field: "title" | "description" | "time" | "estimatedCost",
     value: string,
   ) => {
     if (!itinerary) return;
@@ -146,6 +169,135 @@ function TripDetail() {
       .eq("day_number", updatedDays[dayIndex].day);
   };
 
+  const handleOpenEditPrefs = () => {
+    const myMember = members.find((m) => m.user_id === currentUserId);
+    const prefs = myMember?.member_preferences;
+    if (!prefs) return;
+
+    setEditForm({
+      budget: prefs.budget,
+      foodPreferences: prefs.food_preferences,
+      activityPreferences: prefs.activity_preferences,
+      attractionsPreferences: prefs.attractions_preferences ?? [],
+      travelPace: prefs.travel_pace,
+    });
+    setEditingPrefs(true);
+  };
+
+  const handleSavePrefs = async () => {
+    const { error } = await supabase
+      .from("member_preferences")
+      .update({
+        budget: editForm.budget,
+        food_preferences: editForm.foodPreferences,
+        activity_preferences: editForm.activityPreferences,
+        attractions_preferences: editForm.attractionsPreferences,
+        travel_pace: editForm.travelPace,
+      })
+      .eq("trip_id", trip!.id)
+      .eq("user_id", currentUserId!);
+
+    if (!error) {
+      // Actualizar state local
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.user_id === currentUserId
+            ? {
+                ...m,
+                member_preferences: {
+                  ...m.member_preferences!,
+                  budget: editForm.budget,
+                  food_preferences: editForm.foodPreferences,
+                  activity_preferences: editForm.activityPreferences,
+                  attractions_preferences: editForm.attractionsPreferences,
+                  travel_pace: editForm.travelPace,
+                },
+              }
+            : m,
+        ),
+      );
+      setEditingPrefs(false);
+      showToast("Preferencias actualizadas ✓");
+    }
+  };
+
+  const handleAddActivity = async (
+    dayIndex: number,
+    position: "before" | "after",
+    activityIndex: number,
+  ) => {
+    if (!itinerary) return;
+
+    const newActivity = {
+      time: "12:00",
+      title: "Nueva actividad",
+      description: "Descripción de la actividad",
+      type: "activity" as const,
+      estimatedCost: "",
+    };
+
+    const updatedDays = [...itinerary.days];
+    const activities = [...updatedDays[dayIndex].activities];
+    const insertAt = position === "before" ? activityIndex : activityIndex + 1;
+    activities.splice(insertAt, 0, newActivity);
+    updatedDays[dayIndex] = { ...updatedDays[dayIndex], activities };
+
+    setItinerary({ ...itinerary, days: updatedDays });
+
+    await supabase
+      .from("itinerary_days")
+      .update({ activities: updatedDays[dayIndex] })
+      .eq("trip_id", trip?.id)
+      .eq("day_number", updatedDays[dayIndex].day);
+
+    // Abrir editor de la nueva actividad automáticamente
+    setEditingActivity({ dayIndex, activityIndex: insertAt });
+  };
+
+  const handleDeleteDay = async (dayIndex: number) => {
+    if (!itinerary) return;
+    if (!confirm("¿Seguro que quieres eliminar este día?")) return;
+
+    const updatedDays = itinerary.days
+      .filter((_, i) => i !== dayIndex)
+      .map((d, idx) => ({ ...d, day: idx + 1 }));
+
+    setItinerary({ ...itinerary, days: updatedDays });
+
+    await supabase.from("itinerary_days").delete().eq("trip_id", trip!.id);
+    if (updatedDays.length > 0) {
+      await supabase.from("itinerary_days").insert(
+        updatedDays.map((d) => ({
+          trip_id: trip!.id,
+          day_number: d.day,
+          date: d.date,
+          destination: d.destination,
+          activities: d,
+        })),
+      );
+    }
+  };
+  const handleDeleteActivity = async (
+    dayIndex: number,
+    activityIndex: number,
+  ) => {
+    if (!itinerary) return;
+    if (!confirm("¿Seguro que quieres eliminar esta actividad?")) return;
+
+    const updatedDays = [...itinerary.days];
+    updatedDays[dayIndex].activities = updatedDays[dayIndex].activities.filter(
+      (_, i) => i !== activityIndex,
+    );
+
+    setItinerary({ ...itinerary, days: updatedDays });
+
+    await supabase
+      .from("itinerary_days")
+      .update({ activities: updatedDays[dayIndex] })
+      .eq("trip_id", trip?.id)
+      .eq("day_number", updatedDays[dayIndex].day);
+  };
+
   const handleCopyInviteLink = async () => {
     // Crear invitación en Supabase
     const { data, error } = await supabase
@@ -158,7 +310,63 @@ function TripDetail() {
 
     const link = `${window.location.origin}/invite/${data.token}`;
     await navigator.clipboard.writeText(link);
-    alert("¡Link copiado! Compártelo con quien quieras invitar.");
+    showToast("¡Link copiado! Compártelo con quien quieras invitar.");
+  };
+
+  const handleRemoveMember = async (memberId: string, memberUserId: string) => {
+    if (!confirm("¿Seguro que quieres remover a este viajero?")) return;
+
+    // Borrar preferencias
+    await supabase
+      .from("member_preferences")
+      .delete()
+      .eq("trip_id", trip!.id)
+      .eq("user_id", memberUserId);
+
+    // Borrar miembro
+    await supabase.from("trip_members").delete().eq("id", memberId);
+
+    // Actualizar state
+    setMembers((prev) => prev.filter((m) => m.id !== memberId));
+  };
+
+  const handleUpdateDay = async (
+    dayIndex: number,
+    field: "destination" | "date",
+    value: string,
+  ) => {
+    if (!itinerary) return;
+
+    const updatedDays = [...itinerary.days];
+    updatedDays[dayIndex] = {
+      ...updatedDays[dayIndex],
+      [field]: value,
+    };
+
+    setItinerary({ ...itinerary, days: updatedDays });
+
+    await supabase
+      .from("itinerary_days")
+      .update({ [field]: value, activities: updatedDays[dayIndex] })
+      .eq("trip_id", trip?.id)
+      .eq("day_number", updatedDays[dayIndex].day);
+  };
+
+  const handleLeaveTrip = async () => {
+    if (!confirm("¿Seguro que quieres salir de este viaje?")) return;
+
+    const member = members.find((m) => m.user_id === currentUserId);
+    if (!member) return;
+
+    await supabase
+      .from("member_preferences")
+      .delete()
+      .eq("trip_id", trip!.id)
+      .eq("user_id", currentUserId!);
+
+    await supabase.from("trip_members").delete().eq("id", member.id);
+
+    navigate("/dashboard");
   };
 
   const handleDownloadItinerary = () => {
@@ -205,14 +413,116 @@ function TripDetail() {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const checkBeforeGenerate = () => {
+    const newWarnings: string[] = [];
+
+    if (trip!.expected_members && members.length < trip!.expected_members) {
+      newWarnings.push(
+        `Esperabas ${trip!.expected_members} viajeros pero solo ${members.length} se ${members.length === 1 ? "ha unido" : "han unido"}.`,
+      );
+    }
+
+    const withoutPrefs = members.filter((m) => !m.member_preferences);
+    if (withoutPrefs.length > 0) {
+      const names = withoutPrefs.map((m) => m.profiles?.name).join(", ");
+      newWarnings.push(
+        `Los siguientes viajeros no han puesto sus preferencias: ${names}.`,
+      );
+    }
+
+    if (newWarnings.length > 0) {
+      setWarnings(newWarnings);
+      setShowWarningModal(true);
+    } else {
+      handleGenerateItinerary();
+    }
+  };
+
+  const handleAddDay = async (
+    position: "before" | "after",
+    dayIndex: number,
+  ) => {
+    if (!itinerary) return;
+
+    const referenceDay = itinerary.days[dayIndex];
+    const referenceDate = new Date(referenceDay.date);
+
+    const newDate = new Date(referenceDate);
+    if (position === "before") {
+      newDate.setDate(newDate.getDate() - 1);
+    } else {
+      newDate.setDate(newDate.getDate() + 1);
+    }
+
+    const newDay = {
+      day: 0, // se recalcula abajo
+      date: newDate.toISOString().split("T")[0],
+      destination: referenceDay.destination,
+      activities: [],
+      accommodation: undefined,
+    };
+
+    const updatedDays = [...itinerary.days];
+    const insertAt = position === "before" ? dayIndex : dayIndex + 1;
+    updatedDays.splice(insertAt, 0, newDay);
+
+    // Recalcular números de día
+    const renumbered = updatedDays.map((d, idx) => ({ ...d, day: idx + 1 }));
+
+    setItinerary({ ...itinerary, days: renumbered });
+
+    // Borrar y reinsertar todos los días en Supabase
+    await supabase.from("itinerary_days").delete().eq("trip_id", trip!.id);
+    await supabase.from("itinerary_days").insert(
+      renumbered.map((d) => ({
+        trip_id: trip!.id,
+        day_number: d.day,
+        date: d.date,
+        destination: d.destination,
+        activities: d,
+      })),
+    );
+  };
+
+  const handleUpdateAccommodation = async (
+    dayIndex: number,
+    field:
+      | "suggestion"
+      | "zone"
+      | "estimatedCost"
+      | "airbnbLink"
+      | "bookingLink",
+    value: string,
+  ) => {
+    if (!itinerary) return;
+    const updatedDays = [...itinerary.days];
+    updatedDays[dayIndex] = {
+      ...updatedDays[dayIndex],
+      accommodation: {
+        ...updatedDays[dayIndex].accommodation!,
+        [field]: value,
+      },
+    };
+    setItinerary({ ...itinerary, days: updatedDays });
+    await supabase
+      .from("itinerary_days")
+      .update({ activities: updatedDays[dayIndex] })
+      .eq("trip_id", trip?.id)
+      .eq("day_number", updatedDays[dayIndex].day);
+  };
+
   const handleGenerateItinerary = async () => {
     if (!trip) return;
     setGenerating(true);
     try {
       const result = await generateItinerary({ trip, destinations, members });
       setItinerary(result);
-
-      // Guardar en Supabase
       await supabase.from("itinerary_days").delete().eq("trip_id", trip.id);
 
       await supabase.from("itinerary_days").insert(
@@ -287,7 +597,7 @@ function TripDetail() {
             <div className="flex gap-3">
               {itinerary && (
                 <button
-                  onClick={handleGenerateItinerary}
+                  onClick={checkBeforeGenerate}
                   disabled={generating}
                   className="border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white px-6 py-3 rounded-xl font-semibold transition disabled:opacity-50"
                 >
@@ -296,7 +606,7 @@ function TripDetail() {
               )}
               {!itinerary && (
                 <button
-                  onClick={handleGenerateItinerary}
+                  onClick={checkBeforeGenerate}
                   disabled={generating}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition disabled:opacity-50"
                 >
@@ -356,25 +666,57 @@ function TripDetail() {
                     <p className="font-semibold">{m.profiles?.name}</p>
                     <p className="text-gray-400 text-sm">{m.profiles?.email}</p>
                   </div>
-                  <span
-                    className={`text-xs px-3 py-1 rounded-full font-medium ${
-                      m.role === "owner"
-                        ? "bg-yellow-500/10 text-yellow-400"
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-xs px-3 py-1 rounded-full font-medium ${
+                        m.role === "owner"
+                          ? "bg-yellow-500/10 text-yellow-400"
+                          : m.role === "co-organizer"
+                            ? "bg-blue-500/10 text-blue-400"
+                            : "bg-gray-700 text-gray-400"
+                      }`}
+                    >
+                      {m.role === "owner"
+                        ? "👑 Owner"
                         : m.role === "co-organizer"
-                          ? "bg-blue-500/10 text-blue-400"
-                          : "bg-gray-700 text-gray-400"
-                    }`}
-                  >
-                    {m.role === "owner"
-                      ? "👑 Owner"
-                      : m.role === "co-organizer"
-                        ? "🔧 Co-organizador"
-                        : "✈️ Viajero"}
-                  </span>
+                          ? "🔧 Co-organizador"
+                          : "✈️ Viajero"}
+                    </span>
+
+                    {/* Owner puede remover a otros */}
+                    {isOwner && m.user_id !== currentUserId && (
+                      <button
+                        onClick={() => handleRemoveMember(m.id, m.user_id)}
+                        className="text-gray-600 hover:text-red-400 transition text-sm"
+                      >
+                        ✕
+                      </button>
+                    )}
+
+                    {/* Cualquier miembro puede salirse (excepto owner) */}
+                    {m.user_id === currentUserId && !isOwner && (
+                      <button
+                        onClick={handleLeaveTrip}
+                        className="text-gray-600 hover:text-red-400 text-xs transition"
+                      >
+                        Salir
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {m.member_preferences && (
-                  <div className="space-y-3 border-t border-gray-800 pt-4">
+                  <div className="space-y-3 border-t border-gray-800 pt-3">
+                    {m.user_id === currentUserId && (
+                      <div className=" flex flex-col items-end">
+                        <button
+                          onClick={handleOpenEditPrefs}
+                          className="text-gray-500 hover:text-blue-400 w-fit text-xs transition"
+                        >
+                          ✏️ Editar
+                        </button>
+                      </div>
+                    )}
                     {m.member_preferences.food_preferences?.length > 0 && (
                       <div>
                         <p className="text-gray-400 text-sm mb-2">Comida</p>
@@ -409,6 +751,26 @@ function TripDetail() {
                         </div>
                       </div>
                     )}
+                    {m.member_preferences.attractions_preferences?.length >
+                      0 && (
+                      <div>
+                        <p className="text-gray-400 text-sm mb-2">
+                          Lugares de interés
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {m.member_preferences.attractions_preferences.map(
+                            (a) => (
+                              <span
+                                key={a}
+                                className="bg-gray-800 text-gray-300 text-xs px-2 py-1 rounded-full"
+                              >
+                                📍 {a}
+                              </span>
+                            ),
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -436,129 +798,396 @@ function TripDetail() {
 
             <div className="space-y-6">
               {itinerary.days.map((day, dayIndex) => (
-                <div key={day.day} className="bg-gray-900 rounded-2xl p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="bg-blue-600 text-white text-sm font-bold px-3 py-1 rounded-full">
-                      Día {day.day}
-                    </span>
-                    <span className="text-gray-400 text-sm">{day.date}</span>
-                    <span className="text-white font-semibold">
-                      {day.destination}
-                    </span>
-                  </div>
+                <div key={day.day} className="relative group/day">
+                  {/* Botón agregar día ANTES */}
+                  {(isOwner ||
+                    members.find((m) => m.user_id === currentUserId)?.role ===
+                      "co-organizer") && (
+                    <button
+                      onClick={() => handleAddDay("before", dayIndex)}
+                      className="w-full text-gray-600 hover:text-blue-400 hover:bg-gray-800/50 text-xs py-2 rounded-xl transition border border-dashed border-transparent hover:border-gray-700 mb-2 "
+                    >
+                      + Agregar día aquí
+                    </button>
+                  )}
 
-                  <div className="space-y-3 mb-4">
-                    {day.activities.map((activity, i) => (
-                      <div
-                        key={i}
-                        className="flex gap-4 group cursor-pointer"
-                        onClick={() =>
-                          setEditingActivity(
-                            editingActivity?.dayIndex === dayIndex &&
-                              editingActivity?.activityIndex === i
-                              ? null
-                              : { dayIndex, activityIndex: i },
-                          )
-                        }
-                      >
-                        <span className="text-gray-500 text-sm w-12 shrink-0">
-                          {activity.time}
-                        </span>
-                        <div className="flex-1">
-                          {editingActivity?.dayIndex === dayIndex &&
-                          editingActivity?.activityIndex === i ? (
-                            <div
-                              className="space-y-2"
-                              onClick={(e) => e.stopPropagation()}
+                  <div className="bg-gray-900 rounded-2xl p-6">
+                    {/* ... todo el contenido del día que ya tienes ... */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="bg-blue-600 text-white text-sm font-bold px-3 py-1 rounded-full">
+                        Día {day.day}
+                      </span>
+
+                      {editingDay === dayIndex ? (
+                        <div
+                          className="flex items-center gap-2 flex-1"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <input
+                            type="date"
+                            value={day.date}
+                            onChange={(e) =>
+                              handleUpdateDay(dayIndex, "date", e.target.value)
+                            }
+                            className="bg-gray-800 text-white rounded-lg px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <input
+                            type="text"
+                            value={day.destination}
+                            onChange={(e) =>
+                              handleUpdateDay(
+                                dayIndex,
+                                "destination",
+                                e.target.value,
+                              )
+                            }
+                            className="flex-1 bg-gray-800 text-white rounded-lg px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Destino"
+                          />
+                          <button
+                            onClick={() => setEditingDay(null)}
+                            className="text-blue-400 text-xs hover:underline shrink-0"
+                          >
+                            ✓ Listo
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="text-gray-400 text-sm">
+                            {day.date}
+                          </span>
+                          <span className="text-white font-semibold">
+                            {day.destination}
+                          </span>
+                          {(isOwner ||
+                            members.find((m) => m.user_id === currentUserId)
+                              ?.role === "co-organizer") && (
+                            <button
+                              onClick={() => handleDeleteDay(dayIndex)}
+                              className="text-gray-600 hover:text-red-400 text-xs transition ml-2"
                             >
-                              <input
-                                type="text"
-                                value={activity.title}
-                                onChange={(e) =>
-                                  handleUpdateActivity(
-                                    dayIndex,
-                                    i,
-                                    "title",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                              <textarea
-                                value={activity.description}
-                                onChange={(e) =>
-                                  handleUpdateActivity(
-                                    dayIndex,
-                                    i,
-                                    "description",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                                rows={2}
-                              />
-                              <button
-                                onClick={() => setEditingActivity(null)}
-                                className="text-blue-400 text-xs hover:underline"
-                              >
-                                ✓ Listo
-                              </button>
-                            </div>
-                          ) : (
-                            <>
-                              <p className="font-semibold text-sm group-hover:text-blue-400 transition">
-                                {activity.title}
-                                <span className="text-gray-600 text-xs ml-2 opacity-0 group-hover:opacity-100">
-                                  ✏️ editar
-                                </span>
-                              </p>
-                              <p className="text-gray-400 text-sm">
-                                {activity.description}
-                              </p>
-                              {activity.estimatedCost && (
-                                <p className="text-blue-400 text-xs mt-1">
-                                  {activity.estimatedCost}
-                                </p>
+                              🗑️
+                            </button>
+                          )}
+                          {(isOwner ||
+                            members.find((m) => m.user_id === currentUserId)
+                              ?.role === "co-organizer") && (
+                            <button
+                              onClick={() => setEditingDay(dayIndex)}
+                              className="text-gray-600 hover:text-blue-400 text-xs transition "
+                            >
+                              ✏️
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    <div className="space-y-3 mb-4">
+                      {day.activities.map((activity, i) => (
+                        <div key={i} className="relative group/activity">
+                          {/* Botón agregar ANTES */}
+                          {(isOwner ||
+                            members.find((m) => m.user_id === currentUserId)
+                              ?.role === "co-organizer") && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAddActivity(dayIndex, "before", i);
+                              }}
+                              className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-800 hover:bg-blue-600 text-gray-500 hover:text-white text-xs px-2 py-0.5 rounded-full opacity-0 group-hover/activity:opacity-100 transition z-10"
+                            >
+                              + antes
+                            </button>
+                          )}
+
+                          <div
+                            className="flex gap-4 group cursor-pointer"
+                            onClick={() => {
+                              const myRole = members.find(
+                                (m) => m.user_id === currentUserId,
+                              )?.role;
+                              if (
+                                myRole !== "owner" &&
+                                myRole !== "co-organizer"
+                              )
+                                return;
+                              setEditingActivity(
+                                editingActivity?.dayIndex === dayIndex &&
+                                  editingActivity?.activityIndex === i
+                                  ? null
+                                  : { dayIndex, activityIndex: i },
+                              );
+                            }}
+                          >
+                            <span className="text-gray-500 text-sm w-12 shrink-0">
+                              {activity.time}
+                            </span>
+                            <div className="flex-1">
+                              {editingActivity?.dayIndex === dayIndex &&
+                              editingActivity?.activityIndex === i ? (
+                                <div
+                                  className="space-y-2"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <input
+                                    type="time"
+                                    value={activity.time}
+                                    onChange={(e) =>
+                                      handleUpdateActivity(
+                                        dayIndex,
+                                        i,
+                                        "time",
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={activity.title}
+                                    onChange={(e) =>
+                                      handleUpdateActivity(
+                                        dayIndex,
+                                        i,
+                                        "title",
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                  />
+
+                                  <textarea
+                                    value={activity.description}
+                                    onChange={(e) =>
+                                      handleUpdateActivity(
+                                        dayIndex,
+                                        i,
+                                        "description",
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                    rows={2}
+                                  />
+                                  <input
+                                    type="text"
+                                    value={activity.estimatedCost ?? ""}
+                                    onChange={(e) =>
+                                      handleUpdateActivity(
+                                        dayIndex,
+                                        i,
+                                        "estimatedCost",
+                                        e.target.value,
+                                      )
+                                    }
+                                    placeholder="Costo estimado (ej. $200 MXN)"
+                                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                  />
+                                  <button
+                                    onClick={() => setEditingActivity(null)}
+                                    className="text-blue-400 text-xs hover:underline border border-blue-400 px-3 py-1 rounded-full transition "
+                                  >
+                                    ✓ Listo
+                                  </button>
+                                </div>
+                              ) : (
+                                <>
+                                  <p className="font-semibold text-sm group-hover:text-blue-400 transition">
+                                    {activity.title}
+                                    {(isOwner ||
+                                      members.find(
+                                        (m) => m.user_id === currentUserId,
+                                      )?.role === "co-organizer") && (
+                                      <span className="text-gray-600 text-xs ml-2 opacity-0 group-hover:opacity-100">
+                                        ✏️ editar
+                                      </span>
+                                    )}
+                                    {"  "}
+                                    {(isOwner ||
+                                      members.find(
+                                        (m) => m.user_id === currentUserId,
+                                      )?.role === "co-organizer") && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteActivity(dayIndex, i);
+                                        }}
+                                        className="text-gray-600 hover:text-red-400 text-xs transition mt-1 opacity-0 group-hover:opacity-100"
+                                      >
+                                        🗑️ eliminar
+                                      </button>
+                                    )}
+                                  </p>
+
+                                  <p className="text-gray-400 text-sm">
+                                    {activity.description}
+                                  </p>
+                                  {activity.estimatedCost && (
+                                    <p className="text-blue-400 text-xs mt-1">
+                                      {activity.estimatedCost}
+                                    </p>
+                                  )}
+                                </>
                               )}
-                            </>
+                            </div>
+                          </div>
+
+                          {/* Botón agregar DESPUÉS */}
+                          {(isOwner ||
+                            members.find((m) => m.user_id === currentUserId)
+                              ?.role === "co-organizer") && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAddActivity(dayIndex, "after", i);
+                              }}
+                              className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-gray-800 hover:bg-blue-600 text-gray-500 hover:text-white text-xs px-2 py-0.5 rounded-full opacity-0 group-hover/activity:opacity-100 transition z-10"
+                            >
+                              + después
+                            </button>
                           )}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {day.accommodation && (
-                    <div className="border-t border-gray-800 pt-4">
-                      <p className="text-gray-400 text-sm mb-2">
-                        🏠 Alojamiento sugerido
-                      </p>
-                      <p className="font-semibold">
-                        {day.accommodation.suggestion}
-                      </p>
-                      <p className="text-gray-400 text-sm">
-                        Zona: {day.accommodation.zone} ·{" "}
-                        {day.accommodation.estimatedCost}
-                      </p>
-                      <div className="flex gap-3 mt-2">
-                        <a
-                          href={day.accommodation.airbnbLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-400 hover:underline text-sm"
-                        >
-                          Buscar en Airbnb →
-                        </a>
-                        <a
-                          href={day.accommodation.bookingLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-400 hover:underline text-sm"
-                        >
-                          Buscar en Booking →
-                        </a>
-                      </div>
+                      ))}
                     </div>
-                  )}
+
+                    {day.accommodation && (
+                      <div className="border-t border-gray-800 pt-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-gray-400 text-sm">
+                            🏠 Alojamiento sugerido
+                          </p>
+                          {(isOwner ||
+                            members.find((m) => m.user_id === currentUserId)
+                              ?.role === "co-organizer") && (
+                            <button
+                              onClick={() =>
+                                setEditingAccommodation(
+                                  editingAccommodation === dayIndex
+                                    ? null
+                                    : dayIndex,
+                                )
+                              }
+                              className="text-gray-600 hover:text-blue-400 text-xs transition"
+                            >
+                              {editingAccommodation === dayIndex
+                                ? "✓ Listo"
+                                : "✏️ Editar"}
+                            </button>
+                          )}
+                        </div>
+
+                        {editingAccommodation === dayIndex ? (
+                          <div className="space-y-2">
+                            <input
+                              type="text"
+                              value={day.accommodation.suggestion}
+                              onChange={(e) =>
+                                handleUpdateAccommodation(
+                                  dayIndex,
+                                  "suggestion",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Nombre del alojamiento"
+                              className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <input
+                              type="text"
+                              value={day.accommodation.zone}
+                              onChange={(e) =>
+                                handleUpdateAccommodation(
+                                  dayIndex,
+                                  "zone",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Zona / Colonia"
+                              className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <input
+                              type="text"
+                              value={day.accommodation.estimatedCost}
+                              onChange={(e) =>
+                                handleUpdateAccommodation(
+                                  dayIndex,
+                                  "estimatedCost",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Costo estimado"
+                              className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <input
+                              type="text"
+                              value={day.accommodation.airbnbLink}
+                              onChange={(e) =>
+                                handleUpdateAccommodation(
+                                  dayIndex,
+                                  "airbnbLink",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Link Airbnb"
+                              className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <input
+                              type="text"
+                              value={day.accommodation.bookingLink}
+                              onChange={(e) =>
+                                handleUpdateAccommodation(
+                                  dayIndex,
+                                  "bookingLink",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="Link Booking"
+                              className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            <p className="font-semibold">
+                              {day.accommodation.suggestion}
+                            </p>
+                            <p className="text-gray-400 text-sm">
+                              Zona: {day.accommodation.zone} ·{" "}
+                              {day.accommodation.estimatedCost}
+                            </p>
+                            <div className="flex gap-3 mt-2">
+                              <a
+                                href={day.accommodation.airbnbLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:underline text-sm"
+                              >
+                                Buscar en Airbnb →
+                              </a>
+                              <a
+                                href={day.accommodation.bookingLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:underline text-sm"
+                              >
+                                Buscar en Booking →
+                              </a>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {dayIndex === itinerary.days.length - 1 &&
+                    (isOwner ||
+                      members.find((m) => m.user_id === currentUserId)?.role ===
+                        "co-organizer") && (
+                      <button
+                        onClick={() => handleAddDay("after", dayIndex)}
+                        className="w-full text-gray-600 hover:text-blue-400 hover:bg-gray-800/50 text-xs py-2 rounded-xl transition border border-dashed border-transparent hover:border-gray-700 mt-2"
+                      >
+                        + Agregar día aquí
+                      </button>
+                    )}
                 </div>
               ))}
             </div>
@@ -595,6 +1224,257 @@ function TripDetail() {
           isOpen={documentDrawerOpen}
           onClose={() => setDocumentDrawerOpen(false)}
         />
+      )}
+      {showWarningModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-md w-full space-y-6">
+            <div>
+              <p className="text-xl font-bold mb-1">⚠️ Antes de continuar</p>
+              <p className="text-gray-400 text-sm">
+                El itinerario se generará sin considerar a los viajeros que
+                faltan.
+              </p>
+            </div>
+            <ul className="space-y-2">
+              {warnings.map((w, i) => (
+                <li key={i} className="text-yellow-400 text-sm flex gap-2">
+                  <span>•</span>
+                  <span>{w}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowWarningModal(false)}
+                className="px-5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setShowWarningModal(false);
+                  handleGenerateItinerary();
+                }}
+                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+              >
+                Generar de todas formas
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {editingPrefs && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-lg w-full space-y-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold">✏️ Editar preferencias</h2>
+              <button
+                onClick={() => setEditingPrefs(false)}
+                className="text-gray-500 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Presupuesto */}
+            <div>
+              <label className="text-white font-semibold mb-2 block">
+                Presupuesto (MXN)
+              </label>
+              <input
+                type="number"
+                value={editForm.budget}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, budget: Number(e.target.value) })
+                }
+                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Comida */}
+            <div>
+              <label className="text-white font-semibold mb-2 block">
+                Comida
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {FOOD_OPTIONS.map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        foodPreferences: prev.foodPreferences.includes(opt)
+                          ? prev.foodPreferences.filter((v) => v !== opt)
+                          : [...prev.foodPreferences, opt],
+                      }))
+                    }
+                    className={`px-3 py-1 rounded-full text-sm transition ${
+                      editForm.foodPreferences.includes(opt)
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Actividades */}
+            <div>
+              <label className="text-white font-semibold mb-2 block">
+                Actividades
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {ACTIVITY_OPTIONS.map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        activityPreferences: prev.activityPreferences.includes(
+                          opt,
+                        )
+                          ? prev.activityPreferences.filter((v) => v !== opt)
+                          : [...prev.activityPreferences, opt],
+                      }))
+                    }
+                    className={`px-3 py-1 rounded-full text-sm transition ${
+                      editForm.activityPreferences.includes(opt)
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Lugares de interés */}
+            <div>
+              <label className="text-white font-semibold mb-2 block">
+                Lugares de interés
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={attractionInput}
+                  onChange={(e) => setAttractionInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && attractionInput.trim()) {
+                      setEditForm((prev) => ({
+                        ...prev,
+                        attractionsPreferences: [
+                          ...prev.attractionsPreferences,
+                          attractionInput.trim(),
+                        ],
+                      }));
+                      setAttractionInput("");
+                    }
+                  }}
+                  placeholder="Ej: Chichén Itzá"
+                  className="flex-1 bg-gray-800 text-white rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={() => {
+                    if (!attractionInput.trim()) return;
+                    setEditForm((prev) => ({
+                      ...prev,
+                      attractionsPreferences: [
+                        ...prev.attractionsPreferences,
+                        attractionInput.trim(),
+                      ],
+                    }));
+                    setAttractionInput("");
+                  }}
+                  disabled={!attractionInput.trim()}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                >
+                  ✓ Confirmar
+                </button>
+              </div>
+              {editForm.attractionsPreferences.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {editForm.attractionsPreferences.map((a, i) => (
+                    <span
+                      key={i}
+                      className="flex items-center gap-1 bg-gray-800 text-gray-300 text-sm px-3 py-1 rounded-full"
+                    >
+                      📍 {a}
+                      <button
+                        onClick={() =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            attractionsPreferences:
+                              prev.attractionsPreferences.filter(
+                                (_, idx) => idx !== i,
+                              ),
+                          }))
+                        }
+                        className="text-gray-500 hover:text-red-400 transition ml-1"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Ritmo */}
+            <div>
+              <label className="text-white font-semibold mb-2 block">
+                Ritmo de viaje
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {PACE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() =>
+                      setEditForm({
+                        ...editForm,
+                        travelPace: opt.value as
+                          | "relaxed"
+                          | "moderate"
+                          | "intense",
+                      })
+                    }
+                    className={`p-3 rounded-xl border-2 text-left transition ${
+                      editForm.travelPace === opt.value
+                        ? "border-blue-500 bg-blue-500/10"
+                        : "border-gray-700 hover:border-gray-500"
+                    }`}
+                  >
+                    <p className="font-semibold text-sm">{opt.label}</p>
+                    <p className="text-gray-400 text-xs">{opt.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Botones */}
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setEditingPrefs(false)}
+                className="px-5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSavePrefs}
+                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {toastMessage && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-sm px-5 py-3 rounded-xl shadow-lg z-50 transition">
+          ✅ {toastMessage}
+        </div>
       )}
     </div>
   );

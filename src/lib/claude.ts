@@ -23,7 +23,7 @@ export const generateItinerary = async ({
     })
     .join("\n");
 
-  const prompt = `Eres un experto organizador de viajes. Genera un itinerario detallado para el siguiente viaje:
+  const prompt = `Eres un experto organizador de viajes con amplio conocimiento de precios reales en México y el mundo. Conoces los costos promedio de transporte, restaurantes, actividades y alojamiento en cada destino.
 
 VIAJE: ${trip.name}
 FECHAS: ${trip.start_date} al ${trip.end_date}
@@ -33,16 +33,21 @@ RUTA: ${destinationsText}
 VIAJEROS Y PREFERENCIAS:
 ${membersText}
 
-Genera un itinerario día a día considerando las preferencias de todos los viajeros. Para cada día incluye actividades con horarios, sugerencias de comida según sus preferencias, y opciones de transporte entre destinos.
-
-Para el alojamiento, sugiere la mejor zona para hospedarse en cada destino.
-
-Si el presupuesto de algún viajero parece insuficiente para el destino, indícalo en budgetWarnings.
+INSTRUCCIONES:
+- Genera un itinerario día a día considerando las preferencias de todos los viajeros
+- Usa precios REALES y actuales del destino — considera que los presupuestos están en MXN
+- Sugiere restaurantes, actividades y lugares con buena reputación, que sean tradición local, muy recomendados por viajeros o reconocidos en el destino — no solo los más baratos sino los que valen la pena
+- Prioriza lugares icónicos, con historia, bien valorados o que la gente suele recomendar en ese destino
+- Para destinos mexicanos considera precios realistas en MXN
+- Considera los lugares de interés mencionados por los viajeros e inclúyelos en el itinerario
+- Para alojamiento sugiere la mejor zona según el grupo
+- Los costos estimados deben ser precisos y coherentes con el destino
+- Todo lo anterior tomando en cuenta las preferencias de comida, actividades y lugares de interés de cada viajero — no sugieras algo que claramente no encaja con lo que el grupo prefiere
 
 Responde ÚNICAMENTE con un JSON válido con esta estructura exacta, sin texto adicional, sin markdown, sin backticks:
 {
   "summary": "resumen breve del viaje",
-  "budgetWarnings": ["advertencia si aplica"],
+  "budgetWarnings": [],
   "days": [
     {
       "day": 1,
