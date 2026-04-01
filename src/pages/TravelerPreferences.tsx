@@ -5,7 +5,8 @@ import {
   FOOD_OPTIONS,
   ACTIVITY_OPTIONS,
   PACE_OPTIONS,
-} from "../constants/tripOptions";
+} from "../constants/tripOptions.tsx";
+import PlaneIcon from "../components/Icons/PlaneIcon";
 
 const STEPS = ["Presupuesto", "Preferencias"];
 
@@ -70,7 +71,9 @@ function TravelerPreferences() {
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Navbar */}
       <nav className="flex items-center justify-between px-8 py-6 max-w-3xl mx-auto border-b border-gray-800">
-        <h1 className="text-2xl font-bold">Triploom ✈️</h1>
+        <h1 className="text-2xl font-bold">
+          Triploom <PlaneIcon />
+        </h1>
       </nav>
 
       <main className="max-w-3xl mx-auto px-8 py-12">
@@ -196,7 +199,9 @@ function TravelerPreferences() {
                         : "border-gray-700 hover:border-gray-500"
                     }`}
                   >
-                    <p className="font-semibold mb-1">{opt.label}</p>
+                    <p className="font-semibold flex items-center gap-2 mb-1">
+                      {opt.label} {opt.icon}
+                    </p>
                     <p className="text-gray-400 text-xs">{opt.desc}</p>
                   </button>
                 ))}

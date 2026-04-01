@@ -10,7 +10,8 @@ import {
   FOOD_OPTIONS,
   ACTIVITY_OPTIONS,
   PACE_OPTIONS,
-} from "../constants/tripOptions";
+} from "../constants/tripOptions.tsx";
+import PlaneIcon from "../components/Icons/PlaneIcon";
 
 function TripDetail() {
   const { id } = useParams();
@@ -138,9 +139,9 @@ function TripDetail() {
 
   const paceLabel = (pace: string) => {
     const map: Record<string, string> = {
-      relaxed: "😌 Relajado",
-      moderate: "🚶 Moderado",
-      intense: "⚡ Intenso",
+      relaxed: "Relajado",
+      moderate: "Moderado",
+      intense: "Intenso",
     };
     return map[pace] || pace;
   };
@@ -558,10 +559,10 @@ function TripDetail() {
       {/* Navbar */}
       <nav className="flex items-center justify-between px-8 py-6 max-w-6xl mx-auto border-b border-gray-800">
         <h1
-          className="text-2xl font-bold cursor-pointer"
+          className="text-2xl font-bold cursor-pointer flex items-center gap-2"
           onClick={() => navigate("/dashboard")}
         >
-          Triploom ✈️
+          Triploom <PlaneIcon />
         </h1>
         <button
           onClick={() => navigate("/dashboard")}
@@ -672,7 +673,7 @@ function TripDetail() {
                         ? "👑 Owner"
                         : m.role === "co-organizer"
                           ? "🔧 Co-organizador"
-                          : "✈️ Viajero"}
+                          : `${(<PlaneIcon />)} Viajero`}
                     </span>
 
                     {/* Owner puede remover a otros */}

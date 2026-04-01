@@ -6,7 +6,10 @@ import {
   FOOD_OPTIONS,
   ACTIVITY_OPTIONS,
   PACE_OPTIONS,
-} from "../constants/tripOptions";
+} from "../constants/tripOptions.tsx";
+import PlaneIcon from "../components/Icons/PlaneIcon";
+import House from "../components/Icons/House";
+import StarsIcon from "../components/Icons/StarsIcon";
 
 const STEPS = ["Información", "Destinos", "Alojamiento", "Preferencias"];
 
@@ -119,10 +122,10 @@ function CreateTrip() {
       {/* Navbar */}
       <nav className="flex items-center justify-between px-8 py-6 max-w-3xl mx-auto border-b border-gray-800">
         <h1
-          className="text-2xl font-bold cursor-pointer"
+          className="text-2xl font-bold cursor-pointer flex items-center gap-2"
           onClick={() => navigate("/dashboard")}
         >
-          Triploom ✈️
+          Triploom <PlaneIcon />
         </h1>
         <button
           onClick={() => navigate("/dashboard")}
@@ -183,7 +186,7 @@ function CreateTrip() {
                 value={store.name}
                 onChange={(e) => store.setField("name", e.target.value)}
                 className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Ej: Verano en la playa 🏖️"
+                placeholder="Ej: Verano en la playa"
               />
             </div>
 
@@ -343,12 +346,14 @@ function CreateTrip() {
               {[
                 {
                   value: "together",
-                  label: "🏠 Todos juntos",
+                  icon: <House />,
+                  label: "Todos juntos",
                   desc: "Un Airbnb o casa para el grupo",
                 },
                 {
                   value: "separate",
-                  label: "🏨 Por separado",
+                  icon: <House />,
+                  label: "Por separado",
                   desc: "Cada quien elige su alojamiento",
                 },
               ].map((opt) => (
@@ -366,7 +371,10 @@ function CreateTrip() {
                       : "border-gray-700 hover:border-gray-500"
                   }`}
                 >
-                  <p className="text-lg font-semibold mb-1">{opt.label}</p>
+                  <p className="text-lg font-semibold mb-1 flex items-center gap-2">
+                    {opt.icon}
+                    {opt.label}
+                  </p>
                   <p className="text-gray-400 text-sm">{opt.desc}</p>
                 </button>
               ))}
@@ -480,7 +488,9 @@ function CreateTrip() {
                         : "border-gray-700 hover:border-gray-500"
                     }`}
                   >
-                    <p className="font-semibold mb-1">{opt.label}</p>
+                    <p className="font-semibold mb-1 flex items-center gap-2">
+                      {opt.label} {opt.icon}
+                    </p>
                     <p className="text-gray-400 text-xs">{opt.desc}</p>
                   </button>
                 ))}
@@ -558,9 +568,16 @@ function CreateTrip() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition disabled:opacity-50"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition disabled:opacity-50 flex"
             >
-              {loading ? "Creando viaje..." : "Crear viaje ✨"}
+              {loading ? (
+                "Creando viaje..."
+              ) : (
+                <>
+                  Crear viaje
+                  <StarsIcon />
+                </>
+              )}
             </button>
           )}
         </div>

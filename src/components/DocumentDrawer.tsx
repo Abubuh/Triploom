@@ -1,15 +1,27 @@
 import { useRef, useState } from "react";
 import { Trip, DocumentCategory } from "../types/trip.types";
 import { useDocuments } from "../hooks/useDocuments";
+import PlaneIcon from "./Icons/PlaneIcon";
+import HotelIcon from "./Icons/HotelIcon";
+import TransportIcon from "./Icons/TransportIcon";
+import InsuranceIcon from "./Icons/InsuranceIcon";
+import VisaIcon from "./Icons/VisaIcon";
+import DocumentIcon from "./Icons/DocumentIcon";
+import LinkIcon from "./Icons/LinkIcon";
+import ClipIcon from "./Icons/ClipIcon";
 
 const CATEGORIES: { value: DocumentCategory; label: string; emoji: string }[] =
   [
-    { value: "vuelo", label: "Vuelo", emoji: "✈️" },
-    { value: "hotel", label: "Hotel", emoji: "🏨" },
-    { value: "transporte", label: "Transporte", emoji: "🚌" },
-    { value: "seguro", label: "Seguro", emoji: "🛡️" },
-    { value: "visa", label: "Visa", emoji: "🪪" },
-    { value: "otro", label: "Otro", emoji: "📄" },
+    { value: "vuelo", label: "Vuelo", emoji: `${(<PlaneIcon />)}` },
+    { value: "hotel", label: "Hotel", emoji: `${(<HotelIcon />)}` },
+    {
+      value: "transporte",
+      label: "Transporte",
+      emoji: `${(<TransportIcon />)}`,
+    },
+    { value: "seguro", label: "Seguro", emoji: `${(<InsuranceIcon />)}` },
+    { value: "visa", label: "Visa", emoji: `${(<VisaIcon />)}` },
+    { value: "otro", label: "Otro", emoji: `${(<DocumentIcon />)}` },
   ];
 
 type TabType = "file" | "link";
@@ -94,7 +106,7 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
                   : "bg-gray-800 text-gray-400 hover:bg-gray-700"
               }`}
             >
-              📎 Subir archivo
+              <ClipIcon /> Subir archivo
             </button>
             <button
               onClick={() => setTab("link")}
@@ -104,7 +116,7 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
                   : "bg-gray-800 text-gray-400 hover:bg-gray-700"
               }`}
             >
-              🔗 Agregar link
+              <LinkIcon /> Agregar link
             </button>
           </div>
 

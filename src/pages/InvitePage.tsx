@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import PlaneIcon from "../components/Icons/PlaneIcon";
 
 interface InviteData {
   trip_id: string;
@@ -118,7 +119,9 @@ function InvitePage() {
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="bg-gray-900 rounded-2xl p-8 max-w-md w-full text-center space-y-6">
-        <p className="text-4xl">✈️</p>
+        <p className="text-4xl ">
+          <PlaneIcon />
+        </p>
         <div>
           <p className="text-gray-400 text-sm mb-1">Te invitaron a</p>
           <h1 className="text-2xl font-bold text-white">

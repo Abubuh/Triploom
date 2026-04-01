@@ -1,3 +1,7 @@
+import LightningIcon from "../components/Icons/LightningIcon";
+import ModerateIcon from "../components/Icons/ModerateIcon";
+import RelaxIcon from "../components/Icons/RelaxIcon";
+
 export const FOOD_OPTIONS = [
   "Mexicana",
   "Italiana",
@@ -24,17 +28,20 @@ export const ACTIVITY_OPTIONS = [
 export const PACE_OPTIONS = [
   {
     value: "relaxed",
-    label: "😌 Relajado",
+    label: "Relajado",
+    icon: <RelaxIcon />,
     desc: "Pocas actividades, mucho descanso",
   },
   {
     value: "moderate",
-    label: "🚶 Moderado",
+    label: "Moderado",
+    icon: <ModerateIcon />,
     desc: "Balance entre actividades y descanso",
   },
   {
     value: "intense",
-    label: "⚡ Intenso",
+    label: "Intenso",
+    icon: <LightningIcon />,
     desc: "Aprovechar cada momento al máximo",
   },
 ];

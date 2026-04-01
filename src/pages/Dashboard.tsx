@@ -2,6 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { Trip } from "../types/trip.types";
+import PlaneIcon from "../components/Icons/PlaneIcon";
+import UserIcon from "../components/Icons/UserIcon";
+import MapIcon from "../components/Icons/MapIcon";
+import House from "../components/Icons/House";
+import HotelIcon from "../components/Icons/HotelIcon";
+import DocumentIcon from "../components/Icons/DocumentIcon";
+import CheckIcon from "../components/Icons/CheckIcon";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -58,14 +65,16 @@ function Dashboard() {
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Navbar */}
       <nav className="flex items-center justify-between px-8 py-6 max-w-6xl mx-auto border-b border-gray-800">
-        <h1 className="text-2xl font-bold">Triploom ✈️</h1>
+        <h1 className="text-2xl font-bold flex items-center gap-2 ">
+          Triploom <PlaneIcon />
+        </h1>
         <div className="flex items-center gap-4">
-          <span className="text-gray-400 text-sm">
-            Hola, {profile?.name || "Viajero"} 👋
+          <span className="text-gray-400 text-sm flex items-center gap-1">
+            Hola, {profile?.name || "Viajero"} <UserIcon />
           </span>
           <button
             onClick={handleLogout}
-            className="text-gray-400 hover:text-white text-sm transition"
+            className="text-gray-400 hover:text-white text-sm transition border-2 rounded-md px-2 py-1 border-gray-400 hover:border-white"
           >
             Cerrar sesión
           </button>
@@ -94,7 +103,9 @@ function Dashboard() {
           </div>
         ) : trips.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-center">
-            <span className="text-6xl mb-6">🗺️</span>
+            <span className="text-6xl mb-6">
+              <MapIcon />
+            </span>
             <h3 className="text-xl font-semibold mb-2">
               No tienes viajes todavía
             </h3>
@@ -121,21 +132,36 @@ function Dashboard() {
                   {trip.start_date} → {trip.end_date}
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="bg-blue-500/10 text-blue-400 text-xs px-3 py-1 rounded-full">
-                    {trip.accommodation_type === "together"
-                      ? "🏠 Todos juntos"
-                      : "🏨 Por separado"}
+                  <span className="bg-blue-500/10 text-blue-400 text-xs px-3 py-1 rounded-full flex items-center gap-1">
+                    {trip.accommodation_type === "together" ? (
+                      <>
+                        Todos juntos
+                        <House />
+                      </>
+                    ) : (
+                      <>
+                        Todos separados
+                        <HotelIcon />
+                      </>
+                    )}
                   </span>
                   <span
-                    className={`text-xs px-3 py-1 rounded-full ${
+                    className={`text-xs px-3 py-1 rounded-full flex items-center gap-1 ${
                       trip.status === "planning"
                         ? "bg-yellow-500/10 text-yellow-400"
                         : "bg-green-500/10 text-green-400"
                     }`}
                   >
-                    {trip.status === "planning"
-                      ? "📋 Planificando"
-                      : "✅ Listo"}
+                    {trip.status === "planning" ? (
+                      <>
+                        <DocumentIcon /> Planificando
+                      </>
+                    ) : (
+                      <>
+                        <CheckIcon />
+                        Listo
+                      </>
+                    )}
                   </span>
                 </div>
               </div>
