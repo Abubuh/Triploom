@@ -379,14 +379,6 @@ function TripDetail() {
       content += `## Resumen\n${itinerary.summary}\n\n`;
     }
 
-    if (itinerary.budgetWarnings.length > 0) {
-      content += `## ⚠️ Advertencias de presupuesto\n`;
-      itinerary.budgetWarnings.forEach((w) => {
-        content += `- ${w}\n`;
-      });
-      content += "\n";
-    }
-
     itinerary.days.forEach((day) => {
       content += `## Día ${day.day} — ${day.destination} (${day.date})\n\n`;
       day.activities.forEach((activity) => {
