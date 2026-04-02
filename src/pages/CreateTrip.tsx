@@ -489,7 +489,7 @@ function CreateTrip() {
                     }`}
                   >
                     <p className="font-semibold mb-1 flex items-center gap-2">
-                      {opt.label} {opt.icon}
+                      {opt.icon} {opt.label}
                     </p>
                     <p className="text-gray-400 text-xs">{opt.desc}</p>
                   </button>
@@ -514,7 +514,7 @@ function CreateTrip() {
                   disabled={!attractionInput.trim()}
                   className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-3 rounded-lg font-semibold transition"
                 >
-                  ✓ Confirmar
+                  Confirmar ✓
                 </button>
               </div>
               {attractions.length > 0 && (
@@ -568,7 +568,7 @@ function CreateTrip() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition disabled:opacity-50 flex"
+              className="bg-blue-600 gap-2 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition disabled:opacity-50 flex"
             >
               {loading ? (
                 "Creando viaje..."

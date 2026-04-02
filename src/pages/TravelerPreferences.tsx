@@ -200,7 +200,8 @@ function TravelerPreferences() {
                     }`}
                   >
                     <p className="font-semibold flex items-center gap-2 mb-1">
-                      {opt.label} {opt.icon}
+                      {opt.icon}
+                      {opt.label}
                     </p>
                     <p className="text-gray-400 text-xs">{opt.desc}</p>
                   </button>
@@ -225,7 +226,7 @@ function TravelerPreferences() {
                   disabled={!attractionInput.trim()}
                   className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-3 rounded-lg font-semibold transition"
                 >
-                  ✓ Confirmar
+                  Confirmar ✓
                 </button>
               </div>
               {attractions.length > 0 && (

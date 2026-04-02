@@ -1,14 +1,25 @@
-import { useState } from "react";
+import { Component, JSXElementConstructor, useState } from "react";
 import { Trip, ExpenseCategory, ItineraryDay } from "../types/trip.types";
 import { useExpenses } from "../hooks/useExpenses";
+import CoinIcon from "./Icons/CoinIcon";
+import FoodIcon from "./Icons/FoodIcon";
+import TransportIcon from "./Icons/TransportIcon";
+import House from "./Icons/House";
+import TargetIcon from "./Icons/TargetIcon";
+import ShopIcon from "./Icons/ShopIcon";
+import BoxIcon from "./Icons/BoxIcon";
 
-const CATEGORIES: { value: ExpenseCategory; label: string; emoji: string }[] = [
-  { value: "comida", label: "Comida", emoji: "🍽️" },
-  { value: "transporte", label: "Transporte", emoji: "🚌" },
-  { value: "alojamiento", label: "Alojamiento", emoji: "🏠" },
-  { value: "actividades", label: "Actividades", emoji: "🎯" },
-  { value: "compras", label: "Compras", emoji: "🛍️" },
-  { value: "otro", label: "Otro", emoji: "📦" },
+const CATEGORIES: {
+  value: ExpenseCategory;
+  label: string;
+  emoji: React.ReactNode;
+}[] = [
+  { value: "comida", label: "Comida", emoji: <FoodIcon /> },
+  { value: "transporte", label: "Transporte", emoji: <TransportIcon /> },
+  { value: "alojamiento", label: "Alojamiento", emoji: <House /> },
+  { value: "actividades", label: "Actividades", emoji: <TargetIcon /> },
+  { value: "compras", label: "Compras", emoji: <ShopIcon /> },
+  { value: "otro", label: "Otro", emoji: <BoxIcon /> },
 ];
 
 const CURRENCIES = ["MXN", "USD", "EUR", "GBP"];
@@ -102,7 +113,9 @@ export function ExpenseDrawer({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-800 shrink-0">
           <div>
-            <h2 className="text-lg font-bold">💰 Gastos</h2>
+            <h2 className="text-lg flex gap-2 items-center font-bold mb-2">
+              <CoinIcon /> Gastos
+            </h2>
             <p className="text-gray-400 text-sm">{trip.name}</p>
           </div>
           <button
@@ -332,7 +345,7 @@ export function ExpenseDrawer({
                             onClick={() =>
                               setForm({ ...form, category: cat.value })
                             }
-                            className={`text-xs px-2 py-1 rounded-full transition ${
+                            className={`text-xs px-2 py-1 flex gap-2 items-center mb-1 mr-1 rounded-full transition ${
                               form.category === cat.value
                                 ? "bg-blue-600 text-white"
                                 : "bg-gray-700 text-gray-400 hover:bg-gray-600"

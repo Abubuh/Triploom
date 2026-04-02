@@ -9,8 +9,6 @@ export const generateItinerary = async ({
   destinations,
   members,
 }: GenerateItineraryParams): Promise<GeneratedItinerary> => {
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY as string;
-
   const destinationsText = destinations
     .map((d) => `${d.city}, ${d.country} (${d.days} días)`)
     .join(" → ");
@@ -73,19 +71,12 @@ Responde ÚNICAMENTE con un JSON válido con esta estructura exacta, sin texto a
   ]
 }`;
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("/api/generate-itinerary", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
     },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5",
-      max_tokens: 8000,
-      messages: [{ role: "user", content: prompt }],
-    }),
+    body: JSON.stringify({ prompt }),
   });
 
   const data = await response.json();

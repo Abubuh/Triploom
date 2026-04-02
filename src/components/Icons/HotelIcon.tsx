@@ -10,7 +10,7 @@ const HotelIcon = () => {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="lucide lucide-hotel-icon lucide-hotel"
+      className="lucide lucide-hotel-icon lucide-hotel w-5 h-5"
     >
       <path d="M10 22v-6.57" />
       <path d="M12 11h.01" />

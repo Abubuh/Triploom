@@ -10,7 +10,7 @@ const VisaIcon = () => {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="lucide lucide-id-card-icon lucide-id-card"
+      className="lucide lucide-id-card-icon lucide-id-card w-5 h-5"
     >
       <path d="M16 10h2" />
       <path d="M16 14h2" />

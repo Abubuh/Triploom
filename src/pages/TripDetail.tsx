@@ -12,6 +12,23 @@ import {
   PACE_OPTIONS,
 } from "../constants/tripOptions.tsx";
 import PlaneIcon from "../components/Icons/PlaneIcon";
+import House from "../components/Icons/House";
+import HotelIcon from "../components/Icons/HotelIcon.tsx";
+import Hourglass from "../components/Icons/Hourglass.tsx";
+import RegenerateIcon from "../components/Icons/RegenerateIcon.tsx";
+import StarsIcon from "../components/Icons/StarsIcon.tsx";
+import DownloadIcon from "../components/Icons/DownloadIcon.tsx";
+import MapIcon from "../components/Icons/MapIcon.tsx";
+import GroupIcon from "../components/Icons/GroupIcon.tsx";
+import CrownIcon from "../components/Icons/CrownIcon.tsx";
+import EditIcon from "../components/Icons/EditIcon.tsx";
+import PinIcon from "../components/Icons/PinIcon.tsx";
+import CalendarIcon from "../components/Icons/CalendarIcon.tsx";
+import WarningIcon from "../components/Icons/WarningIcon.tsx";
+import TrashIcon from "../components/Icons/TrashIcon.tsx";
+import DocumentIcon from "../components/Icons/DocumentIcon.tsx";
+import MoneyIcon from "../components/Icons/MoneyIcon.tsx";
+import CheckIcon from "../components/Icons/CheckIcon.tsx";
 
 function TripDetail() {
   const { id } = useParams();
@@ -580,10 +597,16 @@ function TripDetail() {
             <p className="text-gray-400">
               {trip.start_date} → {trip.end_date}
             </p>
-            <span className="inline-block mt-2 bg-blue-500/10 text-blue-400 text-sm px-3 py-1 rounded-full">
-              {trip.accommodation_type === "together"
-                ? "🏠 Todos juntos"
-                : "🏨 Por separado"}
+            <span className=" mt-2 bg-blue-500/10 text-blue-400 text-sm px-3 py-1 rounded-full flex items-center gap-1 w-max ">
+              {trip.accommodation_type === "together" ? (
+                <>
+                  <House /> Todos juntos
+                </>
+              ) : (
+                <>
+                  <HotelIcon /> Por separado
+                </>
+              )}
             </span>
           </div>
           {isOwner && (
@@ -592,26 +615,47 @@ function TripDetail() {
                 <button
                   onClick={checkBeforeGenerate}
                   disabled={generating}
-                  className="border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white px-6 py-3 rounded-xl font-semibold transition disabled:opacity-50"
+                  className="border flex gap-1 items-center border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white px-6 py-3 rounded-xl font-semibold transition disabled:opacity-50"
                 >
-                  {generating ? "⏳ Generando..." : "🔄 Regenerar"}
+                  {generating ? (
+                    <>
+                      Generando...
+                      <Hourglass />
+                    </>
+                  ) : (
+                    <>
+                      Regenerar
+                      <RegenerateIcon />
+                    </>
+                  )}
                 </button>
               )}
               {!itinerary && (
                 <button
                   onClick={checkBeforeGenerate}
                   disabled={generating}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition disabled:opacity-50"
+                  className="bg-blue-600 flex items-center gap-1 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition disabled:opacity-50"
                 >
-                  {generating ? "⏳ Generando..." : "✨ Generar itinerario"}
+                  {generating ? (
+                    <>
+                      Generando
+                      <Hourglass />
+                    </>
+                  ) : (
+                    <>
+                      Generar itinerario
+                      <StarsIcon />
+                    </>
+                  )}
                 </button>
               )}
               {itinerary && (
                 <button
                   onClick={handleDownloadItinerary}
-                  className="border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white px-6 py-3 rounded-xl font-semibold transition"
+                  className="border border-gray-700 flex gap-1 hover:border-gray-500 text-gray-400 hover:text-white px-6 py-3 rounded-xl font-semibold transition"
                 >
-                  ⬇️ Descargar
+                  Descargar
+                  <DownloadIcon />
                 </button>
               )}
             </div>
@@ -620,7 +664,10 @@ function TripDetail() {
 
         {/* Destinos */}
         <section>
-          <h3 className="text-xl font-semibold mb-4">🗺️ Ruta</h3>
+          <h3 className="text-xl flex gap-1 items-center font-semibold mb-4">
+            <MapIcon />
+            Ruta
+          </h3>
           <div className="flex flex-wrap gap-3">
             {destinations.map((d, i) => (
               <div key={d.id} className="flex items-center gap-2">
@@ -641,7 +688,9 @@ function TripDetail() {
         {/* Miembros y preferencias */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-semibold">👥 Viajeros</h3>
+            <h3 className="text-xl font-semibold flex gap-1 items-center">
+              <GroupIcon /> Viajeros
+            </h3>
             {isOwner && (
               <button
                 onClick={handleCopyInviteLink}
@@ -661,7 +710,7 @@ function TripDetail() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`text-xs px-3 py-1 rounded-full font-medium ${
+                      className={`text-xs flex gap-2 items-center px-3 py-1 rounded-full font-medium ${
                         m.role === "owner"
                           ? "bg-yellow-500/10 text-yellow-400"
                           : m.role === "co-organizer"
@@ -669,11 +718,18 @@ function TripDetail() {
                             : "bg-gray-700 text-gray-400"
                       }`}
                     >
-                      {m.role === "owner"
-                        ? "👑 Owner"
-                        : m.role === "co-organizer"
-                          ? "🔧 Co-organizador"
-                          : `${(<PlaneIcon />)} Viajero`}
+                      {m.role === "owner" ? (
+                        <>
+                          <CrownIcon /> Owner
+                        </>
+                      ) : m.role === "co-organizer" ? (
+                        "🔧 Co-organizador"
+                      ) : (
+                        <>
+                          <PlaneIcon />
+                          Viajero
+                        </>
+                      )}
                     </span>
 
                     {/* Owner puede remover a otros */}
@@ -704,9 +760,10 @@ function TripDetail() {
                       <div className=" flex flex-col items-end">
                         <button
                           onClick={handleOpenEditPrefs}
-                          className="text-gray-500 hover:text-blue-400 w-fit text-xs transition"
+                          className="text-gray-500  flex gap-2 hover:text-blue-400 w-fit text-xs transition"
                         >
-                          ✏️ Editar
+                          Editar
+                          <EditIcon />
                         </button>
                       </div>
                     )}
@@ -755,9 +812,9 @@ function TripDetail() {
                             (a) => (
                               <span
                                 key={a}
-                                className="bg-gray-800 text-gray-300 text-xs px-2 py-1 rounded-full"
+                                className="bg-gray-800 text-gray-300 text-xs px-2 flex gap-1 items-center py-1 rounded-full"
                               >
-                                📍 {a}
+                                <PinIcon /> {a}
                               </span>
                             ),
                           )}
@@ -773,13 +830,15 @@ function TripDetail() {
         {/* Itinerario */}
         {itinerary && (
           <section>
-            <h3 className="text-xl font-semibold mb-2">📅 Itinerario</h3>
+            <h3 className="text-xl font-semibold mb-2 flex items-center gap-2">
+              <CalendarIcon /> Itinerario
+            </h3>
             <p className="text-gray-400 mb-6">{itinerary.summary}</p>
 
             {itinerary.budgetWarnings.length > 0 && (
               <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 mb-6">
                 <p className="text-yellow-400 font-semibold mb-2">
-                  ⚠️ Advertencias de presupuesto
+                  <WarningIcon /> Advertencias de presupuesto
                 </p>
                 {itinerary.budgetWarnings.map((w, i) => (
                   <p key={i} className="text-yellow-300 text-sm">
@@ -859,7 +918,7 @@ function TripDetail() {
                               onClick={() => handleDeleteDay(dayIndex)}
                               className="text-gray-600 hover:text-red-400 text-xs transition ml-2"
                             >
-                              🗑️
+                              <TrashIcon />
                             </button>
                           )}
                           {(isOwner ||
@@ -869,7 +928,7 @@ function TripDetail() {
                               onClick={() => setEditingDay(dayIndex)}
                               className="text-gray-600 hover:text-blue-400 text-xs transition "
                             >
-                              ✏️
+                              <EditIcon />
                             </button>
                           )}
                         </>
@@ -986,14 +1045,14 @@ function TripDetail() {
                                 </div>
                               ) : (
                                 <>
-                                  <p className="font-semibold text-sm group-hover:text-blue-400 transition">
+                                  <p className="font-semibold text-sm group-hover:text-blue-400 transition flex gap-2 items-center">
                                     {activity.title}
                                     {(isOwner ||
                                       members.find(
                                         (m) => m.user_id === currentUserId,
                                       )?.role === "co-organizer") && (
-                                      <span className="text-gray-600 text-xs ml-2 opacity-0 group-hover:opacity-100">
-                                        ✏️ editar
+                                      <span className="text-gray-600 hover:text-yellow-400 text-xs ml-2 items-center text-center opacity-0 group-hover:opacity-100 flex">
+                                        <EditIcon /> editar
                                       </span>
                                     )}
                                     {"  "}
@@ -1006,9 +1065,9 @@ function TripDetail() {
                                           e.stopPropagation();
                                           handleDeleteActivity(dayIndex, i);
                                         }}
-                                        className="text-gray-600 hover:text-red-400 text-xs transition mt-1 opacity-0 group-hover:opacity-100"
+                                        className="text-gray-600 flex items-center hover:text-red-400 text-xs transition opacity-0 group-hover:opacity-100"
                                       >
-                                        🗑️ eliminar
+                                        <TrashIcon /> eliminar
                                       </button>
                                     )}
                                   </p>
@@ -1047,8 +1106,8 @@ function TripDetail() {
                     {day.accommodation && (
                       <div className="border-t border-gray-800 pt-4">
                         <div className="flex items-center justify-between mb-2">
-                          <p className="text-gray-400 text-sm">
-                            🏠 Alojamiento sugerido
+                          <p className="text-gray-400 text-sm flex gap-2 items-center">
+                            <House /> Alojamiento sugerido
                           </p>
                           {(isOwner ||
                             members.find((m) => m.user_id === currentUserId)
@@ -1061,11 +1120,17 @@ function TripDetail() {
                                     : dayIndex,
                                 )
                               }
-                              className="text-gray-600 hover:text-blue-400 text-xs transition"
+                              className="text-gray-600 hover:text-blue-400 text-xs flex gap-2 transition"
                             >
-                              {editingAccommodation === dayIndex
-                                ? "✓ Listo"
-                                : "✏️ Editar"}
+                              {editingAccommodation === dayIndex ? (
+                                <>
+                                  Listo <CheckIcon />
+                                </>
+                              ) : (
+                                <>
+                                  Editar <EditIcon />
+                                </>
+                              )}
                             </button>
                           )}
                         </div>
@@ -1193,13 +1258,13 @@ function TripDetail() {
           onClick={() => setDocumentDrawerOpen(true)}
           className="bg-gray-800 hover:bg-gray-700 text-white px-5 py-3 rounded-2xl font-semibold shadow-lg transition flex items-center gap-2"
         >
-          📄 Documentos
+          <DocumentIcon /> Documentos
         </button>
         <button
           onClick={() => setExpenseDrawerOpen(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-2xl font-semibold shadow-lg transition flex items-center gap-2"
         >
-          💰 Gastos
+          <MoneyIcon /> Gastos
         </button>
       </div>
       {trip && (
@@ -1222,7 +1287,9 @@ function TripDetail() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
           <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-md w-full space-y-6">
             <div>
-              <p className="text-xl font-bold mb-1">⚠️ Antes de continuar</p>
+              <p className="text-xl font-bold mb-1 flex gap-2">
+                <WarningIcon /> Antes de continuar
+              </p>
               <p className="text-gray-400 text-sm">
                 El itinerario se generará sin considerar a los viajeros que
                 faltan.
@@ -1260,7 +1327,9 @@ function TripDetail() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
           <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-lg w-full space-y-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">✏️ Editar preferencias</h2>
+              <h2 className="text-xl font-bold">
+                <EditIcon /> Editar preferencias
+              </h2>
               <button
                 onClick={() => setEditingPrefs(false)}
                 className="text-gray-500 hover:text-white"
@@ -1394,7 +1463,7 @@ function TripDetail() {
                       key={i}
                       className="flex items-center gap-1 bg-gray-800 text-gray-300 text-sm px-3 py-1 rounded-full"
                     >
-                      📍 {a}
+                      <PinIcon /> {a}
                       <button
                         onClick={() =>
                           setEditForm((prev) => ({
@@ -1439,6 +1508,7 @@ function TripDetail() {
                         : "border-gray-700 hover:border-gray-500"
                     }`}
                   >
+                    <p>{opt.icon}</p>
                     <p className="font-semibold text-sm">{opt.label}</p>
                     <p className="text-gray-400 text-xs">{opt.desc}</p>
                   </button>
@@ -1466,7 +1536,7 @@ function TripDetail() {
       )}
       {toastMessage && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-sm px-5 py-3 rounded-xl shadow-lg z-50 transition">
-          ✅ {toastMessage}
+          <CheckIcon /> {toastMessage}
         </div>
       )}
     </div>

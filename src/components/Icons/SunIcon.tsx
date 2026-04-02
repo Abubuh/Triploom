@@ -10,7 +10,7 @@ const SunIcon = () => {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="lucide lucide-sun-icon lucide-sun"
+      className="lucide lucide-sun-icon lucide-sun w-5 h-5"
     >
       <circle cx="12" cy="12" r="4" />
       <path d="M12 2v2" />

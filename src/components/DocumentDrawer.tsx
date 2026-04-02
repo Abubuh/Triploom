@@ -10,19 +10,22 @@ import DocumentIcon from "./Icons/DocumentIcon";
 import LinkIcon from "./Icons/LinkIcon";
 import ClipIcon from "./Icons/ClipIcon";
 
-const CATEGORIES: { value: DocumentCategory; label: string; emoji: string }[] =
-  [
-    { value: "vuelo", label: "Vuelo", emoji: `${(<PlaneIcon />)}` },
-    { value: "hotel", label: "Hotel", emoji: `${(<HotelIcon />)}` },
-    {
-      value: "transporte",
-      label: "Transporte",
-      emoji: `${(<TransportIcon />)}`,
-    },
-    { value: "seguro", label: "Seguro", emoji: `${(<InsuranceIcon />)}` },
-    { value: "visa", label: "Visa", emoji: `${(<VisaIcon />)}` },
-    { value: "otro", label: "Otro", emoji: `${(<DocumentIcon />)}` },
-  ];
+const CATEGORIES: {
+  value: DocumentCategory;
+  label: string;
+  emoji: React.ReactNode;
+}[] = [
+  { value: "vuelo", label: "Vuelo", emoji: <PlaneIcon /> },
+  { value: "hotel", label: "Hotel", emoji: <HotelIcon /> },
+  {
+    value: "transporte",
+    label: "Transporte",
+    emoji: `${(<TransportIcon />)}`,
+  },
+  { value: "seguro", label: "Seguro", emoji: `${(<InsuranceIcon />)}` },
+  { value: "visa", label: "Visa", emoji: `${(<VisaIcon />)}` },
+  { value: "otro", label: "Otro", emoji: `${(<DocumentIcon />)}` },
+];
 
 type TabType = "file" | "link";
 

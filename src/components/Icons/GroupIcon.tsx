@@ -10,7 +10,7 @@ const GroupIcon = () => {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="lucide lucide-users-round-icon lucide-users-round"
+      className="lucide lucide-users-round-icon lucide-users-round w-5 h-5"
     >
       <path d="M18 21a8 8 0 0 0-16 0" />
       <circle cx="10" cy="8" r="5" />

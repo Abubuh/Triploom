@@ -70,7 +70,8 @@ function Dashboard() {
         </h1>
         <div className="flex items-center gap-4">
           <span className="text-gray-400 text-sm flex items-center gap-1">
-            Hola, {profile?.name || "Viajero"} <UserIcon />
+            <UserIcon />
+            Hola, {profile?.name || "Viajero"}
           </span>
           <button
             onClick={handleLogout}
@@ -135,13 +136,13 @@ function Dashboard() {
                   <span className="bg-blue-500/10 text-blue-400 text-xs px-3 py-1 rounded-full flex items-center gap-1">
                     {trip.accommodation_type === "together" ? (
                       <>
-                        Todos juntos
                         <House />
+                        Todos juntos
                       </>
                     ) : (
                       <>
-                        Todos separados
                         <HotelIcon />
+                        Todos separados
                       </>
                     )}
                   </span>

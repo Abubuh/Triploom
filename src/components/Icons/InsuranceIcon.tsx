@@ -10,7 +10,7 @@ const InsuranceIcon = () => {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="lucide lucide-hospital-icon lucide-hospital"
+      className="lucide lucide-hospital-icon lucide-hospital w-5 h-5"
     >
       <path d="M12 7v4" />
       <path d="M14 21v-3a2 2 0 0 0-4 0v3" />
