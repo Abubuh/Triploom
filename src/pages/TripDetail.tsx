@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { Trip, Destination, Member } from "../types/trip.types";
+import { Trip, Destination, Expense, Member } from "../types/trip.types";
 import { generateItinerary } from "../lib/claude";
 import { GeneratedItinerary } from "../types/trip.types";
 import { ExpenseDrawer } from "../components/ExpenseDrawer";
@@ -29,7 +29,6 @@ import TrashIcon from "../components/Icons/TrashIcon.tsx";
 import DocumentIcon from "../components/Icons/DocumentIcon.tsx";
 import MoneyIcon from "../components/Icons/MoneyIcon.tsx";
 import CheckIcon from "../components/Icons/CheckIcon.tsx";
-import { useExpenses } from "../hooks/useExpenses.ts";
 
 function TripDetail() {
   const { id } = useParams();
@@ -73,7 +72,7 @@ function TripDetail() {
   const currentUserRole = useMemo(() => {
     return members.find((m) => m.user_id === currentUserId)?.role ?? null;
   }, [members, currentUserId]);
-  const { addExpense } = useExpenses(id as string);
+  const addExpenseRef = useRef<((expense: Omit<Expense, "id" | "created_at" | "user_id">) => Promise<void>) | null>(null);
   const userCurrency = trip?.currency ?? "MXN";
 
   useEffect(() => {
@@ -165,15 +164,6 @@ function TripDetail() {
   }, [id]);
 
   const isOwner = trip?.owner_id === currentUserId;
-
-  const paceLabel = (pace: string) => {
-    const map: Record<string, string> = {
-      relaxed: "Relajado",
-      moderate: "Moderado",
-      intense: "Intenso",
-    };
-    return map[pace] || pace;
-  };
 
   const handleUpdateActivity = async (
     dayIndex: number,
@@ -993,12 +983,9 @@ function TripDetail() {
                           <div
                             className="flex gap-4 group cursor-pointer"
                             onClick={() => {
-                              const myRole = members.find(
-                                (m) => m.user_id === currentUserId,
-                              )?.role;
                               if (
-                                myRole !== "owner" &&
-                                myRole !== "co-organizer"
+                                currentUserRole !== "owner" &&
+                                currentUserRole !== "co-organizer"
                               )
                                 return;
                               setEditingActivity(
@@ -1085,9 +1072,7 @@ function TripDetail() {
                                   <p className="font-semibold text-sm group-hover:text-blue-400 transition flex gap-2 items-center">
                                     {activity.title}
                                     {(isOwner ||
-                                      members.find(
-                                        (m) => m.user_id === currentUserId,
-                                      )?.role === "co-organizer") && (
+                                      currentUserRole === "co-organizer") && (
                                       <span className="text-gray-600 hover:text-yellow-400 text-xs ml-2 items-center text-center opacity-0 group-hover:opacity-100 flex gap-1 transition">
                                         Editar
                                         <EditIcon />
@@ -1095,9 +1080,7 @@ function TripDetail() {
                                     )}
                                     {"  "}
                                     {(isOwner ||
-                                      members.find(
-                                        (m) => m.user_id === currentUserId,
-                                      )?.role === "co-organizer") && (
+                                      currentUserRole === "co-organizer") && (
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -1377,6 +1360,7 @@ function TripDetail() {
           itineraryDays={itinerary?.days ?? []}
           myBudget={myBudget}
           userCurrency={userCurrency}
+          onAddExpenseReady={(fn) => { addExpenseRef.current = fn; }}
         />
       )}
       {trip && (
@@ -1664,7 +1648,7 @@ function TripDetail() {
                 onClick={async () => {
                   const day =
                     itinerary!.days[accommodationExpenseModal.dayIndex];
-                  await addExpense({
+                  await addExpenseRef.current?.({
                     trip_id: trip!.id,
                     amount: accommodationExpenseModal.amount,
                     currency: accommodationExpenseModal.currency,

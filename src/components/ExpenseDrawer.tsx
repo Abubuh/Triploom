@@ -1,5 +1,5 @@
-import { Component, JSXElementConstructor, useEffect, useState } from "react";
-import { Trip, ExpenseCategory, ItineraryDay } from "../types/trip.types";
+import { useEffect, useState } from "react";
+import { Trip, Expense, ExpenseCategory, ItineraryDay } from "../types/trip.types";
 import { useExpenses } from "../hooks/useExpenses";
 import CoinIcon from "./Icons/CoinIcon";
 import FoodIcon from "./Icons/FoodIcon";
@@ -31,6 +31,8 @@ interface InlineFormState {
   description: string;
 }
 
+type AddExpenseFn = (expense: Omit<Expense, "id" | "created_at" | "user_id">) => Promise<void>;
+
 interface Props {
   trip: Trip;
   isOpen: boolean;
@@ -38,6 +40,7 @@ interface Props {
   itineraryDays: ItineraryDay[];
   myBudget: number | null;
   userCurrency: string;
+  onAddExpenseReady?: (addExpense: AddExpenseFn) => void;
 }
 
 export function ExpenseDrawer({
@@ -47,6 +50,7 @@ export function ExpenseDrawer({
   itineraryDays,
   myBudget,
   userCurrency,
+  onAddExpenseReady,
 }: Props) {
   const {
     expenses,
@@ -78,6 +82,10 @@ export function ExpenseDrawer({
   useEffect(() => {
     setForm((prev) => ({ ...prev, currency: userCurrency }));
   }, [userCurrency]);
+
+  useEffect(() => {
+    onAddExpenseReady?.(addExpense);
+  }, [addExpense, onAddExpenseReady]);
 
   const categoryInfo = (cat: string) =>
     CATEGORIES.find((c) => c.value === cat) ?? { emoji: "📦", label: cat };
@@ -184,7 +192,7 @@ export function ExpenseDrawer({
               <p className="text-gray-400 text-xs">Restante</p>
               <p
                 className={`font-semibold text-sm ${
-                  myBudget - (totalsByCurrency["MXN"] ?? 0) < 0
+                  myBudget - (totalsByCurrency[userCurrency] ?? 0) < 0
                     ? "text-red-400"
                     : "text-green-400"
                 }`}
