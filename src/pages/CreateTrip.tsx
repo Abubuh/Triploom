@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useTripStore } from "../store/tripStore";
@@ -26,6 +26,27 @@ function CreateTrip() {
   const [attractionInput, setAttractionInput] = useState("");
 
   const store = useTripStore();
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("currency")
+        .eq("id", user.id)
+        .single();
+
+      if (data?.currency) {
+        store.setField("currency", data.currency);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleNext = () => setStep((s) => s + 1);
   const handleBack = () => setStep((s) => s - 1);
@@ -71,7 +92,8 @@ function CreateTrip() {
         end_date: store.endDate,
         accommodation_type: store.accommodationType,
         status: "planning",
-        expected_members: store.totalPeople, // ← agrega esto
+        expected_members: store.totalPeople,
+        currency: store.currency,
       })
       .select()
       .single();
@@ -229,6 +251,25 @@ function CreateTrip() {
                 className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            <div>
+              <label className="text-gray-400 text-sm mb-1 block">
+                Moneda del viaje
+              </label>
+              <select
+                value={store.currency}
+                onChange={(e) => store.setField("currency", e.target.value)}
+                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {["MXN", "USD", "EUR", "GBP", "CAD", "ARS", "COP", "CLP"].map(
+                  (c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ),
+                )}
+              </select>
+            </div>
           </div>
         )}
 
@@ -383,8 +424,8 @@ function CreateTrip() {
             <div>
               <label className="text-gray-400 text-sm mb-1 block">
                 {store.accommodationType === "together"
-                  ? "Presupuesto total del grupo para alojamiento (MXN)"
-                  : "Tu presupuesto personal para alojamiento (MXN)"}
+                  ? `Presupuesto total del grupo para alojamiento (${store.currency})`
+                  : `Tu presupuesto personal para alojamiento (${store.currency})`}
               </label>
               <input
                 type="number"
@@ -412,7 +453,7 @@ function CreateTrip() {
 
             <div>
               <label className="text-white font-semibold mb-3 block">
-                Presupuesto personal total (MXN)
+                {`Presupuesto personal total (${store.currency})`}
               </label>
               <input
                 type="number"
