@@ -56,8 +56,6 @@ function InvitePage() {
     }
 
     setJoining(true);
-
-    // Verificar que no sea ya miembro
     const { data: existing } = await supabase
       .from("trip_members")
       .select("id")
@@ -66,7 +64,7 @@ function InvitePage() {
       .single();
 
     if (existing) {
-      // Ya es miembro, ir directo al viaje
+      setJoining(false);
       navigate(`/trips/${invite!.trip_id}`);
       return;
     }

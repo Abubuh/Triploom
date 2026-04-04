@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { Trip, Destination, Member } from "../types/trip.types";
@@ -29,6 +29,7 @@ import TrashIcon from "../components/Icons/TrashIcon.tsx";
 import DocumentIcon from "../components/Icons/DocumentIcon.tsx";
 import MoneyIcon from "../components/Icons/MoneyIcon.tsx";
 import CheckIcon from "../components/Icons/CheckIcon.tsx";
+import { useExpenses } from "../hooks/useExpenses.ts";
 
 function TripDetail() {
   const { id } = useParams();
@@ -63,6 +64,17 @@ function TripDetail() {
     number | null
   >(null);
   const [editingDay, setEditingDay] = useState<number | null>(null);
+  const [accommodationExpenseModal, setAccommodationExpenseModal] = useState<{
+    dayIndex: number;
+    amount: number;
+    currency: string;
+    suggestion: string;
+  } | null>(null);
+  const currentUserRole = useMemo(() => {
+    return members.find((m) => m.user_id === currentUserId)?.role ?? null;
+  }, [members, currentUserId]);
+  const { addExpense } = useExpenses(id as string);
+  const [userCurrency, setUserCurrency] = useState("MXN");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -146,6 +158,15 @@ function TripDetail() {
         if (myPrefs) setMyBudget(myPrefs.budget);
       }
 
+      if (user) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("currency")
+          .eq("id", user.id)
+          .single();
+
+        if (profileData) setUserCurrency(profileData.currency ?? "MXN");
+      }
       setLoading(false);
     };
 
@@ -256,7 +277,15 @@ function TripDetail() {
 
     const updatedDays = [...itinerary.days];
     const activities = [...updatedDays[dayIndex].activities];
-    const insertAt = position === "before" ? activityIndex : activityIndex + 1;
+
+    // Si no hay actividades o es -1, simplemente agrega al final
+    const insertAt =
+      activities.length === 0 || activityIndex === -1
+        ? 0
+        : position === "before"
+          ? activityIndex
+          : activityIndex + 1;
+
     activities.splice(insertAt, 0, newActivity);
     updatedDays[dayIndex] = { ...updatedDays[dayIndex], activities };
 
@@ -268,7 +297,6 @@ function TripDetail() {
       .eq("trip_id", trip?.id)
       .eq("day_number", updatedDays[dayIndex].day);
 
-    // Abrir editor de la nueva actividad automáticamente
     setEditingActivity({ dayIndex, activityIndex: insertAt });
   };
 
@@ -408,9 +436,10 @@ function TripDetail() {
       if (day.accommodation) {
         content += `### 🏠 Alojamiento\n`;
         content += `${day.accommodation.suggestion} — ${day.accommodation.zone}\n`;
-        content += `💰 ${day.accommodation.estimatedCost}\n`;
-        content += `Airbnb: ${day.accommodation.airbnbLink}\n`;
-        content += `Booking: ${day.accommodation.bookingLink}\n`;
+        content += `💰 ${day.accommodation.amount} ${day.accommodation.currency}\n`;
+        if (day.accommodation.accommodationLink) {
+          content += `Reserva: ${day.accommodation.accommodationLink}\n`;
+        }
       }
       content += "\n---\n\n";
     });
@@ -502,13 +531,8 @@ function TripDetail() {
 
   const handleUpdateAccommodation = async (
     dayIndex: number,
-    field:
-      | "suggestion"
-      | "zone"
-      | "estimatedCost"
-      | "airbnbLink"
-      | "bookingLink",
-    value: string,
+    field: "suggestion" | "zone" | "amount" | "currency" | "accommodationLink",
+    value: string | number,
   ) => {
     if (!itinerary) return;
     const updatedDays = [...itinerary.days];
@@ -525,6 +549,32 @@ function TripDetail() {
       .update({ activities: updatedDays[dayIndex] })
       .eq("trip_id", trip?.id)
       .eq("day_number", updatedDays[dayIndex].day);
+  };
+
+  const handleAddAccommodation = async (dayIndex: number) => {
+    if (!itinerary) return;
+
+    const updatedDays = [...itinerary.days];
+    updatedDays[dayIndex] = {
+      ...updatedDays[dayIndex],
+      accommodation: {
+        suggestion: "",
+        zone: "",
+        amount: 0,
+        currency: userCurrency,
+        accommodationLink: "",
+      },
+    };
+
+    setItinerary({ ...itinerary, days: updatedDays });
+
+    await supabase
+      .from("itinerary_days")
+      .update({ activities: updatedDays[dayIndex] })
+      .eq("trip_id", trip?.id)
+      .eq("day_number", updatedDays[dayIndex].day);
+
+    setEditingAccommodation(dayIndex);
   };
 
   const handleGenerateItinerary = async () => {
@@ -852,9 +902,7 @@ function TripDetail() {
               {itinerary.days.map((day, dayIndex) => (
                 <div key={day.day} className="relative group/day">
                   {/* Botón agregar día ANTES */}
-                  {(isOwner ||
-                    members.find((m) => m.user_id === currentUserId)?.role ===
-                      "co-organizer") && (
+                  {(isOwner || currentUserRole === "co-organizer") && (
                     <button
                       onClick={() => handleAddDay("before", dayIndex)}
                       className="w-full text-gray-600 hover:text-blue-400 hover:bg-gray-800/50 text-xs py-2 rounded-xl transition border border-dashed border-transparent hover:border-gray-700 mb-2 "
@@ -911,24 +959,20 @@ function TripDetail() {
                           <span className="text-white font-semibold">
                             {day.destination}
                           </span>
-                          {(isOwner ||
-                            members.find((m) => m.user_id === currentUserId)
-                              ?.role === "co-organizer") && (
-                            <button
-                              onClick={() => handleDeleteDay(dayIndex)}
-                              className="text-gray-600 hover:text-red-400 text-xs transition ml-2"
-                            >
-                              <TrashIcon />
-                            </button>
-                          )}
-                          {(isOwner ||
-                            members.find((m) => m.user_id === currentUserId)
-                              ?.role === "co-organizer") && (
+                          {(isOwner || currentUserRole === "co-organizer") && (
                             <button
                               onClick={() => setEditingDay(dayIndex)}
-                              className="text-gray-600 hover:text-blue-400 text-xs transition "
+                              className="text-gray-600 hover:text-yellow-400 text-xs transition "
                             >
                               <EditIcon />
+                            </button>
+                          )}
+                          {(isOwner || currentUserRole === "co-organizer") && (
+                            <button
+                              onClick={() => handleDeleteDay(dayIndex)}
+                              className="text-gray-600 hover:text-red-400 text-xs transition"
+                            >
+                              <TrashIcon />
                             </button>
                           )}
                         </>
@@ -939,18 +983,20 @@ function TripDetail() {
                       {day.activities.map((activity, i) => (
                         <div key={i} className="relative group/activity">
                           {/* Botón agregar ANTES */}
-                          {(isOwner ||
-                            members.find((m) => m.user_id === currentUserId)
-                              ?.role === "co-organizer") && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAddActivity(dayIndex, "before", i);
-                              }}
-                              className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gray-800 hover:bg-blue-600 text-gray-500 hover:text-white text-xs px-2 py-0.5 rounded-full opacity-0 group-hover/activity:opacity-100 transition z-10"
-                            >
-                              + antes
-                            </button>
+                          {(isOwner || currentUserRole === "co-organizer") && (
+                            <div className="flex items-center gap-2 opacity-0 group-hover/activity:opacity-100 transition my-1">
+                              <div className="flex-1 h-px bg-gray-800" />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddActivity(dayIndex, "before", i);
+                                }}
+                                className="text-gray-600 hover:text-blue-400 hover:bg-gray-800 text-xs px-3 py-0.5 rounded-full transition shrink-0"
+                              >
+                                + Agregar antes
+                              </button>
+                              <div className="flex-1 h-px bg-gray-800" />
+                            </div>
                           )}
 
                           <div
@@ -1051,8 +1097,9 @@ function TripDetail() {
                                       members.find(
                                         (m) => m.user_id === currentUserId,
                                       )?.role === "co-organizer") && (
-                                      <span className="text-gray-600 hover:text-yellow-400 text-xs ml-2 items-center text-center opacity-0 group-hover:opacity-100 flex">
-                                        <EditIcon /> editar
+                                      <span className="text-gray-600 hover:text-yellow-400 text-xs ml-2 items-center text-center opacity-0 group-hover:opacity-100 flex gap-1 transition">
+                                        Editar
+                                        <EditIcon />
                                       </span>
                                     )}
                                     {"  "}
@@ -1065,9 +1112,9 @@ function TripDetail() {
                                           e.stopPropagation();
                                           handleDeleteActivity(dayIndex, i);
                                         }}
-                                        className="text-gray-600 flex items-center hover:text-red-400 text-xs transition opacity-0 group-hover:opacity-100"
+                                        className="text-gray-600 flex items-center hover:text-red-400 text-xs transition opacity-0 group-hover:opacity-100 gap-1"
                                       >
-                                        <TrashIcon /> eliminar
+                                        Eliminar <TrashIcon />
                                       </button>
                                     )}
                                   </p>
@@ -1086,32 +1133,43 @@ function TripDetail() {
                           </div>
 
                           {/* Botón agregar DESPUÉS */}
-                          {(isOwner ||
-                            members.find((m) => m.user_id === currentUserId)
-                              ?.role === "co-organizer") && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAddActivity(dayIndex, "after", i);
-                              }}
-                              className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-gray-800 hover:bg-blue-600 text-gray-500 hover:text-white text-xs px-2 py-0.5 rounded-full opacity-0 group-hover/activity:opacity-100 transition z-10"
-                            >
-                              + después
-                            </button>
+                          {(isOwner || currentUserRole === "co-organizer") && (
+                            <div className="flex items-center gap-2 opacity-0 group-hover/activity:opacity-100 transition my-1">
+                              <div className="flex-1 h-px bg-gray-800" />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddActivity(dayIndex, "after", i);
+                                }}
+                                className="text-gray-600 hover:text-blue-400 hover:bg-gray-800 text-xs px-3 py-0.5 rounded-full transition shrink-0"
+                              >
+                                + Agregar despues
+                              </button>
+                              <div className="flex-1 h-px bg-gray-800" />
+                            </div>
                           )}
                         </div>
                       ))}
+                      {day.activities.length === 0 &&
+                        (isOwner || currentUserRole === "co-organizer") && (
+                          <button
+                            onClick={() =>
+                              handleAddActivity(dayIndex, "after", -1)
+                            }
+                            className="w-full text-gray-500 hover:text-blue-400 hover:bg-gray-800/50 text-sm py-3 rounded-xl transition border border-dashed border-gray-700 hover:border-blue-500/30"
+                          >
+                            + Agregar actividad
+                          </button>
+                        )}
                     </div>
 
-                    {day.accommodation && (
+                    {day.accommodation ? (
                       <div className="border-t border-gray-800 pt-4">
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-gray-400 text-sm flex gap-2 items-center">
-                            <House /> Alojamiento sugerido
+                            <House /> Alojamiento
                           </p>
-                          {(isOwner ||
-                            members.find((m) => m.user_id === currentUserId)
-                              ?.role === "co-organizer") && (
+                          {(isOwner || currentUserRole === "co-organizer") && (
                             <button
                               onClick={() =>
                                 setEditingAccommodation(
@@ -1120,7 +1178,7 @@ function TripDetail() {
                                     : dayIndex,
                                 )
                               }
-                              className="text-gray-600 hover:text-blue-400 text-xs flex gap-2 transition"
+                              className="text-gray-600 hover:text-blue-400 items-center flex gap-2 transition"
                             >
                               {editingAccommodation === dayIndex ? (
                                 <>
@@ -1128,7 +1186,7 @@ function TripDetail() {
                                 </>
                               ) : (
                                 <>
-                                  Editar <EditIcon />
+                                  Ingresar datos <EditIcon />
                                 </>
                               )}
                             </button>
@@ -1163,82 +1221,135 @@ function TripDetail() {
                               placeholder="Zona / Colonia"
                               className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                             />
+                            {/* Monto + Moneda */}
+                            <div className="flex gap-2">
+                              <input
+                                type="number"
+                                value={day.accommodation.amount}
+                                onChange={(e) =>
+                                  handleUpdateAccommodation(
+                                    dayIndex,
+                                    "amount",
+                                    Number(e.target.value),
+                                  )
+                                }
+                                placeholder="Costo"
+                                className="flex-1 bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                              <select
+                                value={
+                                  day.accommodation.currency || userCurrency
+                                }
+                                onChange={(e) =>
+                                  handleUpdateAccommodation(
+                                    dayIndex,
+                                    "currency",
+                                    e.target.value,
+                                  )
+                                }
+                                className="bg-gray-800 text-white rounded-lg px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                {["MXN", "USD", "EUR", "GBP"].map((c) => (
+                                  <option key={c} value={c}>
+                                    {c}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
                             <input
                               type="text"
-                              value={day.accommodation.estimatedCost}
+                              value={day.accommodation.accommodationLink}
                               onChange={(e) =>
                                 handleUpdateAccommodation(
                                   dayIndex,
-                                  "estimatedCost",
+                                  "accommodationLink",
                                   e.target.value,
                                 )
                               }
-                              placeholder="Costo estimado"
+                              placeholder="Link de reserva (Airbnb, Booking, etc.)"
                               className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                             />
-                            <input
-                              type="text"
-                              value={day.accommodation.airbnbLink}
-                              onChange={(e) =>
-                                handleUpdateAccommodation(
-                                  dayIndex,
-                                  "airbnbLink",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="Link Airbnb"
-                              className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <input
-                              type="text"
-                              value={day.accommodation.bookingLink}
-                              onChange={(e) =>
-                                handleUpdateAccommodation(
-                                  dayIndex,
-                                  "bookingLink",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="Link Booking"
-                              className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                            />
+                            <button
+                              onClick={() => {
+                                setEditingAccommodation(null);
+                                if (
+                                  day.accommodation?.amount &&
+                                  day.accommodation.amount > 0
+                                ) {
+                                  setAccommodationExpenseModal({
+                                    dayIndex,
+                                    amount: day.accommodation.amount,
+                                    currency: day.accommodation.currency,
+                                    suggestion: day.accommodation.suggestion,
+                                  });
+                                }
+                              }}
+                              className="text-blue-400 text-xs hover:underline border border-blue-400 px-3 py-1 rounded-full transition"
+                            >
+                              ✓ Listo
+                            </button>
                           </div>
                         ) : (
                           <>
                             <p className="font-semibold">
-                              {day.accommodation.suggestion}
+                              {day.accommodation.suggestion || "Sin nombre"}
                             </p>
                             <p className="text-gray-400 text-sm">
-                              Zona: {day.accommodation.zone} ·{" "}
-                              {day.accommodation.estimatedCost}
+                              {day.accommodation.zone &&
+                                `Zona: ${day.accommodation.zone}`}
+                              {day.accommodation.zone &&
+                                day.accommodation.amount > 0 &&
+                                " · "}
+                              {day.accommodation.amount > 0 &&
+                                `${day.accommodation.amount} ${day.accommodation.currency}`}
                             </p>
-                            <div className="flex gap-3 mt-2">
+                            {day.accommodation.accommodationLink ? (
                               <a
-                                href={day.accommodation.airbnbLink}
+                                href={day.accommodation.accommodationLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-400 hover:underline text-sm"
+                                className="text-blue-400 hover:underline text-sm mt-2 inline-block"
                               >
-                                Buscar en Airbnb →
+                                Ver reserva →
                               </a>
-                              <a
-                                href={day.accommodation.bookingLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-400 hover:underline text-sm"
-                              >
-                                Buscar en Booking →
-                              </a>
-                            </div>
+                            ) : (
+                              <div className="flex gap-3 mt-2">
+                                <a
+                                  href={`https://www.airbnb.mx/s/${encodeURIComponent(day.destination)}/homes`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-400 hover:underline text-sm"
+                                >
+                                  Buscar en Airbnb →
+                                </a>
+                                <a
+                                  href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(day.destination)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-400 hover:underline text-sm"
+                                >
+                                  Buscar en Booking →
+                                </a>
+                              </div>
+                            )}
                           </>
                         )}
                       </div>
+                    ) : (
+                      (isOwner || currentUserRole === "co-organizer") && (
+                        <div className="border-t border-gray-800 pt-4">
+                          <button
+                            onClick={() => handleAddAccommodation(dayIndex)}
+                            className="w-full text-gray-500 hover:text-blue-400 hover:bg-gray-800/50 text-sm py-3 rounded-xl transition border border-dashed border-gray-700 hover:border-blue-500/30"
+                          >
+                            + Agregar alojamiento
+                          </button>
+                        </div>
+                      )
                     )}
                   </div>
                   {dayIndex === itinerary.days.length - 1 &&
-                    (isOwner ||
-                      members.find((m) => m.user_id === currentUserId)?.role ===
-                        "co-organizer") && (
+                    (isOwner || currentUserRole === "co-organizer") && (
                       <button
                         onClick={() => handleAddDay("after", dayIndex)}
                         className="w-full text-gray-600 hover:text-blue-400 hover:bg-gray-800/50 text-xs py-2 rounded-xl transition border border-dashed border-transparent hover:border-gray-700 mt-2"
@@ -1274,6 +1385,7 @@ function TripDetail() {
           onClose={() => setExpenseDrawerOpen(false)}
           itineraryDays={itinerary?.days ?? []}
           myBudget={myBudget}
+          userCurrency={userCurrency}
         />
       )}
       {trip && (
@@ -1529,6 +1641,54 @@ function TripDetail() {
                 className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
               >
                 Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {accommodationExpenseModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-sm w-full space-y-4">
+            <p className="text-lg font-bold">¿Agregar a gastos?</p>
+            <p className="text-gray-400 text-sm">
+              ¿Quieres registrar el alojamiento{" "}
+              <span className="text-white font-semibold">
+                {accommodationExpenseModal.suggestion}
+              </span>{" "}
+              por{" "}
+              <span className="text-white font-semibold">
+                {accommodationExpenseModal.amount}{" "}
+                {accommodationExpenseModal.currency}
+              </span>{" "}
+              en tu lista de gastos?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setAccommodationExpenseModal(null)}
+                className="px-5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold transition"
+              >
+                No
+              </button>
+              <button
+                onClick={async () => {
+                  const day =
+                    itinerary!.days[accommodationExpenseModal.dayIndex];
+                  await addExpense({
+                    trip_id: trip!.id,
+                    amount: accommodationExpenseModal.amount,
+                    currency: accommodationExpenseModal.currency,
+                    category: "alojamiento",
+                    description:
+                      accommodationExpenseModal.suggestion || "Alojamiento",
+                    date: day.date,
+                    trip_day: day.day,
+                  });
+                  setAccommodationExpenseModal(null);
+                  showToast("Alojamiento agregado a gastos ✓");
+                }}
+                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+              >
+                Sí, agregar
               </button>
             </div>
           </div>

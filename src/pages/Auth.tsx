@@ -10,6 +10,8 @@ function Auth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
+  const [currency, setCurrency] = useState("MXN");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -33,6 +35,7 @@ function Auth() {
           id: data.user.id,
           email: email,
           name: name,
+          currency: currency,
         });
       }
     }
@@ -83,6 +86,27 @@ function Auth() {
                 placeholder="Tu nombre"
                 required
               />
+            </div>
+          )}
+          {!isLogin && (
+            <div>
+              <label className="text-gray-400 text-sm mb-1 block">
+                Moneda base
+              </label>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="MXN">🇲🇽 MXN — Peso mexicano</option>
+                <option value="USD">🇺🇸 USD — Dólar americano</option>
+                <option value="EUR">🇪🇺 EUR — Euro</option>
+                <option value="GBP">🇬🇧 GBP — Libra esterlina</option>
+                <option value="CAD">🇨🇦 CAD — Dólar canadiense</option>
+                <option value="ARS">🇦🇷 ARS — Peso argentino</option>
+                <option value="COP">🇨🇴 COP — Peso colombiano</option>
+                <option value="CLP">🇨🇱 CLP — Peso chileno</option>
+              </select>
             </div>
           )}
 

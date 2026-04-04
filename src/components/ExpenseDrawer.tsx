@@ -1,4 +1,4 @@
-import { Component, JSXElementConstructor, useState } from "react";
+import { Component, JSXElementConstructor, useEffect, useState } from "react";
 import { Trip, ExpenseCategory, ItineraryDay } from "../types/trip.types";
 import { useExpenses } from "../hooks/useExpenses";
 import CoinIcon from "./Icons/CoinIcon";
@@ -37,6 +37,7 @@ interface Props {
   onClose: () => void;
   itineraryDays: ItineraryDay[];
   myBudget: number | null;
+  userCurrency: string;
 }
 
 export function ExpenseDrawer({
@@ -45,6 +46,7 @@ export function ExpenseDrawer({
   onClose,
   itineraryDays,
   myBudget,
+  userCurrency,
 }: Props) {
   const {
     expenses,
@@ -59,7 +61,7 @@ export function ExpenseDrawer({
   const [activeFormDate, setActiveFormDate] = useState<string | null>(null);
   const [form, setForm] = useState<InlineFormState>({
     amount: "",
-    currency: "MXN",
+    currency: userCurrency,
     category: "otro",
     description: "",
   });
@@ -73,12 +75,21 @@ export function ExpenseDrawer({
     Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
   );
 
+  useEffect(() => {
+    setForm((prev) => ({ ...prev, currency: userCurrency }));
+  }, [userCurrency]);
+
   const categoryInfo = (cat: string) =>
     CATEGORIES.find((c) => c.value === cat) ?? { emoji: "📦", label: cat };
 
   const handleOpenForm = (date: string) => {
     setActiveFormDate(date);
-    setForm({ amount: "", currency: "MXN", category: "otro", description: "" });
+    setForm({
+      amount: "",
+      currency: userCurrency,
+      category: "otro",
+      description: "",
+    });
   };
 
   const handleCloseForm = () => {

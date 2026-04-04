@@ -10,7 +10,7 @@ const TrashIcon = () => {
       stroke-width="2"
       stroke-linecap="round"
       stroke-linejoin="round"
-      className="lucide lucide-trash2-icon lucide-trash-2 w-5 h-5"
+      className="lucide lucide-trash2-icon lucide-trash-2 w-4 h-4"
     >
       <path d="M10 11v6" />
       <path d="M14 11v6" />

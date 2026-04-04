@@ -12,6 +12,7 @@ interface TripState {
   startDate: string;
   endDate: string;
   totalPeople: number;
+  currency: string;
 
   // Step 2
   destinations: Destination[];
@@ -38,6 +39,7 @@ const initialState = {
   startDate: "",
   endDate: "",
   totalPeople: 1,
+  currency: "MXN",
   destinations: [],
   accommodationType: "together" as const,
   accommodationBudget: 0,

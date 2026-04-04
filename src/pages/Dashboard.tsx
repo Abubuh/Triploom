@@ -18,6 +18,7 @@ function Dashboard() {
   } | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currency, setCurrency] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -28,12 +29,14 @@ function Dashboard() {
 
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("name, email")
+        .select("name, email, currency")
         .eq("id", user.id)
         .single();
 
-      if (profileData) setProfile(profileData);
-
+      if (profileData) {
+        setProfile(profileData);
+        setCurrency(profileData.currency ?? "MXN");
+      }
       const { data: memberTrips } = await supabase
         .from("trip_members")
         .select("trip_id")
@@ -61,6 +64,14 @@ function Dashboard() {
     navigate("/");
   };
 
+  const handleCurrencyChange = async (newCurrency: string) => {
+    setCurrency(newCurrency);
+    await supabase
+      .from("profiles")
+      .update({ currency: newCurrency })
+      .eq("id", (await supabase.auth.getUser()).data.user!.id);
+  };
+
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Navbar */}
@@ -73,6 +84,22 @@ function Dashboard() {
             <UserIcon />
             Hola, {profile?.name || "Viajero"}
           </span>
+          {currency && (
+            <select
+              value={currency}
+              onChange={(e) => handleCurrencyChange(e.target.value)}
+              className="bg-gray-800 text-gray-400 hover:text-white text-sm rounded-lg px-2 py-1 outline-none border border-gray-700 hover:border-gray-500 transition"
+            >
+              <option value="MXN">MXN</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="CAD">CAD</option>
+              <option value="ARS">ARS</option>
+              <option value="COP">COP</option>
+              <option value="CLP">CLP</option>
+            </select>
+          )}
           <button
             onClick={handleLogout}
             className="text-gray-400 hover:text-white text-sm transition border-2 rounded-md px-2 py-1 border-gray-400 hover:border-white"

@@ -7,6 +7,7 @@ export interface Trip {
   status: string;
   owner_id: string;
   expected_members: number;
+  currency?: string;
 }
 
 export interface Destination {
@@ -47,11 +48,10 @@ export interface ItineraryActivity {
 export interface ItineraryAccommodation {
   suggestion: string;
   zone: string;
-  estimatedCost: string;
-  airbnbLink: string;
-  bookingLink: string;
+  amount: number;
+  currency: string;
+  accommodationLink: string;
 }
-
 export interface ItineraryDay {
   day: number;
   date: string;
@@ -111,3 +111,10 @@ export type DocumentCategory =
   | "seguro"
   | "visa"
   | "otro";
+
+export interface Profile {
+  id: string;
+  name: string;
+  email: string;
+  currency: string;
+}
