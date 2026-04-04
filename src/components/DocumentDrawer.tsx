@@ -20,11 +20,11 @@ const CATEGORIES: {
   {
     value: "transporte",
     label: "Transporte",
-    emoji: `${(<TransportIcon />)}`,
+    emoji: <TransportIcon />,
   },
-  { value: "seguro", label: "Seguro", emoji: `${(<InsuranceIcon />)}` },
-  { value: "visa", label: "Visa", emoji: `${(<VisaIcon />)}` },
-  { value: "otro", label: "Otro", emoji: `${(<DocumentIcon />)}` },
+  { value: "seguro", label: "Seguro", emoji: <InsuranceIcon /> },
+  { value: "visa", label: "Visa", emoji: <VisaIcon /> },
+  { value: "otro", label: "Otro", emoji: <DocumentIcon /> },
 ];
 
 type TabType = "file" | "link";
@@ -86,7 +86,9 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-800 shrink-0">
           <div>
-            <h2 className="text-lg font-bold">📄 Documentos</h2>
+            <h2 className="text-lg flex items-center gap-2 font-bold">
+              <DocumentIcon /> Documentos
+            </h2>
             <p className="text-gray-400 text-sm">{trip.name}</p>
           </div>
           <button
@@ -103,23 +105,23 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
           <div className="flex gap-2">
             <button
               onClick={() => setTab("file")}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition ${
                 tab === "file"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-800 text-gray-400 hover:bg-gray-700"
               }`}
             >
-              <ClipIcon /> Subir archivo
+              Subir archivo <ClipIcon />
             </button>
             <button
               onClick={() => setTab("link")}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
+              className={`flex-1 flex items-center gap-2 justify-center  py-2 rounded-lg text-sm font-medium transition ${
                 tab === "link"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-800 text-gray-400 hover:bg-gray-700"
               }`}
             >
-              <LinkIcon /> Agregar link
+              Agregar link <LinkIcon />
             </button>
           </div>
 
@@ -129,13 +131,13 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
               <button
                 key={cat.value}
                 onClick={() => setCategory(cat.value)}
-                className={`text-xs px-2 py-1 rounded-full transition ${
+                className={`text-xs px-2 py-1 flex items-center gap-2  mb-1 rounded-full transition ${
                   category === cat.value
                     ? "bg-blue-600 text-white"
                     : "bg-gray-800 text-gray-400 hover:bg-gray-700"
                 }`}
               >
-                {cat.emoji} {cat.label}
+                {cat.label} {cat.emoji}
               </button>
             ))}
           </div>
