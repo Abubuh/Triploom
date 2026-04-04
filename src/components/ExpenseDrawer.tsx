@@ -22,7 +22,7 @@ const CATEGORIES: {
   { value: "otro", label: "Otro", emoji: <BoxIcon /> },
 ];
 
-const CURRENCIES = ["MXN", "USD", "EUR", "GBP"];
+const CURRENCIES = ["MXN", "USD", "EUR", "GBP", "CAD", "ARS", "COP", "CLP"];
 
 interface InlineFormState {
   amount: string;
@@ -147,16 +147,17 @@ export function ExpenseDrawer({
                   {myBudget.toLocaleString("es-MX", {
                     minimumFractionDigits: 2,
                   })}{" "}
-                  MXN
+                  {userCurrency}
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-gray-400 text-xs">Gastado</p>
                 <p className="font-bold text-lg text-red-400">
-                  {(totalsByCurrency["MXN"] ?? 0).toLocaleString("es-MX", {
-                    minimumFractionDigits: 2,
-                  })}{" "}
-                  MXN
+                  {(totalsByCurrency[userCurrency] ?? 0).toLocaleString(
+                    "es-MX",
+                    { minimumFractionDigits: 2 },
+                  )}{" "}
+                  {userCurrency}
                 </p>
               </div>
             </div>
@@ -167,12 +168,12 @@ export function ExpenseDrawer({
             <div className="w-full bg-gray-800 rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all ${
-                  (totalsByCurrency["MXN"] ?? 0) > myBudget
+                  (totalsByCurrency[userCurrency] ?? 0) > myBudget
                     ? "bg-red-500"
                     : "bg-blue-500"
                 }`}
                 style={{
-                  width: `${Math.min(((totalsByCurrency["MXN"] ?? 0) / myBudget) * 100, 100)}%`,
+                  width: `${Math.min(((totalsByCurrency[userCurrency] ?? 0) / myBudget) * 100, 100)}%`,
                 }}
               />
             </div>
@@ -188,20 +189,17 @@ export function ExpenseDrawer({
                     : "text-green-400"
                 }`}
               >
-                {(myBudget - (totalsByCurrency["MXN"] ?? 0)).toLocaleString(
-                  "es-MX",
-                  {
-                    minimumFractionDigits: 2,
-                  },
-                )}{" "}
-                MXN
+                {(
+                  myBudget - (totalsByCurrency[userCurrency] ?? 0)
+                ).toLocaleString("es-MX", { minimumFractionDigits: 2 })}{" "}
+                {userCurrency}
               </p>
             </div>
           )}
 
           {/* Otras monedas */}
           {Object.entries(totalsByCurrency)
-            .filter(([currency]) => currency !== "MXN")
+            .filter(([currency]) => currency !== userCurrency)
             .map(([currency, total]) => (
               <div key={currency}>
                 <p className="text-gray-400 text-xs">{currency} gastado</p>
@@ -215,10 +213,10 @@ export function ExpenseDrawer({
             <p className="text-blue-400 text-xs">
               ~
               {(
-                (myBudget - (totalsByCurrency["MXN"] ?? 0)) /
+                (myBudget - (totalsByCurrency[userCurrency] ?? 0)) /
                 daysLeft
               ).toLocaleString("es-MX", { maximumFractionDigits: 0 })}{" "}
-              MXN/día restante
+              {`${userCurrency}/día restante`}
             </p>
           )}
         </div>

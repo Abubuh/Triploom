@@ -74,7 +74,7 @@ function TripDetail() {
     return members.find((m) => m.user_id === currentUserId)?.role ?? null;
   }, [members, currentUserId]);
   const { addExpense } = useExpenses(id as string);
-  const [userCurrency, setUserCurrency] = useState("MXN");
+  const userCurrency = trip?.currency ?? "MXN";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -158,15 +158,6 @@ function TripDetail() {
         if (myPrefs) setMyBudget(myPrefs.budget);
       }
 
-      if (user) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("currency")
-          .eq("id", user.id)
-          .single();
-
-        if (profileData) setUserCurrency(profileData.currency ?? "MXN");
-      }
       setLoading(false);
     };
 
