@@ -64,13 +64,14 @@ function TripDetail() {
   >(null);
   const [editingDay, setEditingDay] = useState<number | null>(null);
   const [roleMenuOpenFor, setRoleMenuOpenFor] = useState<string | null>(null);
-  const [pendingAccommodationExpense, setPendingAccommodationExpense] = useState<{
-    amount: number;
-    currency: string;
-    suggestion: string;
-    date: string;
-    trip_day: number;
-  } | null>(null);
+  const [pendingAccommodationExpense, setPendingAccommodationExpense] =
+    useState<{
+      amount: number;
+      currency: string;
+      suggestion: string;
+      date: string;
+      trip_day: number;
+    } | null>(null);
   const currentUserRole = useMemo(() => {
     return members.find((m) => m.user_id === currentUserId)?.role ?? null;
   }, [members, currentUserId]);
@@ -755,7 +756,6 @@ function TripDetail() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-semibold">{m.profiles?.name}</p>
-                    <p className="text-gray-400 text-sm">{m.profiles?.email}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span
@@ -1415,7 +1415,9 @@ function TripDetail() {
           myBudget={myBudget}
           userCurrency={userCurrency}
           pendingAccommodationExpense={pendingAccommodationExpense}
-          onAccommodationExpenseDone={() => setPendingAccommodationExpense(null)}
+          onAccommodationExpenseDone={() =>
+            setPendingAccommodationExpense(null)
+          }
         />
       )}
       {trip && (
