@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { Trip, Destination, Expense, Member } from "../types/trip.types";
+import { Trip, Destination, Member } from "../types/trip.types";
 import { generateItinerary } from "../lib/claude";
 import { GeneratedItinerary } from "../types/trip.types";
 import { ExpenseDrawer } from "../components/ExpenseDrawer";
@@ -63,16 +63,17 @@ function TripDetail() {
     number | null
   >(null);
   const [editingDay, setEditingDay] = useState<number | null>(null);
-  const [accommodationExpenseModal, setAccommodationExpenseModal] = useState<{
-    dayIndex: number;
+  const [roleMenuOpenFor, setRoleMenuOpenFor] = useState<string | null>(null);
+  const [pendingAccommodationExpense, setPendingAccommodationExpense] = useState<{
     amount: number;
     currency: string;
     suggestion: string;
+    date: string;
+    trip_day: number;
   } | null>(null);
   const currentUserRole = useMemo(() => {
     return members.find((m) => m.user_id === currentUserId)?.role ?? null;
   }, [members, currentUserId]);
-  const addExpenseRef = useRef<((expense: Omit<Expense, "id" | "created_at" | "user_id">) => Promise<void>) | null>(null);
   const userCurrency = trip?.currency ?? "MXN";
 
   useEffect(() => {
@@ -355,6 +356,23 @@ function TripDetail() {
 
     // Actualizar state
     setMembers((prev) => prev.filter((m) => m.id !== memberId));
+  };
+
+  const handleChangeRole = async (
+    memberId: string,
+    newRole: "co-organizer" | "traveler",
+  ) => {
+    const { error } = await supabase
+      .from("trip_members")
+      .update({ role: newRole })
+      .eq("id", memberId);
+
+    if (error) return;
+
+    setMembers((prev) =>
+      prev.map((m) => (m.id === memberId ? { ...m, role: newRole } : m)),
+    );
+    setRoleMenuOpenFor(null);
   };
 
   const handleUpdateDay = async (
@@ -762,6 +780,41 @@ function TripDetail() {
                         </>
                       )}
                     </span>
+
+                    {/* Kebab menu para cambiar rol (solo owner, solo no-owners) */}
+                    {isOwner && m.role !== "owner" && (
+                      <div className="relative">
+                        <button
+                          onClick={() =>
+                            setRoleMenuOpenFor(
+                              roleMenuOpenFor === m.id ? null : m.id,
+                            )
+                          }
+                          className="text-gray-500 hover:text-white px-1 transition text-lg leading-none"
+                        >
+                          ⋮
+                        </button>
+                        {roleMenuOpenFor === m.id && (
+                          <div className="absolute right-0 top-6 z-10 bg-gray-800 border border-gray-700 rounded-lg shadow-lg py-1 min-w-max">
+                            <button
+                              onClick={() =>
+                                handleChangeRole(
+                                  m.id,
+                                  m.role === "co-organizer"
+                                    ? "traveler"
+                                    : "co-organizer",
+                                )
+                              }
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 transition"
+                            >
+                              {m.role === "co-organizer"
+                                ? "Cambiar a viajero"
+                                : "Hacer co-organizador"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Owner puede remover a otros */}
                     {isOwner && m.user_id !== currentUserId && (
@@ -1250,11 +1303,12 @@ function TripDetail() {
                                   day.accommodation?.amount &&
                                   day.accommodation.amount > 0
                                 ) {
-                                  setAccommodationExpenseModal({
-                                    dayIndex,
+                                  setPendingAccommodationExpense({
                                     amount: day.accommodation.amount,
                                     currency: day.accommodation.currency,
                                     suggestion: day.accommodation.suggestion,
+                                    date: day.date,
+                                    trip_day: day.day,
                                   });
                                 }
                               }}
@@ -1360,7 +1414,8 @@ function TripDetail() {
           itineraryDays={itinerary?.days ?? []}
           myBudget={myBudget}
           userCurrency={userCurrency}
-          onAddExpenseReady={(fn) => { addExpenseRef.current = fn; }}
+          pendingAccommodationExpense={pendingAccommodationExpense}
+          onAccommodationExpenseDone={() => setPendingAccommodationExpense(null)}
         />
       )}
       {trip && (
@@ -1621,54 +1676,7 @@ function TripDetail() {
           </div>
         </div>
       )}
-      {accommodationExpenseModal && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-sm w-full space-y-4">
-            <p className="text-lg font-bold">¿Agregar a gastos?</p>
-            <p className="text-gray-400 text-sm">
-              ¿Quieres registrar el alojamiento{" "}
-              <span className="text-white font-semibold">
-                {accommodationExpenseModal.suggestion}
-              </span>{" "}
-              por{" "}
-              <span className="text-white font-semibold">
-                {accommodationExpenseModal.amount}{" "}
-                {accommodationExpenseModal.currency}
-              </span>{" "}
-              en tu lista de gastos?
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setAccommodationExpenseModal(null)}
-                className="px-5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold transition"
-              >
-                No
-              </button>
-              <button
-                onClick={async () => {
-                  const day =
-                    itinerary!.days[accommodationExpenseModal.dayIndex];
-                  await addExpenseRef.current?.({
-                    trip_id: trip!.id,
-                    amount: accommodationExpenseModal.amount,
-                    currency: accommodationExpenseModal.currency,
-                    category: "alojamiento",
-                    description:
-                      accommodationExpenseModal.suggestion || "Alojamiento",
-                    date: day.date,
-                    trip_day: day.day,
-                  });
-                  setAccommodationExpenseModal(null);
-                  showToast("Alojamiento agregado a gastos ✓");
-                }}
-                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
-              >
-                Sí, agregar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
       {toastMessage && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-sm px-5 py-3 rounded-xl shadow-lg z-50 transition">
           <CheckIcon /> {toastMessage}

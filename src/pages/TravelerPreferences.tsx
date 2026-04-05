@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import {
@@ -23,6 +23,18 @@ function TravelerPreferences() {
   const [travelPace, setTravelPace] = useState<
     "relaxed" | "moderate" | "intense"
   >("moderate");
+  const [tripCurrency, setTripCurrency] = useState("MXN");
+
+  useEffect(() => {
+    supabase
+      .from("trips")
+      .select("currency")
+      .eq("id", tripId)
+      .single()
+      .then(({ data }) => {
+        if (data?.currency) setTripCurrency(data.currency);
+      });
+  }, [tripId]);
 
   const toggleOption = (field: "food" | "activity", value: string) => {
     if (field === "food") {
@@ -114,7 +126,7 @@ function TravelerPreferences() {
                 ¿Cuál es tu presupuesto?
               </h2>
               <p className="text-gray-400">
-                Tu presupuesto personal para este viaje en MXN
+                {`Tu presupuesto personal para este viaje en ${tripCurrency}`}
               </p>
             </div>
             <input

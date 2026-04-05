@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Trip, Expense, ExpenseCategory, ItineraryDay } from "../types/trip.types";
+import { Trip, ExpenseCategory, ItineraryDay } from "../types/trip.types";
 import { useExpenses } from "../hooks/useExpenses";
 import CoinIcon from "./Icons/CoinIcon";
 import FoodIcon from "./Icons/FoodIcon";
@@ -31,7 +31,13 @@ interface InlineFormState {
   description: string;
 }
 
-type AddExpenseFn = (expense: Omit<Expense, "id" | "created_at" | "user_id">) => Promise<void>;
+interface PendingAccommodationExpense {
+  amount: number;
+  currency: string;
+  suggestion: string;
+  date: string;
+  trip_day: number;
+}
 
 interface Props {
   trip: Trip;
@@ -40,7 +46,8 @@ interface Props {
   itineraryDays: ItineraryDay[];
   myBudget: number | null;
   userCurrency: string;
-  onAddExpenseReady?: (addExpense: AddExpenseFn) => void;
+  pendingAccommodationExpense: PendingAccommodationExpense | null;
+  onAccommodationExpenseDone: () => void;
 }
 
 export function ExpenseDrawer({
@@ -50,7 +57,8 @@ export function ExpenseDrawer({
   itineraryDays,
   myBudget,
   userCurrency,
-  onAddExpenseReady,
+  pendingAccommodationExpense,
+  onAccommodationExpenseDone,
 }: Props) {
   const {
     expenses,
@@ -82,10 +90,6 @@ export function ExpenseDrawer({
   useEffect(() => {
     setForm((prev) => ({ ...prev, currency: userCurrency }));
   }, [userCurrency]);
-
-  useEffect(() => {
-    onAddExpenseReady?.(addExpense);
-  }, [addExpense, onAddExpenseReady]);
 
   const categoryInfo = (cat: string) =>
     CATEGORIES.find((c) => c.value === cat) ?? { emoji: "📦", label: cat };
@@ -120,15 +124,15 @@ export function ExpenseDrawer({
     setSubmitting(false);
   };
 
-  if (!isOpen) return null;
-
   return (
     <>
-      {/* Overlay */}
-      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
+      {isOpen && (
+        <>
+          {/* Overlay */}
+          <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
 
-      {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-gray-900 border-l border-gray-800 z-50 flex flex-col shadow-2xl">
+          {/* Drawer */}
+          <div className="fixed right-0 top-0 h-full w-full max-w-md bg-gray-900 border-l border-gray-800 z-50 flex flex-col shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-800 shrink-0">
           <div>
@@ -405,7 +409,55 @@ export function ExpenseDrawer({
             })
           )}
         </div>
-      </div>
+        </div>
+        </>
+      )}
+
+      {pendingAccommodationExpense && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-sm w-full space-y-4">
+            <p className="text-lg font-bold">¿Agregar a gastos?</p>
+            <p className="text-gray-400 text-sm">
+              ¿Quieres registrar el alojamiento{" "}
+              <span className="text-white font-semibold">
+                {pendingAccommodationExpense.suggestion}
+              </span>{" "}
+              por{" "}
+              <span className="text-white font-semibold">
+                {pendingAccommodationExpense.amount}{" "}
+                {pendingAccommodationExpense.currency}
+              </span>{" "}
+              en tu lista de gastos?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={onAccommodationExpenseDone}
+                className="px-5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold transition"
+              >
+                No
+              </button>
+              <button
+                onClick={async () => {
+                  await addExpense({
+                    trip_id: trip.id,
+                    amount: pendingAccommodationExpense.amount,
+                    currency: pendingAccommodationExpense.currency,
+                    category: "alojamiento",
+                    description:
+                      pendingAccommodationExpense.suggestion || "Alojamiento",
+                    date: pendingAccommodationExpense.date,
+                    trip_day: pendingAccommodationExpense.trip_day,
+                  });
+                  onAccommodationExpenseDone();
+                }}
+                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+              >
+                Sí, agregar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
