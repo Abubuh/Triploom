@@ -71,13 +71,26 @@ Responde ÚNICAMENTE con un JSON válido con esta estructura exacta, sin texto a
   ]
 }`;
 
-  const response = await fetch("/api/generate-itinerary", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ prompt }),
-  });
+  const response = import.meta.env.DEV
+    ? await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5",
+          max_tokens: 8000,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      })
+    : await fetch("/api/generate-itinerary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
 
   const data = await response.json();
   const text = data.content[0].text;
@@ -90,8 +103,6 @@ Responde ÚNICAMENTE con un JSON válido con esta estructura exacta, sin texto a
       const query = encodeURIComponent(
         `${day.accommodation.zone} ${day.destination}`,
       );
-      day.accommodation.airbnbLink = `https://www.airbnb.com.mx/s/${query}`;
-      day.accommodation.bookingLink = `https://www.booking.com/search?ss=${query}`;
     }
     return day;
   });
