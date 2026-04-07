@@ -29,6 +29,7 @@ import TrashIcon from "../components/Icons/TrashIcon.tsx";
 import DocumentIcon from "../components/Icons/DocumentIcon.tsx";
 import MoneyIcon from "../components/Icons/MoneyIcon.tsx";
 import CheckIcon from "../components/Icons/CheckIcon.tsx";
+import CoOrganizerIcon from "../components/Icons/CoOrganizerIcon.tsx";
 
 function TripDetail() {
   const { id } = useParams();
@@ -772,7 +773,9 @@ function TripDetail() {
                           <CrownIcon /> Owner
                         </>
                       ) : m.role === "co-organizer" ? (
-                        "🔧 Co-organizador"
+                        <>
+                          <CoOrganizerIcon /> Co-organizador
+                        </>
                       ) : (
                         <>
                           <PlaneIcon />
