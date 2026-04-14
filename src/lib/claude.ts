@@ -1,7 +1,6 @@
 import {
   GeneratedItinerary,
   GenerateItineraryParams,
-  ItineraryDay,
 } from "../types/trip.types";
 
 export const generateItinerary = async ({
@@ -14,42 +13,49 @@ export const generateItinerary = async ({
     .join(" → ");
 
   const membersText = members
+    .filter((m) => m.member_preferences)
     .map((m) => {
-      const prefs = m.member_preferences;
-      if (!prefs) return `- ${m.profiles.name}: sin preferencias registradas`;
-      return `- ${m.profiles.name}: presupuesto $${prefs.budget} MXN, ritmo ${prefs.travel_pace}, comida: ${prefs.food_preferences.join(", ") || "sin preferencia"}, actividades: ${prefs.activity_preferences.join(", ") || "sin preferencia"}, lugares de interés: ${prefs.attractions_preferences?.join(", ") || "sin preferencia"}`;
+      const prefs = m.member_preferences!;
+      const parts = [`- ${m.profiles.name}`];
+      if (prefs.budget)
+        parts.push(`presupuesto $${prefs.budget} ${trip.currency ?? "MXN"}`);
+      if (prefs.travel_pace) parts.push(`ritmo ${prefs.travel_pace}`);
+      if (prefs.food_preferences?.length)
+        parts.push(`comida: ${prefs.food_preferences.join(", ")}`);
+      if (prefs.activity_preferences?.length)
+        parts.push(`actividades: ${prefs.activity_preferences.join(", ")}`);
+      if (prefs.attractions_preferences?.length)
+        parts.push(`visitar: ${prefs.attractions_preferences.join(", ")}`);
+      return parts.join(", ");
     })
     .join("\n");
-
-  const prompt = `Eres un experto organizador de viajes con amplio conocimiento de precios reales en México y el mundo. Conoces los costos promedio de transporte, restaurantes, actividades y alojamiento en cada destino.
-
+  const accommodationInstruction =
+    trip.accommodation_type === "together"
+      ? `El grupo se aloja JUNTO — sugiere UN solo Airbnb o casa grande para todos. El costo del alojamiento es compartido entre ${members.length} personas.`
+      : `Cada viajero se aloja POR SEPARADO — sugiere zonas económicas con buenas opciones de hoteles u hostales individuales. El costo es personal.`;
+  const prompt = `
+Genera un itinerario día a día basado en estos datos:"
 VIAJE: ${trip.name}
 FECHAS: ${trip.start_date} al ${trip.end_date}
-ALOJAMIENTO: ${trip.accommodation_type === "together" ? "Todos juntos" : "Por separado"}
+ALOJAMIENTO: ${accommodationInstruction}
+MONEDA: ${trip.currency ?? "MXN"}
 RUTA: ${destinationsText}
 
-VIAJEROS Y PREFERENCIAS:
+VIAJEROS:
 ${membersText}
 
-INSTRUCCIONES:
-- Genera un itinerario día a día considerando las preferencias de todos los viajeros
-- Usa precios REALES y actuales del destino — considera que los presupuestos están en MXN
-- Sugiere restaurantes, actividades y lugares con buena reputación, que sean tradición local, muy recomendados por viajeros o reconocidos en el destino — no solo los más baratos sino los que valen la pena
-- Prioriza lugares icónicos, con historia, bien valorados o que la gente suele recomendar en ese destino
-- Para destinos mexicanos considera precios realistas en MXN
-- Considera los lugares de interés mencionados por los viajeros e inclúyelos en el itinerario
-- Para alojamiento sugiere la mejor zona según el grupo
-- Los costos estimados deben ser precisos y coherentes con el destino
-- Todo lo anterior tomando en cuenta las preferencias de comida, actividades y lugares de interés de cada viajero — no sugieras algo que claramente no encaja con lo que el grupo prefiere
+- Usa precios reales en ${trip.currency ?? "MXN"}
+- Prioriza lugares icónicos y bien valorados
+- Respeta las preferencias de comida, actividades y lugares de interés
 
-Responde ÚNICAMENTE con un JSON válido con esta estructura exacta, sin texto adicional, sin markdown, sin backticks:
+Responde ÚNICAMENTE con este JSON:
 {
   "summary": "resumen breve del viaje",
   "budgetWarnings": [],
   "days": [
     {
       "day": 1,
-      "date": "2026-03-31",
+      "date": "YYYY-MM-DD",
       "destination": "Ciudad",
       "activities": [
         {
@@ -57,15 +63,12 @@ Responde ÚNICAMENTE con un JSON válido con esta estructura exacta, sin texto a
           "title": "Nombre actividad",
           "description": "Descripción breve",
           "type": "activity",
-          "estimatedCost": "$200 MXN"
+          "estimatedCost": "200 ${trip.currency ?? "MXN"}"
         }
       ],
       "accommodation": {
-        "suggestion": "Nombre del tipo de lugar",
-        "zone": "Colonia o zona recomendada",
-        "estimatedCost": "$800 MXN por noche",
-        "airbnbLink": "https://www.airbnb.com.mx/s/Zona--Ciudad",
-        "bookingLink": "https://www.booking.com/search?ss=Zona+Ciudad"
+        "suggestion": "Nombre del lugar",
+        "zone": "Zona recomendada"
       }
     }
   ]
@@ -82,7 +85,17 @@ Responde ÚNICAMENTE con un JSON válido con esta estructura exacta, sin texto a
         },
         body: JSON.stringify({
           model: "claude-haiku-4-5",
-          max_tokens: 8000,
+          max_tokens: Math.min(
+            500 + destinations.reduce((acc, d) => acc + d.days, 0) * 350,
+            3000,
+          ),
+          system: [
+            {
+              type: "text",
+              text: "Eres un experto organizador de viajes. Respondes ÚNICAMENTE con JSON válido, sin texto adicional ni backticks.",
+              cache_control: { type: "ephemeral" },
+            },
+          ],
           messages: [{ role: "user", content: prompt }],
         }),
       })
@@ -96,16 +109,6 @@ Responde ÚNICAMENTE con un JSON válido con esta estructura exacta, sin texto a
   const text = data.content[0].text;
   const clean = text.replace(/```json|```/g, "").trim();
   const parsed: GeneratedItinerary = JSON.parse(clean);
-
-  // Generar links reales por zona y ciudad
-  parsed.days = parsed.days.map((day) => {
-    if (day.accommodation) {
-      const query = encodeURIComponent(
-        `${day.accommodation.zone} ${day.destination}`,
-      );
-    }
-    return day;
-  });
 
   return parsed;
 };
