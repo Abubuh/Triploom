@@ -57,18 +57,20 @@ export function ChatPanel({
     console.log(
       "Itinerary tokens aprox:",
       Math.round(itineraryJson.length / 4),
-    ); // ← agrega esto
+    );
 
     return {
-      instructions: `Eres un agente de viajes experto y amigable.
-Respondes preguntas sobre el itinerario y ayudas al viajero.
-Si el usuario pide un CAMBIO al itinerario, responde con una explicación
-breve y el itinerario completo modificado dentro de tags:
+      instructions: `Eres un agente de viajes conciso y amigable.
+Tu único rol es ayudar al usuario con su itinerario y los destinos de su viaje.
+Respondes de forma breve y directa, sin listas innecesarias ni emojis excesivos.
+Puedes responder preguntas sobre lugares, restaurantes, transporte y actividades relacionadas con los destinos del viaje.
+Si el usuario pregunta algo completamente ajeno al viaje (clima de otro país, noticias, etc), redirígelo: "Solo puedo ayudarte con tu viaje. ¿Tienes alguna pregunta sobre tu itinerario o destinos?"
+
+Si el usuario pide un CAMBIO al itinerario, responde con una explicación breve y el itinerario completo modificado dentro de tags:
 <itinerary_update>{ ...JSON completo... }</itinerary_update>
+Cuando agregues o modifiques actividades, conserva SIEMPRE todas las actividades existentes. Solo reorganiza horarios si es necesario para acomodar la nueva actividad. Cuando el usuario diga "X tiempo después de Y actividad", suma ese tiempo exactamente al horario de inicio de Y. No estimes duración de actividades.
 Si no hay cambios, NUNCA incluyas JSON.
-Responde siempre en el idioma del usuario.
-Solo respondes preguntas relacionadas con el viaje y el itinerario.
-Si el usuario pregunta algo fuera de ese contexto, recuérdales amablemente que eres un asistente de viajes.`,
+Responde siempre en el idioma del usuario.`,
       itineraryText: `ITINERARIO ACTUAL DEL VIAJE "${trip.name}":\n${itineraryJson}`,
     };
   };
@@ -76,6 +78,24 @@ Si el usuario pregunta algo fuera de ese contexto, recuérdales amablemente que 
     conversationMessages: ChatMessage[],
   ): Promise<string> => {
     const { instructions, itineraryText } = buildSystemParts();
+    const lastAssistantIdx = conversationMessages.reduce(
+      (last, msg, i) => (msg.role === "assistant" ? i : last),
+      -1,
+    );
+    const apiMessages = conversationMessages.map((msg, i) =>
+      i === lastAssistantIdx
+        ? {
+            role: msg.role,
+            content: [
+              {
+                type: "text",
+                text: msg.content,
+                cache_control: { type: "ephemeral" },
+              },
+            ],
+          }
+        : msg,
+    );
 
     const response = import.meta.env.DEV
       ? await fetch("https://api.anthropic.com/v1/messages", {
@@ -98,7 +118,7 @@ Si el usuario pregunta algo fuera de ese contexto, recuérdales amablemente que 
                 cache_control: { type: "ephemeral" },
               },
             ],
-            messages: conversationMessages,
+            messages: apiMessages,
           }),
         })
       : await fetch("/api/chat-itinerary", {
@@ -107,7 +127,7 @@ Si el usuario pregunta algo fuera de ese contexto, recuérdales amablemente que 
           body: JSON.stringify({
             instructions,
             itineraryText,
-            messages: conversationMessages,
+            messages: apiMessages,
           }),
         });
 
