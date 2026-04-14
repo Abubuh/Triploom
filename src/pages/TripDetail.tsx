@@ -9,6 +9,7 @@ import { DocumentDrawer } from "../components/DocumentDrawer";
 import { WarningModal } from "../components/TripDetail/WarningModal";
 import { MembersSection } from "../components/TripDetail/MembersSection";
 import { ItinerarySection } from "../components/TripDetail/ItinerarySection";
+import { ChatPanel } from "../components/TripDetail/ChatPanel";
 import PlaneIcon from "../components/Icons/PlaneIcon";
 import House from "../components/Icons/House";
 import HotelIcon from "../components/Icons/HotelIcon.tsx";
@@ -37,6 +38,8 @@ function TripDetail() {
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [updatingItinerary, setUpdatingItinerary] = useState(false);
   const [pendingAccommodationExpense, setPendingAccommodationExpense] =
     useState<{
       amount: number;
@@ -238,6 +241,30 @@ function TripDetail() {
     }
   };
 
+  const handleChatItineraryUpdate = async (updated: GeneratedItinerary) => {
+    if (!trip) return;
+    setUpdatingItinerary(true);
+    try {
+      setItinerary(updated);
+      await supabase.from("itinerary_days").delete().eq("trip_id", trip.id);
+      await supabase.from("itinerary_days").insert(
+        updated.days.map((day) => ({
+          trip_id: trip.id,
+          day_number: day.day,
+          date: day.date,
+          destination: day.destination,
+          activities: day,
+        })),
+      );
+      showToast("Itinerario actualizado");
+    } catch (err) {
+      console.error("Error actualizando itinerario desde chat:", err);
+      showToast("Error al actualizar el itinerario");
+    } finally {
+      setUpdatingItinerary(false);
+    }
+  };
+
   if (loading)
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
@@ -379,19 +406,32 @@ function TripDetail() {
         />
         {/* Itinerario */}
         {itinerary && (
-          <ItinerarySection
-            trip={trip}
-            itinerary={itinerary}
-            isOwner={isOwner}
-            currentUserRole={currentUserRole}
-            userCurrency={userCurrency}
-            onItineraryChange={setItinerary}
-            onPendingAccommodationExpense={setPendingAccommodationExpense}
-          />
+          <div className="relative">
+            {updatingItinerary && (
+              <div className="absolute inset-0 bg-gray-950/70 z-10 flex items-center justify-center rounded-2xl">
+                <p className="text-blue-400 text-sm font-semibold animate-pulse">
+                  Actualizando itinerario...
+                </p>
+              </div>
+            )}
+            <ItinerarySection
+              trip={trip}
+              itinerary={itinerary}
+              isOwner={isOwner}
+              currentUserRole={currentUserRole}
+              userCurrency={userCurrency}
+              onItineraryChange={setItinerary}
+              onPendingAccommodationExpense={setPendingAccommodationExpense}
+            />
+          </div>
         )}
       </main>
       {/* Botones flotantes */}
-      <div className="fixed bottom-8 right-8 flex gap-3 z-30">
+      <div
+        className={`fixed bottom-8 flex gap-3 z-30 transition-all duration-300 ${
+          chatOpen ? "right-8 md:right-[26rem]" : "right-8"
+        }`}
+      >
         <button
           onClick={() => setDocumentDrawerOpen(true)}
           className="bg-gray-800 hover:bg-gray-700 text-white px-5 py-3 rounded-2xl font-semibold shadow-lg transition flex items-center gap-2"
@@ -403,6 +443,12 @@ function TripDetail() {
           className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-2xl font-semibold shadow-lg transition flex items-center gap-2"
         >
           <MoneyIcon /> Gastos
+        </button>
+        <button
+          onClick={() => setChatOpen((prev) => !prev)}
+          className="bg-gray-800 hover:bg-gray-700 text-white px-5 py-3 rounded-2xl font-semibold shadow-lg transition flex items-center gap-2"
+        >
+          <StarsIcon /> Agente
         </button>
       </div>
       {trip && (
@@ -441,6 +487,14 @@ function TripDetail() {
           <CheckIcon /> {toastMessage}
         </div>
       )}
+
+      <ChatPanel
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        itinerary={itinerary}
+        trip={trip}
+        onItineraryUpdate={handleChatItineraryUpdate}
+      />
     </div>
   );
 }
