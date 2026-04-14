@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import type { User } from "@supabase/supabase-js";
 import PlaneIcon from "../components/Icons/PlaneIcon";
 
 interface InviteData {
@@ -19,7 +20,7 @@ function InvitePage() {
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchInvite = async () => {

@@ -23,8 +23,26 @@ function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
+      if (event === "SIGNED_IN" && session?.user) {
+        const user = session.user;
+        if (user.app_metadata.provider === "google") {
+          const { data: existingProfile } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("id", user.id)
+            .single();
+          if (!existingProfile) {
+            await supabase.from("profiles").insert({
+              id: user.id,
+              email: user.email,
+              name: user.user_metadata.full_name ?? user.email,
+              currency: "MXN",
+            });
+          }
+        }
+      }
     });
 
     return () => subscription.unsubscribe();
