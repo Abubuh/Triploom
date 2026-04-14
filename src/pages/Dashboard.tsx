@@ -9,6 +9,8 @@ import House from "../components/Icons/House";
 import HotelIcon from "../components/Icons/HotelIcon";
 import DocumentIcon from "../components/Icons/DocumentIcon";
 import CheckIcon from "../components/Icons/CheckIcon";
+import EditIcon from "../components/Icons/EditIcon";
+import TrashIcon from "../components/Icons/TrashIcon";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -19,6 +21,12 @@ function Dashboard() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [hoveredTripId, setHoveredTripId] = useState<string | null>(null);
+  const [openMenuTripId, setOpenMenuTripId] = useState<string | null>(null);
+  const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", start_date: "", end_date: "" });
+  const [deletingTripId, setDeletingTripId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,6 +34,8 @@ function Dashboard() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
+
+      setUserId(user.id);
 
       const { data: profileData } = await supabase
         .from("profiles")
@@ -70,6 +80,22 @@ function Dashboard() {
       .from("profiles")
       .update({ currency: newCurrency })
       .eq("id", (await supabase.auth.getUser()).data.user!.id);
+  };
+
+  const handleDeleteTrip = async (tripId: string) => {
+    await supabase.from("trips").delete().eq("id", tripId);
+    setTrips(trips.filter((t) => t.id !== tripId));
+    setDeletingTripId(null);
+  };
+
+  const handleEditTrip = async () => {
+    if (!editingTrip) return;
+    await supabase
+      .from("trips")
+      .update({ name: editForm.name, start_date: editForm.start_date, end_date: editForm.end_date })
+      .eq("id", editingTrip.id);
+    setTrips(trips.map((t) => (t.id === editingTrip.id ? { ...t, ...editForm } : t)));
+    setEditingTrip(null);
   };
 
   return (
@@ -153,8 +179,57 @@ function Dashboard() {
               <div
                 key={trip.id}
                 onClick={() => navigate(`/trips/${trip.id}`)}
-                className="bg-gray-900 rounded-2xl p-6 cursor-pointer hover:bg-gray-800 transition"
+                onMouseEnter={() => setHoveredTripId(trip.id)}
+                onMouseLeave={() => {
+                  setHoveredTripId(null);
+                  setOpenMenuTripId(null);
+                }}
+                className="relative bg-gray-900 rounded-2xl p-6 cursor-pointer hover:bg-gray-800 transition"
               >
+                {trip.owner_id === userId && hoveredTripId === trip.id && (
+                  <div
+                    className="absolute top-4 right-4"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() =>
+                        setOpenMenuTripId(
+                          openMenuTripId === trip.id ? null : trip.id,
+                        )
+                      }
+                      className="text-gray-400 hover:text-white px-1 transition text-lg leading-none"
+                    >
+                      ⋮
+                    </button>
+                    {openMenuTripId === trip.id && (
+                      <div className="absolute right-0 top-6 z-10 bg-gray-800 border border-gray-700 rounded-lg shadow-lg py-1 min-w-max">
+                        <button
+                          onClick={() => {
+                            setEditingTrip(trip);
+                            setEditForm({
+                              name: trip.name,
+                              start_date: trip.start_date,
+                              end_date: trip.end_date,
+                            });
+                            setOpenMenuTripId(null);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 transition flex items-center gap-2"
+                        >
+                          <EditIcon /> Editar
+                        </button>
+                        <button
+                          onClick={() => {
+                            setDeletingTripId(trip.id);
+                            setOpenMenuTripId(null);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 text-red-400 transition flex items-center gap-2"
+                        >
+                          <TrashIcon /> Eliminar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <h3 className="text-xl font-bold mb-2">{trip.name}</h3>
                 <p className="text-gray-400 text-sm mb-3">
                   {trip.start_date} → {trip.end_date}
@@ -197,6 +272,83 @@ function Dashboard() {
           </div>
         )}
       </main>
+
+      {/* Modal de edición */}
+      {editingTrip && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-md w-full space-y-6">
+            <h3 className="text-xl font-bold">Editar viaje</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-gray-400 mb-1 block">Nombre</label>
+                <input
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full bg-gray-800 rounded-xl px-4 py-2 text-white outline-none border border-gray-700 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-400 mb-1 block">Fecha de inicio</label>
+                <input
+                  type="date"
+                  value={editForm.start_date}
+                  onChange={(e) => setEditForm({ ...editForm, start_date: e.target.value })}
+                  className="w-full bg-gray-800 rounded-xl px-4 py-2 text-white outline-none border border-gray-700 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-400 mb-1 block">Fecha de fin</label>
+                <input
+                  type="date"
+                  value={editForm.end_date}
+                  onChange={(e) => setEditForm({ ...editForm, end_date: e.target.value })}
+                  className="w-full bg-gray-800 rounded-xl px-4 py-2 text-white outline-none border border-gray-700 focus:border-blue-500"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setEditingTrip(null)}
+                className="px-5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleEditTrip}
+                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación de borrado */}
+      {deletingTripId && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-md w-full space-y-6">
+            <h3 className="text-xl font-bold">¿Eliminar viaje?</h3>
+            <p className="text-gray-400 text-sm">
+              Esta acción no se puede deshacer. Se eliminará el viaje y todos sus datos.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setDeletingTripId(null)}
+                className="px-5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleDeleteTrip(deletingTripId)}
+                className="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
