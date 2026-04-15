@@ -385,9 +385,12 @@ export function ItinerarySection({
                       <span className="text-gray-500 text-sm w-12 shrink-0">
                         {activity.time}
                       </span>
-                      <div className="tl-spine">
-                        <div className="tl-dot" />
-                        <div className="tl-line" />{" "}
+
+                      <div className="flex flex-col items-center">
+                        <div className="w-2.5 h-2.5 rounded-full bg-blue-600 border-2 border-[#111121]  z-10 shrink-0" />
+                        {dayIndex < day.activities.length - 1 && (
+                          <div className="w-px flex-1 bg-white" />
+                        )}
                       </div>
                       <div className="flex-1">
                         {editingActivity?.dayIndex === dayIndex &&
