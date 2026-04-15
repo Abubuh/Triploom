@@ -34,7 +34,7 @@ export const generateItinerary = async ({
       ? `El grupo se aloja JUNTO — sugiere UN solo Airbnb o casa grande para todos. El costo del alojamiento es compartido entre ${members.length} personas.`
       : `Cada viajero se aloja POR SEPARADO — sugiere zonas económicas con buenas opciones de hoteles u hostales individuales. El costo es personal.`;
   const prompt = `
-Genera un itinerario día a día basado en estos datos:"
+Genera un itinerario día a día basado en estos datos:
 VIAJE: ${trip.name}
 FECHAS: ${trip.start_date} al ${trip.end_date}
 ALOJAMIENTO: ${accommodationInstruction}
@@ -85,10 +85,7 @@ Responde ÚNICAMENTE con este JSON:
         },
         body: JSON.stringify({
           model: "claude-haiku-4-5",
-          max_tokens: Math.min(
-            500 + destinations.reduce((acc, d) => acc + d.days, 0) * 350,
-            3000,
-          ),
+          max_tokens: 8000,
           system: [
             {
               type: "text",
@@ -107,8 +104,13 @@ Responde ÚNICAMENTE con este JSON:
 
   const data = await response.json();
   const text = data.content[0].text;
-  const clean = text.replace(/```json|```/g, "").trim();
-  const parsed: GeneratedItinerary = JSON.parse(clean);
+  const clean = text
+    .replace(/```json|```/g, "")
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
+    .trim();
+  const jsonMatch = clean.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error("No JSON found in response");
+  const parsed: GeneratedItinerary = JSON.parse(jsonMatch[0]);
 
   return parsed;
 };

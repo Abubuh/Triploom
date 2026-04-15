@@ -374,23 +374,33 @@ function TripDetail() {
         <section>
           <h3 className="text-xl flex gap-1 items-center font-semibold mb-4">
             <MapIcon />
-            Ruta
+            Destino(s)
           </h3>
-          <div className="flex flex-wrap gap-3">
-            {destinations.map((d, i) => (
-              <div key={d.id} className="flex items-center gap-2">
-                <div className="bg-gray-800 rounded-xl px-4 py-3">
-                  <p className="font-semibold">{d.city}</p>
-                  <p className="text-gray-400 text-sm">
-                    {d.country} · {d.days} días
-                  </p>
+
+          {destinations.length === 1 ? (
+            <p className="text-lg font-semibold">
+              {destinations[0].city},{" "}
+              <span className="text-gray-400 font-normal">
+                {destinations[0].country}
+              </span>
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {destinations.map((d, i) => (
+                <div key={d.id} className="flex items-center gap-2">
+                  <div className="bg-gray-800 rounded-xl px-4 py-3">
+                    <p className="font-semibold">{d.city}</p>
+                    <p className="text-gray-400 text-sm">
+                      {d.country} · {d.days} días
+                    </p>
+                  </div>
+                  {i < destinations.length - 1 && (
+                    <span className="text-gray-600">→</span>
+                  )}
                 </div>
-                {i < destinations.length - 1 && (
-                  <span className="text-gray-600">→</span>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Miembros y preferencias */}

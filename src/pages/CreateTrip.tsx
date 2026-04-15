@@ -103,6 +103,13 @@ function CreateTrip() {
       return;
     }
 
+    // Agregar owner como miembro primero (requerido por RLS de destinations)
+    await supabase.from("trip_members").insert({
+      trip_id: trip.id,
+      user_id: user.id,
+      role: "owner",
+    });
+
     // Agregar destinos
     if (store.destinations.length > 0) {
       await supabase.from("destinations").insert(
@@ -115,13 +122,6 @@ function CreateTrip() {
         })),
       );
     }
-
-    // Agregar owner como miembro
-    await supabase.from("trip_members").insert({
-      trip_id: trip.id,
-      user_id: user.id,
-      role: "owner",
-    });
 
     // Guardar preferencias
     await supabase.from("member_preferences").insert({
