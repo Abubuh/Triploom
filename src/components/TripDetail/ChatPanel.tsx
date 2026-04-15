@@ -50,15 +50,6 @@ export function ChatPanel({
     const itineraryJson = itinerary
       ? JSON.stringify(itinerary, null, 2)
       : "Aún no hay itinerario generado.";
-    console.log(
-      "Itinerary tokens aprox:",
-      Math.round(itineraryJson.length / 4),
-    ); // ← agrega esto
-    console.log(
-      "Itinerary tokens aprox:",
-      Math.round(itineraryJson.length / 4),
-    );
-
     return {
       instructions: `Eres un agente de viajes conciso y amigable.
 Tu único rol es ayudar al usuario con su itinerario y los destinos de su viaje.
@@ -132,8 +123,6 @@ Responde siempre en el idioma del usuario.`,
         });
 
     const data = await response.json();
-    console.log("Token usage:", data.usage);
-    console.log("Full response:", JSON.stringify(data.usage));
     return data.content[0].text as string;
   };
 
