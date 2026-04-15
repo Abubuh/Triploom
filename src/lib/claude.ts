@@ -40,13 +40,15 @@ FECHAS: ${trip.start_date} al ${trip.end_date}
 ALOJAMIENTO: ${accommodationInstruction}
 MONEDA: ${trip.currency ?? "MXN"}
 RUTA: ${destinationsText}
+Si hay múltiples destinos, optimiza el orden geográfico para minimizar 
+distancias de traslado y maximizar tiempo en cada lugar.
 
 VIAJEROS:
 ${membersText}
 
 - Usa precios reales en ${trip.currency ?? "MXN"}
-- Prioriza lugares icónicos y bien valorados
-- Respeta las preferencias de comida, actividades y lugares de interés
+- Genera entre 2 a 4 actividades por día, considerando el ritmo de viaje de cada viajero
+- Prioriza lugares icónicos y bien valorados, BASADOS en preferencias de comida, actividades y lugares de interés
 
 Responde ÚNICAMENTE con este JSON:
 {
@@ -74,33 +76,11 @@ Responde ÚNICAMENTE con este JSON:
   ]
 }`;
 
-  const response = import.meta.env.DEV
-    ? await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: "claude-haiku-4-5",
-          max_tokens: 8000,
-          system: [
-            {
-              type: "text",
-              text: "Eres un experto organizador de viajes. Respondes ÚNICAMENTE con JSON válido, sin texto adicional ni backticks.",
-              cache_control: { type: "ephemeral" },
-            },
-          ],
-          messages: [{ role: "user", content: prompt }],
-        }),
-      })
-    : await fetch("/api/generate-itinerary", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
+  const response = await fetch("/api/generate-itinerary", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt }),
+  });
 
   const data = await response.json();
   const text = data.content[0].text;

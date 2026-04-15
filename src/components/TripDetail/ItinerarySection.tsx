@@ -308,11 +308,7 @@ export function ItinerarySection({
                       type="text"
                       value={day.destination}
                       onChange={(e) =>
-                        handleUpdateDay(
-                          dayIndex,
-                          "destination",
-                          e.target.value,
-                        )
+                        handleUpdateDay(dayIndex, "destination", e.target.value)
                       }
                       className="flex-1 bg-gray-800 text-white rounded-lg px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Destino"
@@ -389,6 +385,10 @@ export function ItinerarySection({
                       <span className="text-gray-500 text-sm w-12 shrink-0">
                         {activity.time}
                       </span>
+                      <div className="tl-spine">
+                        <div className="tl-dot" />
+                        <div className="tl-line" />{" "}
+                      </div>
                       <div className="flex-1">
                         {editingActivity?.dayIndex === dayIndex &&
                         editingActivity?.activityIndex === i ? (
