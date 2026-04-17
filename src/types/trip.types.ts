@@ -37,27 +37,47 @@ export interface Member {
   member_preferences: MemberPreferences | null;
 }
 
+export interface ActivityCost {
+  min: number;
+  max: number;
+}
+
 export interface ItineraryActivity {
-  time: string;
+  id: string;
+  time_start: string;
+  time_end: string;
   title: string;
   description: string;
-  type: "food" | "activity" | "transport" | "accommodation";
-  estimatedCost?: string;
+  estimated_cost: ActivityCost;
+  location: string;
+  type: "actividad" | "buffer";
+  full_day: boolean;
 }
 
 export interface ItineraryAccommodation {
-  suggestion: string;
+  name: string;
   zone: string;
   amount: number;
   currency: string;
-  accommodationLink: string;
+  airbnb_url: string | null;
+  booking_url: string | null;
 }
+
+export interface DaySummary {
+  total_hours: number;
+  total_cost_min: number;
+  total_cost_max: number;
+  activity_count: number;
+}
+
 export interface ItineraryDay {
-  day: number;
+  day_number: number;
   date: string;
   destination: string;
+  flags: string[];
   activities: ItineraryActivity[];
-  accommodation?: ItineraryAccommodation;
+  accommodation: ItineraryAccommodation;
+  day_summary: DaySummary;
 }
 
 export interface GeneratedItinerary {

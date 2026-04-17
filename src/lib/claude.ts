@@ -2,95 +2,52 @@ import {
   GeneratedItinerary,
   GenerateItineraryParams,
 } from "../types/trip.types";
+import { buildPrompt } from "./itinerary/phase1";
+import { validateItinerary } from "./itinerary/phase2";
+import { postProcess } from "./itinerary/phase3";
 
-export const generateItinerary = async ({
-  trip,
-  destinations,
-  members,
-}: GenerateItineraryParams): Promise<GeneratedItinerary> => {
-  const destinationsText = destinations
-    .map((d) => `${d.city}, ${d.country} (${d.days} días)`)
-    .join(" → ");
-
-  const membersText = members
-    .filter((m) => m.member_preferences)
-    .map((m) => {
-      const prefs = m.member_preferences!;
-      const parts = [`- ${m.profiles.name}`];
-      if (prefs.budget)
-        parts.push(`presupuesto $${prefs.budget} ${trip.currency ?? "MXN"}`);
-      if (prefs.travel_pace) parts.push(`ritmo ${prefs.travel_pace}`);
-      if (prefs.food_preferences?.length)
-        parts.push(`comida: ${prefs.food_preferences.join(", ")}`);
-      if (prefs.activity_preferences?.length)
-        parts.push(`actividades: ${prefs.activity_preferences.join(", ")}`);
-      if (prefs.attractions_preferences?.length)
-        parts.push(`visitar: ${prefs.attractions_preferences.join(", ")}`);
-      return parts.join(", ");
-    })
-    .join("\n");
-  const accommodationInstruction =
-    trip.accommodation_type === "together"
-      ? `El grupo se aloja JUNTO — sugiere UN solo Airbnb o casa grande para todos. El costo del alojamiento es compartido entre ${members.length} personas.`
-      : `Cada viajero se aloja POR SEPARADO — sugiere zonas económicas con buenas opciones de hoteles u hostales individuales. El costo es personal.`;
-  const prompt = `
-Genera un itinerario día a día basado en estos datos:
-VIAJE: ${trip.name}
-FECHAS: ${trip.start_date} al ${trip.end_date}
-ALOJAMIENTO: ${accommodationInstruction}
-MONEDA: ${trip.currency ?? "MXN"}
-RUTA: ${destinationsText}
-Si hay múltiples destinos, optimiza el orden geográfico para minimizar 
-distancias de traslado y maximizar tiempo en cada lugar.
-
-VIAJEROS:
-${membersText}
-
-- Usa precios reales en ${trip.currency ?? "MXN"}
-- Genera entre 2 a 4 actividades por día, considerando el ritmo de viaje de cada viajero
-- Prioriza lugares icónicos y bien valorados, BASADOS en preferencias de comida, actividades y lugares de interés
-
-Responde ÚNICAMENTE con este JSON:
-{
-  "summary": "resumen breve del viaje",
-  "budgetWarnings": [],
-  "days": [
-    {
-      "day": 1,
-      "date": "YYYY-MM-DD",
-      "destination": "Ciudad",
-      "activities": [
-        {
-          "time": "09:00",
-          "title": "Nombre actividad",
-          "description": "Descripción breve",
-          "type": "activity",
-          "estimatedCost": "200 ${trip.currency ?? "MXN"}"
-        }
-      ],
-      "accommodation": {
-        "suggestion": "Nombre del lugar",
-        "zone": "Zona recomendada"
-      }
-    }
-  ]
-}`;
-
+async function callClaudeAPI(prompt: string): Promise<string> {
   const response = await fetch("/api/generate-itinerary", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prompt }),
   });
 
-  const data = await response.json();
-  const text = data.content[0].text;
-  const clean = text
-    .replace(/```json|```/g, "")
-    .replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
-    .trim();
-  const jsonMatch = clean.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error("No JSON found in response");
-  const parsed: GeneratedItinerary = JSON.parse(jsonMatch[0]);
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status} ${response.statusText}`);
+  }
 
-  return parsed;
+  const data = await response.json();
+
+  if (data.type === "error" || !data.content) {
+    throw new Error(
+      `Anthropic API error: ${data.error?.message ?? data.message ?? JSON.stringify(data)}`,
+    );
+  }
+
+  return data.content[0].text as string;
+}
+
+export const generateItinerary = async (
+  params: GenerateItineraryParams,
+): Promise<GeneratedItinerary> => {
+  const prompt = buildPrompt(params);
+  const raw = await callClaudeAPI(prompt);
+
+  const { itinerary, issues, summary, budgetWarnings } = validateItinerary(
+    raw,
+    params,
+  );
+
+  const days = postProcess(itinerary, issues);
+
+  const warningMessages = issues
+    .filter((i) => i.type !== "hora_limite_excedida")
+    .map((i) => i.message);
+
+  return {
+    summary,
+    budgetWarnings: [...budgetWarnings, ...warningMessages],
+    days,
+  };
 };

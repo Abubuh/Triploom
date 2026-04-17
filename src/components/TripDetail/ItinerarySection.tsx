@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { Trip, GeneratedItinerary } from "../../types/trip.types";
+import { Trip, GeneratedItinerary, ItineraryActivity } from "../../types/trip.types";
 import CalendarIcon from "../Icons/CalendarIcon";
 import WarningIcon from "../Icons/WarningIcon";
 import EditIcon from "../Icons/EditIcon";
@@ -58,7 +58,7 @@ export function ItinerarySection({
   const handleUpdateActivity = async (
     dayIndex: number,
     activityIndex: number,
-    field: "title" | "description" | "time" | "estimatedCost",
+    field: keyof Pick<ItineraryActivity, "title" | "description" | "time_start" | "time_end" | "location">,
     value: string,
   ) => {
     const updatedDays = [...itinerary.days];
@@ -73,7 +73,32 @@ export function ItinerarySection({
       .from("itinerary_days")
       .update({ activities: updatedDays[dayIndex] })
       .eq("trip_id", trip.id)
-      .eq("day_number", updatedDays[dayIndex].day);
+      .eq("day_number", updatedDays[dayIndex].day_number);
+  };
+
+  const handleUpdateActivityCost = async (
+    dayIndex: number,
+    activityIndex: number,
+    field: "min" | "max",
+    value: number,
+  ) => {
+    const updatedDays = [...itinerary.days];
+    const current = updatedDays[dayIndex].activities[activityIndex];
+    updatedDays[dayIndex].activities[activityIndex] = {
+      ...current,
+      estimated_cost: {
+        ...current.estimated_cost,
+        [field]: value,
+      },
+    };
+
+    onItineraryChange({ ...itinerary, days: updatedDays });
+
+    await supabase
+      .from("itinerary_days")
+      .update({ activities: updatedDays[dayIndex] })
+      .eq("trip_id", trip.id)
+      .eq("day_number", updatedDays[dayIndex].day_number);
   };
 
   const handleAddActivity = async (
@@ -81,12 +106,16 @@ export function ItinerarySection({
     position: "before" | "after",
     activityIndex: number,
   ) => {
-    const newActivity = {
-      time: "12:00",
+    const newActivity: ItineraryActivity = {
+      id: `manual-${Date.now()}`,
+      time_start: "12:00",
+      time_end: "13:00",
       title: "Nueva actividad",
       description: "Descripción de la actividad",
-      type: "activity" as const,
-      estimatedCost: "",
+      estimated_cost: { min: 0, max: 0 },
+      location: "",
+      type: "actividad",
+      full_day: false,
     };
 
     const updatedDays = [...itinerary.days];
@@ -108,7 +137,7 @@ export function ItinerarySection({
       .from("itinerary_days")
       .update({ activities: updatedDays[dayIndex] })
       .eq("trip_id", trip.id)
-      .eq("day_number", updatedDays[dayIndex].day);
+      .eq("day_number", updatedDays[dayIndex].day_number);
 
     setEditingActivity({ dayIndex, activityIndex: insertAt });
   };
@@ -130,7 +159,7 @@ export function ItinerarySection({
       .from("itinerary_days")
       .update({ activities: updatedDays[dayIndex] })
       .eq("trip_id", trip.id)
-      .eq("day_number", updatedDays[dayIndex].day);
+      .eq("day_number", updatedDays[dayIndex].day_number);
   };
 
   const handleUpdateDay = async (
@@ -150,7 +179,7 @@ export function ItinerarySection({
       .from("itinerary_days")
       .update({ [field]: value, activities: updatedDays[dayIndex] })
       .eq("trip_id", trip.id)
-      .eq("day_number", updatedDays[dayIndex].day);
+      .eq("day_number", updatedDays[dayIndex].day_number);
   };
 
   const handleDeleteDay = async (dayIndex: number) => {
@@ -158,7 +187,7 @@ export function ItinerarySection({
 
     const updatedDays = itinerary.days
       .filter((_, i) => i !== dayIndex)
-      .map((d, idx) => ({ ...d, day: idx + 1 }));
+      .map((d, idx) => ({ ...d, day_number: idx + 1 }));
 
     onItineraryChange({ ...itinerary, days: updatedDays });
     setSelectedDayIndex((i) =>
@@ -170,7 +199,7 @@ export function ItinerarySection({
       await supabase.from("itinerary_days").insert(
         updatedDays.map((d) => ({
           trip_id: trip.id,
-          day_number: d.day,
+          day_number: d.day_number,
           date: d.date,
           destination: d.destination,
           activities: d,
@@ -194,18 +223,32 @@ export function ItinerarySection({
     }
 
     const newDay = {
-      day: 0,
+      day_number: 0,
       date: newDate.toISOString().split("T")[0],
       destination: referenceDay.destination,
+      flags: [],
       activities: [],
-      accommodation: undefined,
+      accommodation: {
+        name: "",
+        zone: "",
+        amount: 0,
+        currency: userCurrency,
+        airbnb_url: null,
+        booking_url: null,
+      },
+      day_summary: {
+        total_hours: 0,
+        total_cost_min: 0,
+        total_cost_max: 0,
+        activity_count: 0,
+      },
     };
 
     const updatedDays = [...itinerary.days];
     const insertAt = position === "before" ? dayIndex : dayIndex + 1;
     updatedDays.splice(insertAt, 0, newDay);
 
-    const renumbered = updatedDays.map((d, idx) => ({ ...d, day: idx + 1 }));
+    const renumbered = updatedDays.map((d, idx) => ({ ...d, day_number: idx + 1 }));
 
     onItineraryChange({ ...itinerary, days: renumbered });
     if (position === "after") setSelectedDayIndex(dayIndex + 1);
@@ -215,7 +258,7 @@ export function ItinerarySection({
     await supabase.from("itinerary_days").insert(
       renumbered.map((d) => ({
         trip_id: trip.id,
-        day_number: d.day,
+        day_number: d.day_number,
         date: d.date,
         destination: d.destination,
         activities: d,
@@ -225,14 +268,14 @@ export function ItinerarySection({
 
   const handleUpdateAccommodation = async (
     dayIndex: number,
-    field: "suggestion" | "zone" | "amount" | "currency" | "accommodationLink",
+    field: "name" | "zone" | "amount" | "currency" | "airbnb_url" | "booking_url",
     value: string | number,
   ) => {
     const updatedDays = [...itinerary.days];
     updatedDays[dayIndex] = {
       ...updatedDays[dayIndex],
       accommodation: {
-        ...updatedDays[dayIndex].accommodation!,
+        ...updatedDays[dayIndex].accommodation,
         [field]: value,
       },
     };
@@ -241,7 +284,7 @@ export function ItinerarySection({
       .from("itinerary_days")
       .update({ activities: updatedDays[dayIndex] })
       .eq("trip_id", trip.id)
-      .eq("day_number", updatedDays[dayIndex].day);
+      .eq("day_number", updatedDays[dayIndex].day_number);
   };
 
   const handleAddAccommodation = async (dayIndex: number) => {
@@ -249,11 +292,12 @@ export function ItinerarySection({
     updatedDays[dayIndex] = {
       ...updatedDays[dayIndex],
       accommodation: {
-        suggestion: "",
+        name: "",
         zone: "",
         amount: 0,
         currency: userCurrency,
-        accommodationLink: "",
+        airbnb_url: null,
+        booking_url: null,
       },
     };
 
@@ -263,9 +307,19 @@ export function ItinerarySection({
       .from("itinerary_days")
       .update({ activities: updatedDays[dayIndex] })
       .eq("trip_id", trip.id)
-      .eq("day_number", updatedDays[dayIndex].day);
+      .eq("day_number", updatedDays[dayIndex].day_number);
 
     setEditingAccommodation(dayIndex);
+  };
+
+  // Backward compat: old itineraries stored in Supabase use `time`, new ones use `time_start`
+  const getTime = (activity: ItineraryActivity): string =>
+    activity.time_start ?? (activity as unknown as { time?: string }).time ?? "";
+
+  const FLAG_LABELS: Record<string, string> = {
+    día_pesado: "Día pesado",
+    recomendado_dividir: "Considera dividir este día",
+    sin_almuerzo: "Sin almuerzo planeado",
   };
 
   return (
@@ -292,7 +346,7 @@ export function ItinerarySection({
       <div className="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-none">
         {itinerary.days.map((day, i) => (
           <button
-            key={day.day}
+            key={day.day_number}
             onClick={() => setSelectedDayIndex(i)}
             className={
               i === selectedDayIndex
@@ -300,7 +354,7 @@ export function ItinerarySection({
                 : "shrink-0 px-4 py-1.5 rounded-full text-sm text-gray-400 border border-gray-700 hover:border-gray-500 transition"
             }
           >
-            Día {day.day}
+            Día {day.day_number}
           </button>
         ))}
       </div>
@@ -331,9 +385,9 @@ export function ItinerarySection({
           return (
             <div className="relative group/day">
               <div className="bg-gray-900 rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-3 mb-4 flex-wrap">
                   <span className="bg-blue-600 text-white text-sm font-bold px-3 py-1 rounded-full">
-                    Día {day.day}
+                    Día {day.day_number}
                   </span>
 
                   {editingDay === dayIndex ? (
@@ -397,176 +451,287 @@ export function ItinerarySection({
                   )}
                 </div>
 
+                {/* Flags del día */}
+                {day.flags && day.flags.length > 0 && (
+                  <div className="flex gap-2 flex-wrap mb-4">
+                    {day.flags.map((flag) => (
+                      <span
+                        key={flag}
+                        className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/20"
+                      >
+                        {FLAG_LABELS[flag] ?? flag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Resumen del día */}
+                {day.day_summary && (day.day_summary.total_hours > 0 || day.day_summary.activity_count > 0) && (
+                  <div className="flex gap-4 mb-4 text-xs text-gray-500">
+                    <span>{day.day_summary.activity_count} actividades</span>
+                    <span>{day.day_summary.total_hours}h planeadas</span>
+                    {day.day_summary.total_cost_max > 0 && (
+                      <span>
+                        {day.day_summary.total_cost_min.toLocaleString()}–{day.day_summary.total_cost_max.toLocaleString()} {trip.currency ?? "MXN"}
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-3 mb-4">
                   {day.activities.map((activity, i) => (
-                    <div key={i} className="relative group/activity">
-                      {/* Botón agregar ANTES */}
-                      {(isOwner || currentUserRole === "co-organizer") && (
-                        <div className="flex items-center gap-2 opacity-0 group-hover/activity:opacity-100 transition my-1">
-                          <div className="flex-1 h-px bg-gray-800" />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddActivity(dayIndex, "before", i);
-                            }}
-                            className="text-gray-600 hover:text-blue-400 hover:bg-gray-800 text-xs px-3 py-0.5 rounded-full transition shrink-0"
-                          >
-                            + Agregar antes
-                          </button>
-                          <div className="flex-1 h-px bg-gray-800" />
+                    <div key={activity.id ?? i} className="relative group/activity">
+                      {/* Buffer de traslado */}
+                      {activity.type === "buffer" ? (
+                        <div className="flex gap-4 py-1 opacity-50">
+                          <span className="text-gray-600 text-xs w-12 shrink-0">
+                            {getTime(activity)}
+                          </span>
+                          <div className="flex flex-col items-center">
+                            <div className="w-px flex-1 border-l border-dashed border-gray-700" />
+                          </div>
+                          <span className="text-gray-600 text-xs italic self-center">
+                            {activity.title}
+                          </span>
                         </div>
-                      )}
-
-                      <div
-                        className="flex gap-4 group cursor-pointer"
-                        onClick={() => {
-                          if (
-                            currentUserRole !== "owner" &&
-                            currentUserRole !== "co-organizer"
-                          )
-                            return;
-                          setEditingActivity(
-                            editingActivity?.dayIndex === dayIndex &&
-                              editingActivity?.activityIndex === i
-                              ? null
-                              : { dayIndex, activityIndex: i },
-                          );
-                        }}
-                      >
-                        <span className="text-gray-500 text-sm w-12 shrink-0">
-                          {activity.time}
-                        </span>
-
-                        <div className="flex flex-col items-center">
-                          <div className="w-2.5 h-2.5 rounded-full bg-blue-600 border-2 border-[#111121]  z-10 shrink-0" />
-                          {dayIndex < day.activities.length - 1 && (
-                            <div className="w-px flex-1 bg-white" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          {editingActivity?.dayIndex === dayIndex &&
-                          editingActivity?.activityIndex === i ? (
-                            <div
-                              className="space-y-2"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <input
-                                type="time"
-                                value={activity.time}
-                                onChange={(e) =>
-                                  handleUpdateActivity(
-                                    dayIndex,
-                                    i,
-                                    "time",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                              <input
-                                type="text"
-                                value={activity.title}
-                                onChange={(e) =>
-                                  handleUpdateActivity(
-                                    dayIndex,
-                                    i,
-                                    "title",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                              <textarea
-                                value={activity.description}
-                                onChange={(e) =>
-                                  handleUpdateActivity(
-                                    dayIndex,
-                                    i,
-                                    "description",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                                rows={2}
-                              />
-                              <input
-                                type="text"
-                                value={activity.estimatedCost ?? ""}
-                                onChange={(e) =>
-                                  handleUpdateActivity(
-                                    dayIndex,
-                                    i,
-                                    "estimatedCost",
-                                    e.target.value,
-                                  )
-                                }
-                                placeholder="Costo estimado (ej. $200 MXN)"
-                                className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                              />
+                      ) : (
+                        <>
+                          {/* Botón agregar ANTES */}
+                          {(isOwner || currentUserRole === "co-organizer") && (
+                            <div className="flex items-center gap-2 opacity-0 group-hover/activity:opacity-100 transition my-1">
+                              <div className="flex-1 h-px bg-gray-800" />
                               <button
-                                onClick={() => setEditingActivity(null)}
-                                className="text-blue-400 text-xs hover:underline border border-blue-400 px-3 py-1 rounded-full transition "
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddActivity(dayIndex, "before", i);
+                                }}
+                                className="text-gray-600 hover:text-blue-400 hover:bg-gray-800 text-xs px-3 py-0.5 rounded-full transition shrink-0"
                               >
-                                ✓ Listo
+                                + Agregar antes
                               </button>
+                              <div className="flex-1 h-px bg-gray-800" />
                             </div>
-                          ) : (
-                            <>
-                              <p className="font-semibold text-sm group-hover:text-blue-400 transition flex gap-2 items-center">
-                                {activity.title}
-                                {(isOwner ||
-                                  currentUserRole === "co-organizer") && (
-                                  <span className="text-gray-600 hover:text-yellow-400 text-xs ml-2 items-center text-center opacity-0 group-hover:opacity-100 flex gap-1 transition">
-                                    Editar
-                                    <EditIcon />
-                                  </span>
-                                )}
-                                {"  "}
-                                {(isOwner ||
-                                  currentUserRole === "co-organizer") && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteActivity(dayIndex, i);
-                                    }}
-                                    className="text-gray-600 flex items-center hover:text-red-400 text-xs transition opacity-0 group-hover:opacity-100 gap-1"
-                                  >
-                                    Eliminar <TrashIcon />
-                                  </button>
-                                )}
-                              </p>
-                              <p className="text-gray-400 text-sm">
-                                {activity.description}
-                              </p>
-                              {activity.estimatedCost && (
-                                <p className="text-blue-400 text-xs mt-1">
-                                  {activity.estimatedCost}
-                                </p>
-                              )}
-                            </>
                           )}
-                        </div>
-                      </div>
 
-                      {/* Botón agregar DESPUÉS */}
-                      {(isOwner || currentUserRole === "co-organizer") && (
-                        <div className="flex items-center gap-2 opacity-0 group-hover/activity:opacity-100 transition my-1">
-                          <div className="flex-1 h-px bg-gray-800" />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddActivity(dayIndex, "after", i);
+                          <div
+                            className="flex gap-4 group cursor-pointer"
+                            onClick={() => {
+                              if (
+                                currentUserRole !== "owner" &&
+                                currentUserRole !== "co-organizer"
+                              )
+                                return;
+                              setEditingActivity(
+                                editingActivity?.dayIndex === dayIndex &&
+                                  editingActivity?.activityIndex === i
+                                  ? null
+                                  : { dayIndex, activityIndex: i },
+                              );
                             }}
-                            className="text-gray-600 hover:text-blue-400 hover:bg-gray-800 text-xs px-3 py-0.5 rounded-full transition shrink-0"
                           >
-                            + Agregar despues
-                          </button>
-                          <div className="flex-1 h-px bg-gray-800" />
-                        </div>
+                            <span className="text-gray-500 text-sm w-12 shrink-0">
+                              {getTime(activity)}
+                            </span>
+
+                            <div className="flex flex-col items-center">
+                              <div className="w-2.5 h-2.5 rounded-full bg-blue-600 border-2 border-[#111121] z-10 shrink-0" />
+                              {i < day.activities.length - 1 && (
+                                <div className="w-px flex-1 bg-white" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              {editingActivity?.dayIndex === dayIndex &&
+                              editingActivity?.activityIndex === i ? (
+                                <div
+                                  className="space-y-2"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div className="flex gap-2">
+                                    <div className="flex-1">
+                                      <label className="text-xs text-gray-500 mb-1 block">Inicio</label>
+                                      <input
+                                        type="time"
+                                        value={activity.time_start}
+                                        onChange={(e) =>
+                                          handleUpdateActivity(
+                                            dayIndex,
+                                            i,
+                                            "time_start",
+                                            e.target.value,
+                                          )
+                                        }
+                                        className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <label className="text-xs text-gray-500 mb-1 block">Fin</label>
+                                      <input
+                                        type="time"
+                                        value={activity.time_end}
+                                        onChange={(e) =>
+                                          handleUpdateActivity(
+                                            dayIndex,
+                                            i,
+                                            "time_end",
+                                            e.target.value,
+                                          )
+                                        }
+                                        className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                      />
+                                    </div>
+                                  </div>
+                                  <input
+                                    type="text"
+                                    value={activity.title}
+                                    onChange={(e) =>
+                                      handleUpdateActivity(
+                                        dayIndex,
+                                        i,
+                                        "title",
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                  />
+                                  <textarea
+                                    value={activity.description}
+                                    onChange={(e) =>
+                                      handleUpdateActivity(
+                                        dayIndex,
+                                        i,
+                                        "description",
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                    rows={2}
+                                  />
+                                  <input
+                                    type="text"
+                                    value={activity.location}
+                                    onChange={(e) =>
+                                      handleUpdateActivity(
+                                        dayIndex,
+                                        i,
+                                        "location",
+                                        e.target.value,
+                                      )
+                                    }
+                                    placeholder="Ubicación"
+                                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                  />
+                                  <div className="flex gap-2 items-center">
+                                    <span className="text-xs text-gray-500 shrink-0">Costo ({trip.currency ?? "MXN"})</span>
+                                    <input
+                                      type="number"
+                                      value={activity.estimated_cost?.min ?? 0}
+                                      onChange={(e) =>
+                                        handleUpdateActivityCost(
+                                          dayIndex,
+                                          i,
+                                          "min",
+                                          Number(e.target.value),
+                                        )
+                                      }
+                                      placeholder="Mín"
+                                      className="flex-1 bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                    <span className="text-gray-600">–</span>
+                                    <input
+                                      type="number"
+                                      value={activity.estimated_cost?.max ?? 0}
+                                      onChange={(e) =>
+                                        handleUpdateActivityCost(
+                                          dayIndex,
+                                          i,
+                                          "max",
+                                          Number(e.target.value),
+                                        )
+                                      }
+                                      placeholder="Máx"
+                                      className="flex-1 bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                  </div>
+                                  <button
+                                    onClick={() => setEditingActivity(null)}
+                                    className="text-blue-400 text-xs hover:underline border border-blue-400 px-3 py-1 rounded-full transition "
+                                  >
+                                    ✓ Listo
+                                  </button>
+                                </div>
+                              ) : (
+                                <>
+                                  <p className="font-semibold text-sm group-hover:text-blue-400 transition flex gap-2 items-center">
+                                    {activity.title}
+                                    {(isOwner ||
+                                      currentUserRole === "co-organizer") && (
+                                      <span className="text-gray-600 hover:text-yellow-400 text-xs ml-2 items-center text-center opacity-0 group-hover:opacity-100 flex gap-1 transition">
+                                        Editar
+                                        <EditIcon />
+                                      </span>
+                                    )}
+                                    {"  "}
+                                    {(isOwner ||
+                                      currentUserRole === "co-organizer") && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteActivity(dayIndex, i);
+                                        }}
+                                        className="text-gray-600 flex items-center hover:text-red-400 text-xs transition opacity-0 group-hover:opacity-100 gap-1"
+                                      >
+                                        Eliminar <TrashIcon />
+                                      </button>
+                                    )}
+                                  </p>
+                                  <p className="text-gray-400 text-sm">
+                                    {activity.description}
+                                  </p>
+                                  {activity.location && (
+                                    <p className="text-gray-600 text-xs mt-0.5">
+                                      📍 {activity.location}
+                                    </p>
+                                  )}
+                                  {activity.estimated_cost &&
+                                    (activity.estimated_cost.min > 0 ||
+                                      activity.estimated_cost.max > 0) && (
+                                      <p className="text-blue-400 text-xs mt-1">
+                                        {activity.estimated_cost.min === activity.estimated_cost.max
+                                          ? `${activity.estimated_cost.min.toLocaleString()} ${trip.currency ?? "MXN"}`
+                                          : `${activity.estimated_cost.min.toLocaleString()}–${activity.estimated_cost.max.toLocaleString()} ${trip.currency ?? "MXN"}`}
+                                      </p>
+                                    )}
+                                  {activity.time_end && (
+                                    <p className="text-gray-600 text-xs mt-0.5">
+                                      Hasta las {activity.time_end}
+                                    </p>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Botón agregar DESPUÉS */}
+                          {(isOwner || currentUserRole === "co-organizer") && (
+                            <div className="flex items-center gap-2 opacity-0 group-hover/activity:opacity-100 transition my-1">
+                              <div className="flex-1 h-px bg-gray-800" />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddActivity(dayIndex, "after", i);
+                                }}
+                                className="text-gray-600 hover:text-blue-400 hover:bg-gray-800 text-xs px-3 py-0.5 rounded-full transition shrink-0"
+                              >
+                                + Agregar despues
+                              </button>
+                              <div className="flex-1 h-px bg-gray-800" />
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   ))}
-                  {day.activities.length === 0 &&
+                  {day.activities.filter((a) => a.type === "actividad").length === 0 &&
                     (isOwner || currentUserRole === "co-organizer") && (
                       <button
                         onClick={() => handleAddActivity(dayIndex, "after", -1)}
@@ -577,7 +742,7 @@ export function ItinerarySection({
                     )}
                 </div>
 
-                {day.accommodation ? (
+                {day.accommodation && (day.accommodation.name || (isOwner || currentUserRole === "co-organizer")) ? (
                   <div className="border-t border-gray-800 pt-4">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-gray-400 text-sm flex gap-2 items-center">
@@ -611,11 +776,11 @@ export function ItinerarySection({
                       <div className="space-y-2">
                         <input
                           type="text"
-                          value={day.accommodation.suggestion}
+                          value={day.accommodation.name}
                           onChange={(e) =>
                             handleUpdateAccommodation(
                               dayIndex,
-                              "suggestion",
+                              "name",
                               e.target.value,
                             )
                           }
@@ -669,15 +834,28 @@ export function ItinerarySection({
                         </div>
                         <input
                           type="text"
-                          value={day.accommodation.accommodationLink}
+                          value={day.accommodation.airbnb_url ?? ""}
                           onChange={(e) =>
                             handleUpdateAccommodation(
                               dayIndex,
-                              "accommodationLink",
+                              "airbnb_url",
                               e.target.value,
                             )
                           }
-                          placeholder="Link de reserva (Airbnb, Booking, etc.)"
+                          placeholder="Link de Airbnb"
+                          className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <input
+                          type="text"
+                          value={day.accommodation.booking_url ?? ""}
+                          onChange={(e) =>
+                            handleUpdateAccommodation(
+                              dayIndex,
+                              "booking_url",
+                              e.target.value,
+                            )
+                          }
+                          placeholder="Link de Booking"
                           className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <button
@@ -690,9 +868,9 @@ export function ItinerarySection({
                               onPendingAccommodationExpense({
                                 amount: day.accommodation.amount,
                                 currency: day.accommodation.currency,
-                                suggestion: day.accommodation.suggestion,
+                                suggestion: day.accommodation.name,
                                 date: day.date,
-                                trip_day: day.day,
+                                trip_day: day.day_number,
                               });
                             }
                           }}
@@ -704,7 +882,7 @@ export function ItinerarySection({
                     ) : (
                       <>
                         <p className="font-semibold">
-                          {day.accommodation.suggestion || "Sin nombre"}
+                          {day.accommodation.name || "Sin nombre"}
                         </p>
                         <p className="text-gray-400 text-sm">
                           {day.accommodation.zone &&
@@ -715,15 +893,29 @@ export function ItinerarySection({
                           {day.accommodation.amount > 0 &&
                             `${day.accommodation.amount} ${day.accommodation.currency}`}
                         </p>
-                        {day.accommodation.accommodationLink ? (
-                          <a
-                            href={day.accommodation.accommodationLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-400 hover:underline text-sm mt-2 inline-block"
-                          >
-                            Ver reserva →
-                          </a>
+                        {day.accommodation.airbnb_url || day.accommodation.booking_url ? (
+                          <div className="flex gap-3 mt-2">
+                            {day.accommodation.airbnb_url && (
+                              <a
+                                href={day.accommodation.airbnb_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:underline text-sm"
+                              >
+                                Ver en Airbnb →
+                              </a>
+                            )}
+                            {day.accommodation.booking_url && (
+                              <a
+                                href={day.accommodation.booking_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:underline text-sm"
+                              >
+                                Ver en Booking →
+                              </a>
+                            )}
+                          </div>
                         ) : (
                           <div className="flex gap-3 mt-2">
                             <a

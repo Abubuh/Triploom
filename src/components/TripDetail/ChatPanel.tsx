@@ -88,41 +88,15 @@ Responde siempre en el idioma del usuario.`,
         : msg,
     );
 
-    const response = import.meta.env.DEV
-      ? await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": import.meta.env.VITE_ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-            "anthropic-beta": "prompt-caching-2024-07-31",
-            "anthropic-dangerous-direct-browser-access": "true",
-          },
-          body: JSON.stringify({
-            model: "claude-haiku-4-5",
-            max_tokens: 4000,
-            system: [
-              { type: "text", text: instructions },
-              {
-                type: "text",
-                text: itineraryText,
-                cache_control: { type: "ephemeral" },
-              },
-            ],
-            messages: apiMessages,
-          }),
-        })
-      : await fetch("/api/chat-itinerary", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            instructions,
-            itineraryText,
-            messages: apiMessages,
-          }),
-        });
+    const response = await fetch("/api/chat-itinerary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ instructions, itineraryText, messages: apiMessages }),
+    });
 
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
+    if (!data.content?.[0]?.text) throw new Error(data.error?.message ?? "Sin respuesta de la API");
     return data.content[0].text as string;
   };
 
