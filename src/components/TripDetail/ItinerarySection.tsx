@@ -316,6 +316,19 @@ export function ItinerarySection({
   const getTime = (activity: ItineraryActivity): string =>
     activity.time_start ?? (activity as unknown as { time?: string }).time ?? "";
 
+  // Backward compat: old itineraries use `estimatedCost` string, new ones use `estimated_cost: { min, max }`
+  const getCostDisplay = (activity: ItineraryActivity): string | null => {
+    if (activity.estimated_cost && (activity.estimated_cost.min > 0 || activity.estimated_cost.max > 0)) {
+      const { min, max } = activity.estimated_cost;
+      const currency = trip.currency ?? "MXN";
+      return min === max
+        ? `${min.toLocaleString()} ${currency}`
+        : `${min.toLocaleString()}–${max.toLocaleString()} ${currency}`;
+    }
+    const legacy = (activity as unknown as { estimatedCost?: string }).estimatedCost;
+    return legacy ?? null;
+  };
+
   const FLAG_LABELS: Record<string, string> = {
     día_pesado: "Día pesado",
     recomendado_dividir: "Considera dividir este día",
@@ -692,15 +705,11 @@ export function ItinerarySection({
                                       📍 {activity.location}
                                     </p>
                                   )}
-                                  {activity.estimated_cost &&
-                                    (activity.estimated_cost.min > 0 ||
-                                      activity.estimated_cost.max > 0) && (
-                                      <p className="text-blue-400 text-xs mt-1">
-                                        {activity.estimated_cost.min === activity.estimated_cost.max
-                                          ? `${activity.estimated_cost.min.toLocaleString()} ${trip.currency ?? "MXN"}`
-                                          : `${activity.estimated_cost.min.toLocaleString()}–${activity.estimated_cost.max.toLocaleString()} ${trip.currency ?? "MXN"}`}
-                                      </p>
-                                    )}
+                                  {getCostDisplay(activity) && (
+                                    <p className="text-blue-400 text-xs mt-1">
+                                      {getCostDisplay(activity)}
+                                    </p>
+                                  )}
                                   {activity.time_end && (
                                     <p className="text-gray-600 text-xs mt-0.5">
                                       Hasta las {activity.time_end}
