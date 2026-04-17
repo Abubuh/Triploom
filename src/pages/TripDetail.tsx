@@ -154,20 +154,21 @@ function TripDetail() {
     }
 
     itinerary.days.forEach((day) => {
-      content += `## Día ${day.day} — ${day.destination} (${day.date})\n\n`;
+      content += `## Día ${day.day_number} — ${day.destination} (${day.date})\n\n`;
       day.activities.forEach((activity) => {
-        content += `**${activity.time} — ${activity.title}**\n`;
+        content += `**${activity.time_start}–${activity.time_end} — ${activity.title}**\n`;
         content += `${activity.description}\n`;
-        if (activity.estimatedCost) content += `💰 ${activity.estimatedCost}\n`;
+        if (activity.estimated_cost && (activity.estimated_cost.min > 0 || activity.estimated_cost.max > 0)) {
+          content += `💰 ${activity.estimated_cost.min}–${activity.estimated_cost.max} ${trip.currency ?? "MXN"}\n`;
+        }
         content += "\n";
       });
-      if (day.accommodation) {
+      if (day.accommodation?.name) {
         content += `### 🏠 Alojamiento\n`;
-        content += `${day.accommodation.suggestion} — ${day.accommodation.zone}\n`;
+        content += `${day.accommodation.name} — ${day.accommodation.zone}\n`;
         content += `💰 ${day.accommodation.amount} ${day.accommodation.currency}\n`;
-        if (day.accommodation.accommodationLink) {
-          content += `Reserva: ${day.accommodation.accommodationLink}\n`;
-        }
+        if (day.accommodation.airbnb_url) content += `Airbnb: ${day.accommodation.airbnb_url}\n`;
+        if (day.accommodation.booking_url) content += `Booking: ${day.accommodation.booking_url}\n`;
       }
       content += "\n---\n\n";
     });
@@ -222,7 +223,7 @@ function TripDetail() {
       await supabase.from("itinerary_days").insert(
         result.days.map((day) => ({
           trip_id: trip.id,
-          day_number: day.day,
+          day_number: day.day_number,
           date: day.date,
           destination: day.destination,
           activities: day,
@@ -250,7 +251,7 @@ function TripDetail() {
       await supabase.from("itinerary_days").insert(
         updated.days.map((day) => ({
           trip_id: trip.id,
-          day_number: day.day,
+          day_number: day.day_number,
           date: day.date,
           destination: day.destination,
           activities: day,

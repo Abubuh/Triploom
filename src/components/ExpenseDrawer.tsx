@@ -251,12 +251,12 @@ export function ExpenseDrawer({
               const isFormOpen = activeFormDate === day.date;
 
               return (
-                <div key={day.day}>
+                <div key={day.day_number}>
                   {/* Header del día */}
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <span className="text-xs font-bold text-blue-400 uppercase tracking-wide">
-                        Día {day.day}
+                        Día {day.day_number}
                       </span>
                       <span className="text-gray-400 text-xs ml-2">
                         {day.date}
@@ -386,7 +386,7 @@ export function ExpenseDrawer({
                           Cancelar
                         </button>
                         <button
-                          onClick={() => handleSubmit(day.date, day.day)}
+                          onClick={() => handleSubmit(day.date, day.day_number)}
                           disabled={
                             submitting || !form.amount || !form.description
                           }
