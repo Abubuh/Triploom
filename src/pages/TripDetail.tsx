@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { Trip, Destination, Member } from "../types/trip.types";
@@ -21,6 +21,7 @@ import MapIcon from "../components/Icons/MapIcon.tsx";
 import DocumentIcon from "../components/Icons/DocumentIcon.tsx";
 import MoneyIcon from "../components/Icons/MoneyIcon.tsx";
 import CheckIcon from "../components/Icons/CheckIcon.tsx";
+import GroupIcon from "../components/Icons/GroupIcon.tsx";
 
 function TripDetail() {
   const { id } = useParams();
@@ -40,6 +41,8 @@ function TripDetail() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [updatingItinerary, setUpdatingItinerary] = useState(false);
+  const [burgerOpen, setBurgerOpen] = useState(false);
+  const burgerRef = useRef<HTMLDivElement>(null);
   const [pendingAccommodationExpense, setPendingAccommodationExpense] =
     useState<{
       amount: number;
@@ -52,6 +55,17 @@ function TripDetail() {
     return members.find((m) => m.user_id === currentUserId)?.role ?? null;
   }, [members, currentUserId]);
   const userCurrency = trip?.currency ?? "MXN";
+
+  useEffect(() => {
+    if (!burgerOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (burgerRef.current && !burgerRef.current.contains(e.target as Node)) {
+        setBurgerOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [burgerOpen]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -158,7 +172,10 @@ function TripDetail() {
       day.activities.forEach((activity) => {
         content += `**${activity.time_start}–${activity.time_end} — ${activity.title}**\n`;
         content += `${activity.description}\n`;
-        if (activity.estimated_cost && (activity.estimated_cost.min > 0 || activity.estimated_cost.max > 0)) {
+        if (
+          activity.estimated_cost &&
+          (activity.estimated_cost.min > 0 || activity.estimated_cost.max > 0)
+        ) {
           content += `💰 ${activity.estimated_cost.min}–${activity.estimated_cost.max} ${trip.currency ?? "MXN"}\n`;
         }
         content += "\n";
@@ -167,8 +184,10 @@ function TripDetail() {
         content += `### 🏠 Alojamiento\n`;
         content += `${day.accommodation.name} — ${day.accommodation.zone}\n`;
         content += `💰 ${day.accommodation.amount} ${day.accommodation.currency}\n`;
-        if (day.accommodation.airbnb_url) content += `Airbnb: ${day.accommodation.airbnb_url}\n`;
-        if (day.accommodation.booking_url) content += `Booking: ${day.accommodation.booking_url}\n`;
+        if (day.accommodation.airbnb_url)
+          content += `Airbnb: ${day.accommodation.airbnb_url}\n`;
+        if (day.accommodation.booking_url)
+          content += `Booking: ${day.accommodation.booking_url}\n`;
       }
       content += "\n---\n\n";
     });
@@ -439,28 +458,78 @@ function TripDetail() {
       </main>
       {/* Botones flotantes */}
       <div
-        className={`fixed bottom-8 flex gap-3 z-30 transition-all duration-300 ${
+        className={`fixed bottom-8 z-30 transition-all duration-300 ${
           chatOpen ? "right-8 md:right-[26rem]" : "right-8"
         }`}
       >
-        <button
-          onClick={() => setDocumentDrawerOpen(true)}
-          className="bg-gray-800 hover:bg-gray-700 text-white px-5 py-3 rounded-2xl font-semibold shadow-lg transition flex items-center gap-2"
-        >
-          <DocumentIcon /> Documentos
-        </button>
-        <button
-          onClick={() => setExpenseDrawerOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-2xl font-semibold shadow-lg transition flex items-center gap-2"
-        >
-          <MoneyIcon /> Gastos
-        </button>
-        <button
-          onClick={() => setChatOpen((prev) => !prev)}
-          className="bg-gray-800 hover:bg-gray-700 text-white px-5 py-3 rounded-2xl font-semibold shadow-lg transition flex items-center gap-2"
-        >
-          <StarsIcon /> Agente
-        </button>
+        {/* Burger menu */}
+        <div ref={burgerRef} className="relative">
+          {burgerOpen && (
+            <div
+              className="absolute bottom-full mb-3 right-0 w-52 z-40 animate-fadeIn shadow-xl"
+              style={{
+                background: "#111121",
+                border: "0.5px solid #2a2a44",
+                borderRadius: 14,
+                padding: 8,
+              }}
+            >
+              <button
+                onClick={() => {
+                  setDocumentDrawerOpen(true);
+                  setBurgerOpen(false);
+                }}
+                style={{ color: "#9090b0" }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1a1a2e] transition"
+              >
+                <DocumentIcon /> Documentos
+              </button>
+              <button
+                onClick={() => {
+                  setExpenseDrawerOpen(true);
+                  setBurgerOpen(false);
+                }}
+                style={{ color: "#9090b0" }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1a1a2e] transition"
+              >
+                <MoneyIcon /> Gastos
+              </button>
+              <div
+                style={{ borderColor: "#2a2a44" }}
+                className="border-t my-1.5 mx-2"
+              />
+              <button
+                onClick={() => {
+                  setBurgerOpen(false);
+                  setToastMessage("Chat del grupo próximamente");
+                  setTimeout(() => setToastMessage(null), 2500);
+                }}
+                style={{ color: "#9090b0" }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1a1a2e] transition"
+              >
+                <GroupIcon /> Chat del grupo
+              </button>
+              <button
+                onClick={() => {
+                  setChatOpen((prev) => !prev);
+                  setBurgerOpen(false);
+                }}
+                style={{ color: "#9090b0" }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1a1a2e] transition"
+              >
+                <StarsIcon /> Agente
+              </button>
+            </div>
+          )}
+          <button
+            onClick={() => setBurgerOpen((prev) => !prev)}
+            className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-3 rounded-2xl shadow-lg transition flex flex-col items-center justify-center gap-1"
+          >
+            <span className="block w-4 h-0.5 bg-white rounded-full" />
+            <span className="block w-4 h-0.5 bg-white rounded-full" />
+            <span className="block w-4 h-0.5 bg-white rounded-full" />
+          </button>
+        </div>
       </div>
       {trip && (
         <ExpenseDrawer
