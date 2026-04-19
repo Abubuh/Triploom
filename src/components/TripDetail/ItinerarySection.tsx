@@ -740,15 +740,6 @@ export function ItinerarySection({
                       )}
                     </div>
                   ))}
-                  {day.activities.filter((a) => a.type === "actividad").length === 0 &&
-                    (isOwner || currentUserRole === "co-organizer") && (
-                      <button
-                        onClick={() => handleAddActivity(dayIndex, "after", -1)}
-                        className="w-full text-gray-500 hover:text-blue-400 hover:bg-gray-800/50 text-sm py-3 rounded-xl transition border border-dashed border-gray-700 hover:border-blue-500/30"
-                      >
-                        + Agregar actividad
-                      </button>
-                    )}
                 </div>
 
                 {day.accommodation && (day.accommodation.name || (isOwner || currentUserRole === "co-organizer")) ? (

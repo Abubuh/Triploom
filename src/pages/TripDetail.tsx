@@ -10,6 +10,7 @@ import { WarningModal } from "../components/TripDetail/WarningModal";
 import { MembersSection } from "../components/TripDetail/MembersSection";
 import { ItinerarySection } from "../components/TripDetail/ItinerarySection";
 import { ChatPanel } from "../components/TripDetail/ChatPanel";
+import { EditTripModal } from "../components/TripDetail/EditTripModal";
 import PlaneIcon from "../components/Icons/PlaneIcon";
 import House from "../components/Icons/House";
 import HotelIcon from "../components/Icons/HotelIcon.tsx";
@@ -20,6 +21,7 @@ import DownloadIcon from "../components/Icons/DownloadIcon.tsx";
 import MapIcon from "../components/Icons/MapIcon.tsx";
 import DocumentIcon from "../components/Icons/DocumentIcon.tsx";
 import MoneyIcon from "../components/Icons/MoneyIcon.tsx";
+import EditIcon from "../components/Icons/EditIcon.tsx";
 import CheckIcon from "../components/Icons/CheckIcon.tsx";
 import GroupIcon from "../components/Icons/GroupIcon.tsx";
 
@@ -42,6 +44,7 @@ function TripDetail() {
   const [chatOpen, setChatOpen] = useState(false);
   const [updatingItinerary, setUpdatingItinerary] = useState(false);
   const [burgerOpen, setBurgerOpen] = useState(false);
+  const [editTripOpen, setEditTripOpen] = useState(false);
   const burgerRef = useRef<HTMLDivElement>(null);
   const [pendingAccommodationExpense, setPendingAccommodationExpense] =
     useState<{
@@ -261,6 +264,12 @@ function TripDetail() {
     }
   };
 
+  const handleTripSaved = (updatedTrip: Trip, updatedDestinations: Destination[]) => {
+    setTrip(updatedTrip);
+    setDestinations(updatedDestinations);
+    setEditTripOpen(false);
+  };
+
   const handleChatItineraryUpdate = async (updated: GeneratedItinerary) => {
     if (!trip) return;
     setUpdatingItinerary(true);
@@ -337,9 +346,15 @@ function TripDetail() {
               )}
             </span>
           </div>
-          {isOwner && (
+          {(isOwner || currentUserRole === "co-organizer") && (
             <div className="flex gap-3">
-              {itinerary && (
+              <button
+                onClick={() => setEditTripOpen(true)}
+                className="border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white px-4 py-3 rounded-xl font-semibold transition flex items-center gap-2"
+              >
+                <EditIcon /> Editar
+              </button>
+              {isOwner && itinerary && (
                 <button
                   onClick={checkBeforeGenerate}
                   disabled={generating}
@@ -358,7 +373,7 @@ function TripDetail() {
                   )}
                 </button>
               )}
-              {!itinerary && (
+              {isOwner && !itinerary && (
                 <button
                   onClick={checkBeforeGenerate}
                   disabled={generating}
@@ -377,7 +392,7 @@ function TripDetail() {
                   )}
                 </button>
               )}
-              {itinerary && (
+              {isOwner && itinerary && (
                 <button
                   onClick={handleDownloadItinerary}
                   className="border border-gray-700 flex gap-1 hover:border-gray-500 text-gray-400 hover:text-white px-6 py-3 rounded-xl font-semibold transition"
@@ -561,6 +576,15 @@ function TripDetail() {
           handleGenerateItinerary();
         }}
       />
+      {trip && (
+        <EditTripModal
+          isOpen={editTripOpen}
+          onClose={() => setEditTripOpen(false)}
+          trip={trip}
+          destinations={destinations}
+          onSaved={handleTripSaved}
+        />
+      )}
 
       {toastMessage && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-sm px-5 py-3 rounded-xl shadow-lg z-50 transition">
