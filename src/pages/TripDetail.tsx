@@ -10,6 +10,7 @@ import { WarningModal } from "../components/TripDetail/WarningModal";
 import { MembersSection } from "../components/TripDetail/MembersSection";
 import { ItinerarySection } from "../components/TripDetail/ItinerarySection";
 import { ChatPanel } from "../components/TripDetail/ChatPanel";
+import { GroupChatPanel } from "../components/TripDetail/GroupChatPanel";
 import { EditTripModal } from "../components/TripDetail/EditTripModal";
 import PlaneIcon from "../components/Icons/PlaneIcon";
 import House from "../components/Icons/House";
@@ -44,6 +45,7 @@ function TripDetail() {
   const [chatOpen, setChatOpen] = useState(false);
   const [updatingItinerary, setUpdatingItinerary] = useState(false);
   const [burgerOpen, setBurgerOpen] = useState(false);
+  const [groupChatOpen, setGroupChatOpen] = useState(false);
   const [editTripOpen, setEditTripOpen] = useState(false);
   const burgerRef = useRef<HTMLDivElement>(null);
   const [pendingAccommodationExpense, setPendingAccommodationExpense] =
@@ -57,6 +59,10 @@ function TripDetail() {
   const currentUserRole = useMemo(() => {
     return members.find((m) => m.user_id === currentUserId)?.role ?? null;
   }, [members, currentUserId]);
+  const currentUserName = useMemo(
+    () => members.find((m) => m.user_id === currentUserId)?.profiles?.name ?? "Tú",
+    [members, currentUserId]
+  );
   const userCurrency = trip?.currency ?? "MXN";
 
   useEffect(() => {
@@ -474,7 +480,7 @@ function TripDetail() {
       {/* Botones flotantes */}
       <div
         className={`fixed bottom-8 z-30 transition-all duration-300 ${
-          chatOpen ? "right-8 md:right-[26rem]" : "right-8"
+          chatOpen || groupChatOpen ? "right-8 md:right-[26rem]" : "right-8"
         }`}
       >
         {/* Burger menu */}
@@ -515,9 +521,9 @@ function TripDetail() {
               />
               <button
                 onClick={() => {
+                  setGroupChatOpen(true);
+                  setChatOpen(false);
                   setBurgerOpen(false);
-                  setToastMessage("Chat del grupo próximamente");
-                  setTimeout(() => setToastMessage(null), 2500);
                 }}
                 style={{ color: "#9090b0" }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-[#1a1a2e] transition"
@@ -527,6 +533,7 @@ function TripDetail() {
               <button
                 onClick={() => {
                   setChatOpen((prev) => !prev);
+                  setGroupChatOpen(false);
                   setBurgerOpen(false);
                 }}
                 style={{ color: "#9090b0" }}
@@ -599,6 +606,16 @@ function TripDetail() {
         trip={trip}
         onItineraryUpdate={handleChatItineraryUpdate}
       />
+      {trip && (
+        <GroupChatPanel
+          isOpen={groupChatOpen}
+          onClose={() => setGroupChatOpen(false)}
+          tripId={trip.id}
+          tripName={trip.name}
+          currentUserId={currentUserId ?? ""}
+          currentUserName={currentUserName}
+        />
+      )}
     </div>
   );
 }
