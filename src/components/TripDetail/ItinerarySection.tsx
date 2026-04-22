@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { Trip, GeneratedItinerary, ItineraryActivity } from "../../types/trip.types";
+import {
+  Trip,
+  GeneratedItinerary,
+  ItineraryActivity,
+} from "../../types/trip.types";
 import CalendarIcon from "../Icons/CalendarIcon";
 import WarningIcon from "../Icons/WarningIcon";
 import EditIcon from "../Icons/EditIcon";
@@ -58,7 +62,10 @@ export function ItinerarySection({
   const handleUpdateActivity = async (
     dayIndex: number,
     activityIndex: number,
-    field: keyof Pick<ItineraryActivity, "title" | "description" | "time_start" | "time_end" | "location">,
+    field: keyof Pick<
+      ItineraryActivity,
+      "title" | "description" | "time_start" | "time_end" | "location"
+    >,
     value: string,
   ) => {
     const updatedDays = [...itinerary.days];
@@ -248,7 +255,10 @@ export function ItinerarySection({
     const insertAt = position === "before" ? dayIndex : dayIndex + 1;
     updatedDays.splice(insertAt, 0, newDay);
 
-    const renumbered = updatedDays.map((d, idx) => ({ ...d, day_number: idx + 1 }));
+    const renumbered = updatedDays.map((d, idx) => ({
+      ...d,
+      day_number: idx + 1,
+    }));
 
     onItineraryChange({ ...itinerary, days: renumbered });
     if (position === "after") setSelectedDayIndex(dayIndex + 1);
@@ -268,7 +278,13 @@ export function ItinerarySection({
 
   const handleUpdateAccommodation = async (
     dayIndex: number,
-    field: "name" | "zone" | "amount" | "currency" | "airbnb_url" | "booking_url",
+    field:
+      | "name"
+      | "zone"
+      | "amount"
+      | "currency"
+      | "airbnb_url"
+      | "booking_url",
     value: string | number,
   ) => {
     const updatedDays = [...itinerary.days];
@@ -314,18 +330,24 @@ export function ItinerarySection({
 
   // Backward compat: old itineraries stored in Supabase use `time`, new ones use `time_start`
   const getTime = (activity: ItineraryActivity): string =>
-    activity.time_start ?? (activity as unknown as { time?: string }).time ?? "";
+    activity.time_start ??
+    (activity as unknown as { time?: string }).time ??
+    "";
 
   // Backward compat: old itineraries use `estimatedCost` string, new ones use `estimated_cost: { min, max }`
   const getCostDisplay = (activity: ItineraryActivity): string | null => {
-    if (activity.estimated_cost && (activity.estimated_cost.min > 0 || activity.estimated_cost.max > 0)) {
+    if (
+      activity.estimated_cost &&
+      (activity.estimated_cost.min > 0 || activity.estimated_cost.max > 0)
+    ) {
       const { min, max } = activity.estimated_cost;
       const currency = trip.currency ?? "MXN";
       return min === max
         ? `${min.toLocaleString()} ${currency}`
         : `${min.toLocaleString()}–${max.toLocaleString()} ${currency}`;
     }
-    const legacy = (activity as unknown as { estimatedCost?: string }).estimatedCost;
+    const legacy = (activity as unknown as { estimatedCost?: string })
+      .estimatedCost;
     return legacy ?? null;
   };
 
@@ -341,19 +363,6 @@ export function ItinerarySection({
         <CalendarIcon /> Itinerario
       </h3>
       <p className="text-gray-400 mb-6">{itinerary.summary}</p>
-
-      {itinerary.budgetWarnings.length > 0 && (
-        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 mb-6">
-          <p className="text-yellow-400 font-semibold mb-2">
-            <WarningIcon /> Advertencias de presupuesto
-          </p>
-          {itinerary.budgetWarnings.map((w, i) => (
-            <p key={i} className="text-yellow-300 text-sm">
-              {w}
-            </p>
-          ))}
-        </div>
-      )}
 
       {/* Navegación horizontal de días */}
       <div className="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-none">
@@ -479,21 +488,28 @@ export function ItinerarySection({
                 )}
 
                 {/* Resumen del día */}
-                {day.day_summary && (day.day_summary.total_hours > 0 || day.day_summary.activity_count > 0) && (
-                  <div className="flex gap-4 mb-4 text-xs text-gray-500">
-                    <span>{day.day_summary.activity_count} actividades</span>
-                    <span>{day.day_summary.total_hours}h planeadas</span>
-                    {day.day_summary.total_cost_max > 0 && (
-                      <span>
-                        {day.day_summary.total_cost_min.toLocaleString()}–{day.day_summary.total_cost_max.toLocaleString()} {trip.currency ?? "MXN"}
-                      </span>
-                    )}
-                  </div>
-                )}
+                {day.day_summary &&
+                  (day.day_summary.total_hours > 0 ||
+                    day.day_summary.activity_count > 0) && (
+                    <div className="flex gap-4 mb-4 text-xs text-gray-500">
+                      <span>{day.day_summary.activity_count} actividades</span>
+                      <span>{day.day_summary.total_hours}h planeadas</span>
+                      {day.day_summary.total_cost_max > 0 && (
+                        <span>
+                          {day.day_summary.total_cost_min.toLocaleString()}–
+                          {day.day_summary.total_cost_max.toLocaleString()}{" "}
+                          {trip.currency ?? "MXN"}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                 <div className="space-y-3 mb-4">
                   {day.activities.map((activity, i) => (
-                    <div key={activity.id ?? i} className="relative group/activity">
+                    <div
+                      key={activity.id ?? i}
+                      className="relative group/activity"
+                    >
                       {/* Buffer de traslado */}
                       {activity.type === "buffer" ? (
                         <div className="flex gap-4 py-1 opacity-50">
@@ -561,7 +577,9 @@ export function ItinerarySection({
                                 >
                                   <div className="flex gap-2">
                                     <div className="flex-1">
-                                      <label className="text-xs text-gray-500 mb-1 block">Inicio</label>
+                                      <label className="text-xs text-gray-500 mb-1 block">
+                                        Inicio
+                                      </label>
                                       <input
                                         type="time"
                                         value={activity.time_start}
@@ -577,7 +595,9 @@ export function ItinerarySection({
                                       />
                                     </div>
                                     <div className="flex-1">
-                                      <label className="text-xs text-gray-500 mb-1 block">Fin</label>
+                                      <label className="text-xs text-gray-500 mb-1 block">
+                                        Fin
+                                      </label>
                                       <input
                                         type="time"
                                         value={activity.time_end}
@@ -634,7 +654,9 @@ export function ItinerarySection({
                                     className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                                   />
                                   <div className="flex gap-2 items-center">
-                                    <span className="text-xs text-gray-500 shrink-0">Costo ({trip.currency ?? "MXN"})</span>
+                                    <span className="text-xs text-gray-500 shrink-0">
+                                      Costo ({trip.currency ?? "MXN"})
+                                    </span>
                                     <input
                                       type="number"
                                       value={activity.estimated_cost?.min ?? 0}
@@ -742,7 +764,10 @@ export function ItinerarySection({
                   ))}
                 </div>
 
-                {day.accommodation && (day.accommodation.name || (isOwner || currentUserRole === "co-organizer")) ? (
+                {day.accommodation &&
+                (day.accommodation.name ||
+                  isOwner ||
+                  currentUserRole === "co-organizer") ? (
                   <div className="border-t border-gray-800 pt-4">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-gray-400 text-sm flex gap-2 items-center">
@@ -893,7 +918,8 @@ export function ItinerarySection({
                           {day.accommodation.amount > 0 &&
                             `${day.accommodation.amount} ${day.accommodation.currency}`}
                         </p>
-                        {day.accommodation.airbnb_url || day.accommodation.booking_url ? (
+                        {day.accommodation.airbnb_url ||
+                        day.accommodation.booking_url ? (
                           <div className="flex gap-3 mt-2">
                             {day.accommodation.airbnb_url && (
                               <a

@@ -3,10 +3,13 @@ import {
   MemberPreferences,
 } from "../../types/trip.types";
 
-const PACE_MAX_ACTIVITIES: Record<MemberPreferences["travel_pace"], number> = {
-  relaxed: 2,
-  moderate: 3,
-  intense: 4,
+const PACE_MAX_ACTIVITIES: Record<
+  MemberPreferences["travel_pace"],
+  { min: number; max: number }
+> = {
+  relaxed: { min: 2, max: 2 },
+  moderate: { min: 4, max: 5 },
+  intense: { min: 5, max: 6 },
 };
 
 function dominantPace(
@@ -32,7 +35,7 @@ export function buildPrompt({
     .filter((m) => m.member_preferences?.travel_pace)
     .map((m) => m.member_preferences!.travel_pace);
   const pace = dominantPace(paces);
-  const maxActivities = PACE_MAX_ACTIVITIES[pace];
+  const maxActivities = `${PACE_MAX_ACTIVITIES[pace].min}-${PACE_MAX_ACTIVITIES[pace].max}`;
 
   const allAttractions = members
     .filter((m) => m.member_preferences?.attractions_preferences?.length)
