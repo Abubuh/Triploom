@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { useAuth } from "../modules/auth";
 import { Expense } from "../types/trip.types";
 
 export function useExpenses(tripId: string) {
+  const { user } = useAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,9 +37,6 @@ export function useExpenses(tripId: string) {
   const addExpense = async (
     expense: Omit<Expense, "id" | "created_at" | "user_id">,
   ) => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
     if (!user) return;
 
     const { data, error } = await supabase
