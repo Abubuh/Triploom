@@ -19,7 +19,7 @@ export function AuthProvider({ children, onPendingInvite }: AuthProviderProps) {
     authLoading: true,
     profileLoading: false,
   });
-
+  const currentUserRef = useRef<string | null>(null);
   const onPendingInviteRef = useRef(onPendingInvite);
 
   useEffect(() => {
@@ -27,12 +27,22 @@ export function AuthProvider({ children, onPendingInvite }: AuthProviderProps) {
   }, [onPendingInvite]);
 
   useEffect(() => {
+    currentUserRef.current = state.user?.id ?? null;
+  }, [state.user]);
+
+  useEffect(() => {
     if (!state.user?.id) {
-      setState((prev) => ({
-        ...prev,
-        profile: null,
-        profileLoading: false,
-      }));
+      setState((prev) => {
+        if (prev.profile === null && prev.profileLoading === false) return prev;
+        return {
+          ...prev,
+          profile: null,
+          profileLoading: false,
+        };
+      });
+      return;
+    }
+    if (state.profile && state.profile?.id === state.user.id) {
       return;
     }
 
@@ -40,13 +50,15 @@ export function AuthProvider({ children, onPendingInvite }: AuthProviderProps) {
     const userId = state.user.id;
 
     const fetchProfile = async () => {
-      setState((prev) => ({ ...prev, profileLoading: true }));
+      setState((prev) => {
+        if (prev.profile) return prev;
+        return { ...prev, profileLoading: true };
+      });
 
       try {
         const { data } = await profileService.getProfile(userId);
 
-        if (cancelled) return;
-
+        if (cancelled) return; //preguntar
         setState((prev) => ({
           ...prev,
           profile: data,
@@ -70,6 +82,7 @@ export function AuthProvider({ children, onPendingInvite }: AuthProviderProps) {
       cancelled = true;
     };
   }, [state.user]);
+
   useEffect(() => {
     let mounted = true;
 
@@ -88,6 +101,9 @@ export function AuthProvider({ children, onPendingInvite }: AuthProviderProps) {
         }
 
         if (event === "SIGNED_IN" && session?.user) {
+          if (currentUserRef.current === session.user.id) {
+            return;
+          }
           setState((prev) => ({
             ...prev,
             session,
