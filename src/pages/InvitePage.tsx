@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import type { User } from "@supabase/supabase-js";
+import { useAuth } from "../modules/auth";
 import PlaneIcon from "../components/Icons/PlaneIcon";
 
 interface InviteData {
@@ -16,19 +16,14 @@ interface InviteData {
 function InvitePage() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [invite, setInvite] = useState<InviteData | null>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchInvite = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setCurrentUser(user);
-
       const { data, error } = await supabase
         .from("trip_invitations")
         .select("trip_id, trips(name, start_date, end_date)")
@@ -49,8 +44,7 @@ function InvitePage() {
   }, [token]);
 
   const handleJoin = async () => {
-    if (!currentUser) {
-      // Guarda el token y manda al login
+    if (!user) {
       localStorage.setItem("pendingInviteToken", token!);
       navigate("/auth");
       return;
@@ -61,7 +55,7 @@ function InvitePage() {
       .from("trip_members")
       .select("id")
       .eq("trip_id", invite!.trip_id)
-      .eq("user_id", currentUser.id)
+      .eq("user_id", user.id)
       .single();
 
     if (existing) {
@@ -70,10 +64,9 @@ function InvitePage() {
       return;
     }
 
-    // Agregar como miembro
     const { error: memberError } = await supabase.from("trip_members").insert({
       trip_id: invite!.trip_id,
-      user_id: currentUser.id,
+      user_id: user.id,
       role: "traveler",
     });
 
@@ -83,10 +76,9 @@ function InvitePage() {
       return;
     }
 
-    // Marcar invitación como usada
     await supabase
       .from("trip_invitations")
-      .update({ used_by: currentUser.id, used_at: new Date().toISOString() })
+      .update({ used_by: user.id, used_at: new Date().toISOString() })
       .eq("token", token);
 
     navigate(`/preferences/${invite!.trip_id}`);
@@ -137,7 +129,7 @@ function InvitePage() {
         >
           {joining
             ? "Uniéndose..."
-            : currentUser
+            : user
               ? "Unirme al viaje"
               : "Iniciar sesión para unirme"}
         </button>

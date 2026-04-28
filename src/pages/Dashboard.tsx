@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { useAuth } from "../modules/auth";
 import { Trip } from "../types/trip.types";
 import PlaneIcon from "../components/Icons/PlaneIcon";
 import UserIcon from "../components/Icons/UserIcon";
@@ -14,39 +15,30 @@ import TrashIcon from "../components/Icons/TrashIcon";
 
 function Dashboard() {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<{
-    name: string;
-    email: string;
-  } | null>(null);
+  const { user, profile, signOut } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
   const [hoveredTripId, setHoveredTripId] = useState<string | null>(null);
   const [openMenuTripId, setOpenMenuTripId] = useState<string | null>(null);
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", start_date: "", end_date: "" });
+  const [editForm, setEditForm] = useState({
+    name: "",
+    start_date: "",
+    end_date: "",
+  });
   const [deletingTripId, setDeletingTripId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
+    if (profile) setCurrency(profile.currency ?? "MXN");
+  }, [profile]);
 
-      setUserId(user.id);
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("name, email, currency")
-        .eq("id", user.id)
-        .single();
-
-      if (profileData) {
-        setProfile(profileData);
-        setCurrency(profileData.currency ?? "MXN");
-      }
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    const fetchTrips = async () => {
       const { data: memberTrips } = await supabase
         .from("trip_members")
         .select("trip_id")
@@ -66,20 +58,22 @@ function Dashboard() {
       setLoading(false);
     };
 
-    fetchData();
-  }, []);
+    fetchTrips();
+  }, [user]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut();
     navigate("/");
   };
 
   const handleCurrencyChange = async (newCurrency: string) => {
     setCurrency(newCurrency);
-    await supabase
-      .from("profiles")
-      .update({ currency: newCurrency })
-      .eq("id", (await supabase.auth.getUser()).data.user!.id);
+    if (user) {
+      await supabase
+        .from("profiles")
+        .update({ currency: newCurrency })
+        .eq("id", user.id);
+    }
   };
 
   const handleDeleteTrip = async (tripId: string) => {
@@ -92,9 +86,15 @@ function Dashboard() {
     if (!editingTrip) return;
     await supabase
       .from("trips")
-      .update({ name: editForm.name, start_date: editForm.start_date, end_date: editForm.end_date })
+      .update({
+        name: editForm.name,
+        start_date: editForm.start_date,
+        end_date: editForm.end_date,
+      })
       .eq("id", editingTrip.id);
-    setTrips(trips.map((t) => (t.id === editingTrip.id ? { ...t, ...editForm } : t)));
+    setTrips(
+      trips.map((t) => (t.id === editingTrip.id ? { ...t, ...editForm } : t)),
+    );
     setEditingTrip(null);
   };
 
@@ -108,7 +108,7 @@ function Dashboard() {
         <div className="flex items-center gap-4">
           <span className="text-gray-400 text-sm flex items-center gap-1">
             <UserIcon />
-            Hola, {profile?.name || "Viajero"}
+            Hola, {profile?.name ?? "Viajero"}
           </span>
           {currency && (
             <select
@@ -186,7 +186,7 @@ function Dashboard() {
                 }}
                 className="relative bg-gray-900 rounded-2xl p-6 cursor-pointer hover:bg-gray-800 transition"
               >
-                {trip.owner_id === userId && hoveredTripId === trip.id && (
+                {trip.owner_id === user?.id && hoveredTripId === trip.id && (
                   <div
                     className="absolute top-4 right-4"
                     onClick={(e) => e.stopPropagation()}
@@ -280,28 +280,40 @@ function Dashboard() {
             <h3 className="text-xl font-bold">Editar viaje</h3>
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-gray-400 mb-1 block">Nombre</label>
+                <label className="text-sm text-gray-400 mb-1 block">
+                  Nombre
+                </label>
                 <input
                   value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, name: e.target.value })
+                  }
                   className="w-full bg-gray-800 rounded-xl px-4 py-2 text-white outline-none border border-gray-700 focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-400 mb-1 block">Fecha de inicio</label>
+                <label className="text-sm text-gray-400 mb-1 block">
+                  Fecha de inicio
+                </label>
                 <input
                   type="date"
                   value={editForm.start_date}
-                  onChange={(e) => setEditForm({ ...editForm, start_date: e.target.value })}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, start_date: e.target.value })
+                  }
                   className="w-full bg-gray-800 rounded-xl px-4 py-2 text-white outline-none border border-gray-700 focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-400 mb-1 block">Fecha de fin</label>
+                <label className="text-sm text-gray-400 mb-1 block">
+                  Fecha de fin
+                </label>
                 <input
                   type="date"
                   value={editForm.end_date}
-                  onChange={(e) => setEditForm({ ...editForm, end_date: e.target.value })}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, end_date: e.target.value })
+                  }
                   className="w-full bg-gray-800 rounded-xl px-4 py-2 text-white outline-none border border-gray-700 focus:border-blue-500"
                 />
               </div>
@@ -330,7 +342,8 @@ function Dashboard() {
           <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-md w-full space-y-6">
             <h3 className="text-xl font-bold">¿Eliminar viaje?</h3>
             <p className="text-gray-400 text-sm">
-              Esta acción no se puede deshacer. Se eliminará el viaje y todos sus datos.
+              Esta acción no se puede deshacer. Se eliminará el viaje y todos
+              sus datos.
             </p>
             <div className="flex gap-3 justify-end">
               <button
