@@ -132,9 +132,5 @@ export type DocumentCategory =
   | "visa"
   | "otro";
 
-export interface Profile {
-  id: string;
-  name: string;
-  email: string;
-  currency: string;
-}
+// Profile moved to src/modules/auth/types/auth.types.ts
+export type { Profile } from "../modules/auth";
