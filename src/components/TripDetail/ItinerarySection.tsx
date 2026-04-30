@@ -64,7 +64,7 @@ export function ItinerarySection({
     activityIndex: number,
     field: keyof Pick<
       ItineraryActivity,
-      "title" | "description" | "time_start" | "time_end" | "location"
+      "title" | "description" | "time_start" | "time_end"
     >,
     value: string,
   ) => {
@@ -120,8 +120,8 @@ export function ItinerarySection({
       title: "Nueva actividad",
       description: "Descripción de la actividad",
       estimated_cost: { min: 0, max: 0 },
-      location: "",
-      type: "actividad",
+      place: { name: "", address: "", search_query: "", lat: null, lng: null },
+      type: "activity",
       full_day: false,
     };
 
@@ -639,20 +639,6 @@ export function ItinerarySection({
                                     className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                                     rows={2}
                                   />
-                                  <input
-                                    type="text"
-                                    value={activity.location}
-                                    onChange={(e) =>
-                                      handleUpdateActivity(
-                                        dayIndex,
-                                        i,
-                                        "location",
-                                        e.target.value,
-                                      )
-                                    }
-                                    placeholder="Ubicación"
-                                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                                  />
                                   <div className="flex gap-2 items-center">
                                     <span className="text-xs text-gray-500 shrink-0">
                                       Costo ({trip.currency ?? "MXN"})
@@ -722,10 +708,21 @@ export function ItinerarySection({
                                   <p className="text-gray-400 text-sm">
                                     {activity.description}
                                   </p>
-                                  {activity.location && (
-                                    <p className="text-gray-600 text-xs mt-0.5">
-                                      📍 {activity.location}
-                                    </p>
+                                  {activity.place?.name && (
+                                    activity.place.search_query ? (
+                                      <a
+                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.place.search_query)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-gray-600 hover:text-blue-400 text-xs mt-0.5 flex items-center gap-1 transition w-fit"
+                                      >
+                                        📍 {activity.place.name}
+                                      </a>
+                                    ) : (
+                                      <p className="text-gray-600 text-xs mt-0.5">
+                                        📍 {activity.place.name}
+                                      </p>
+                                    )
                                   )}
                                   {getCostDisplay(activity) && (
                                     <p className="text-blue-400 text-xs mt-1">
