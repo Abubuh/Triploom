@@ -1,28 +1,9 @@
 import {
   GenerateItineraryParams,
-  MemberPreferences,
 } from "../../types/trip.types";
 
-const PACE_MAX_ACTIVITIES: Record<
-  MemberPreferences["travel_pace"],
-  { min: number; max: number }
-> = {
-  relaxed: { min: 2, max: 2 },
-  moderate: { min: 4, max: 5 },
-  intense: { min: 5, max: 6 },
-};
-
-function dominantPace(
-  paces: MemberPreferences["travel_pace"][],
-): MemberPreferences["travel_pace"] {
-  const counts: Record<string, number> = {};
-  for (const p of paces) counts[p] = (counts[p] ?? 0) + 1;
-  return (
-    (["intense", "moderate", "relaxed"].find(
-      (p) => counts[p],
-    ) as MemberPreferences["travel_pace"]) ?? "moderate"
-  );
-}
+import { PACE_MAX_ACTIVITIES } from "../../types/itinerary.generated.types";
+import { dominantPace } from "./utils/pace";
 
 export function buildPrompt({
   trip,
@@ -35,7 +16,7 @@ export function buildPrompt({
     .filter((m) => m.member_preferences?.travel_pace)
     .map((m) => m.member_preferences!.travel_pace);
   const pace = dominantPace(paces);
-  const maxActivities = `${PACE_MAX_ACTIVITIES[pace].min}-${PACE_MAX_ACTIVITIES[pace].max}`;
+  const maxActivities = `${PACE_MAX_ACTIVITIES[pace]}`;
 
   const allAttractions = members
     .filter((m) => m.member_preferences?.attractions_preferences?.length)
@@ -101,6 +82,31 @@ REGLAS OBLIGATORIAS:
 8. Usa precios reales del destino.
 9. Cada actividad debe ser UNA sola cosa — no mezcles desayuno con traslado, 
 ni visita con vida nocturna. Si son dos cosas distintas, son dos actividades separadas.
+10. Cada día debe incluir:
+   - 1 desayuno (morning)
+   - 1 comida (afternoon)
+   - 1 cena (evening)
+   (Excepción: en días de excursión completa, solo desayuno y cena — sin comida intermedia)
+
+11. Las actividades de tipo comida deben clasificarse como:
+   - breakfast: cafeterías, panaderías, brunch
+   - lunch: restaurantes casuales o locales
+   - dinner: restaurantes formales o experiencias nocturnas
+
+12. Las comidas deben ser lugares reales, específicos y reconocibles.
+
+13. Coherencia obligatoria:
+- Si category es "breakfast", entonces type debe ser "food" y time_of_day "morning"
+- Si category es "lunch", entonces type debe ser "food" y time_of_day "afternoon"
+- Si category es "dinner", entonces type debe ser "food" y time_of_day "evening"
+
+14. El campo search_query debe ser específico y listo para búsqueda en mapas:
+incluye nombre + ciudad + país.
+
+Los campos deben cumplir:
+- type: uno de ["activity", "food", "transport"]
+- category: uno de ["breakfast", "lunch", "dinner", "attraction", "experience"]
+- time_of_day: uno de ["morning", "afternoon", "evening"]
 
 SCHEMA EXACTO — devuelve ÚNICAMENTE este JSON, sin markdown, sin texto adicional:
 {
@@ -120,10 +126,18 @@ SCHEMA EXACTO — devuelve ÚNICAMENTE este JSON, sin markdown, sin texto adicio
           "title": "Nombre actividad",
           "description": "Descripción breve y útil",
           "estimated_cost": { "min": 0, "max": 0 },
-          "location": "Nombre del lugar o zona",
-          "type": "actividad",
-          "full_day": false
-        }
+          "place": {
+            "name": "Nombre del lugar",
+            "address": "Dirección o zona",
+            "search_query": "Nombre + ciudad + país",
+            "lat": null,
+            "lng": null
+          },
+          "type": "activity",
+            "category": "attraction",
+            "time_of_day": "morning",
+            "full_day": false
+          }
       ],
       "accommodation": {
         "name": "Nombre del alojamiento sugerido",

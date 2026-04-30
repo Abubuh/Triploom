@@ -69,7 +69,7 @@ function insertBuffers(activities: ItineraryActivity[]): ItineraryActivity[] {
           title: "Traslado",
           description: "Tiempo de desplazamiento entre actividades",
           estimated_cost: { min: 0, max: 0 },
-          location: "",
+          place: { name: "", address: "", search_query: "", lat: null, lng: null },
           type: "buffer",
           full_day: false,
         });
@@ -129,7 +129,7 @@ function clampLastActivityTo22(
 function computeDaySummary(
   activities: ItineraryActivity[],
 ): ItineraryDay["day_summary"] {
-  const realActivities = activities.filter((a) => a.type === "actividad");
+  const realActivities = activities.filter((a) => a.type !== "buffer");
 
   const allActivities = activities; // including buffers for time range
   const totalMinutes =
