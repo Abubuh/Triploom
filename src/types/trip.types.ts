@@ -42,6 +42,14 @@ export interface ActivityCost {
   max: number;
 }
 
+export interface Place {
+  name: string;
+  address: string;
+  search_query: string;
+  lat: number | null;
+  lng: number | null;
+}
+
 export interface ItineraryActivity {
   id: string;
   time_start: string;
@@ -49,8 +57,8 @@ export interface ItineraryActivity {
   title: string;
   description: string;
   estimated_cost: ActivityCost;
-  location: string;
-  type: "actividad" | "buffer";
+  place: Place;
+  type: "activity" | "food" | "transport" | "buffer";
   full_day: boolean;
 }
 
