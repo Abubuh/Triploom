@@ -1,6 +1,4 @@
-import {
-  GenerateItineraryParams,
-} from "../../types/trip.types";
+import { GenerateItineraryParams } from "../../types/trip.types";
 
 import { PACE_MAX_ACTIVITIES } from "../../types/itinerary.generated.types";
 import { dominantPace } from "./utils/pace";
@@ -100,9 +98,35 @@ ni visita con vida nocturna. Si son dos cosas distintas, son dos actividades sep
 - Si category es "lunch", entonces type debe ser "food" y time_of_day "afternoon"
 - Si category es "dinner", entonces type debe ser "food" y time_of_day "evening"
 
-14. El campo search_query debe ser específico y listo para búsqueda en mapas:
-incluye nombre + ciudad + país.
+14. El campo search_query debe ser específico, preciso y listo para búsqueda en mapas:
+- Formato: "<nombre del lugar>, <ciudad>, <país>"
+- Ejemplo: "Terras Urban Mexican Kitchen, Brownsville, Texas, USA"
+- Si es una zona:
+  "restaurantes en Downtown Brownsville Texas USA"
+15. Todos los lugares deben ser reales, verificables y ubicados en la ciudad del día.
 
+- NO uses nombres genéricos como "Sunrise Bakery", "City Cafe", "Central Park Restaurant".
+- Usa nombres únicos y específicos que claramente existan en esa ciudad.
+- Si no estás seguro de un lugar real, usa una zona o área reconocida en lugar de inventar un negocio.
+16. Todas las actividades del día deben estar geográficamente cercanas entre sí.
+17. Si no puedes garantizar un lugar específico real:
+
+- Usa una zona conocida en lugar de un negocio inventado.
+- Ejemplo:
+  - En lugar de: "Sunrise Bakery"
+  - Usa: "Cafetería local en el centro de Brownsville"
+
+Y en place:
+- name: "Cafetería en Downtown Brownsville"
+- search_query: "cafetería en Downtown Brownsville Texas"
+- Asume un máximo de 15–20 minutos de traslado entre actividades.
+- NO incluyas lugares en otras ciudades o zonas lejanas.
+- Si una ubicación conocida está a más de 20 minutos, NO la uses.
+- NO uses nombres genéricos como "Sunrise Bakery", "City Cafe", "Central Park Restaurant".
+- Usa nombres únicos y específicos que claramente existan en esa ciudad.
+- Si no estás seguro de un lugar real, usa una zona o área reconocida en lugar de inventar un negocio.
+No inventes lugares. Es preferible usar una zona real que un negocio falso.
+La precisión geográfica es más importante que la creatividad.
 Los campos deben cumplir:
 - type: uno de ["activity", "food", "transport"]
 - category: uno de ["breakfast", "lunch", "dinner", "attraction", "experience"]

@@ -1,7 +1,5 @@
 import type { Place } from "./trip.types";
 
-export type { Place };
-
 export const PACE_MAX_ACTIVITIES = {
   relaxed: 3,
   moderate: 4,
@@ -9,18 +7,20 @@ export const PACE_MAX_ACTIVITIES = {
 };
 
 export type Activity = {
+  id: string;
+  type: string;
+  category?: string;
   title: string;
   description: string;
-  type: string;
-  category: string;
-  time_of_day: string;
+  full_day: boolean;
   time_start: string;
   time_end: string;
-  full_day?: boolean;
-  place: Place;
+  time_of_day?: string;
+  place?: Place;
+  estimated_cost: { min: number; max: number };
 };
 
-export type ActivityType = "activity" | "food" | "transport";
+export type ActivityType = "activity" | "food" | "transport" | "buffer";
 
 export type ActivityCategory =
   | "breakfast"

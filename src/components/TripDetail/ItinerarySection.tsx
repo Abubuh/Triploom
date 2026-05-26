@@ -108,6 +108,31 @@ export function ItinerarySection({
       .eq("day_number", updatedDays[dayIndex].day_number);
   };
 
+  const handleUpdateActivityPlace = async (
+    dayIndex: number,
+    activityIndex: number,
+    value: string,
+  ) => {
+    const updatedDays = [...itinerary.days];
+    const current = updatedDays[dayIndex].activities[activityIndex];
+    updatedDays[dayIndex].activities[activityIndex] = {
+      ...current,
+      place: {
+        ...current.place,
+        name: value,
+        search_query: `${value}, ${updatedDays[dayIndex].destination}`,
+      },
+    };
+
+    onItineraryChange({ ...itinerary, days: updatedDays });
+
+    await supabase
+      .from("itinerary_days")
+      .update({ activities: updatedDays[dayIndex] })
+      .eq("trip_id", trip.id)
+      .eq("day_number", updatedDays[dayIndex].day_number);
+  };
+
   const handleAddActivity = async (
     dayIndex: number,
     position: "before" | "after",
@@ -543,20 +568,7 @@ export function ItinerarySection({
                           )}
 
                           <div
-                            className="flex gap-4 group cursor-pointer"
-                            onClick={() => {
-                              if (
-                                currentUserRole !== "owner" &&
-                                currentUserRole !== "co-organizer"
-                              )
-                                return;
-                              setEditingActivity(
-                                editingActivity?.dayIndex === dayIndex &&
-                                  editingActivity?.activityIndex === i
-                                  ? null
-                                  : { dayIndex, activityIndex: i },
-                              );
-                            }}
+                            className="flex gap-4 group"
                           >
                             <span className="text-gray-500 text-sm w-12 shrink-0">
                               {getTime(activity)}
@@ -639,6 +651,19 @@ export function ItinerarySection({
                                     className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                                     rows={2}
                                   />
+                                  <input
+                                    type="text"
+                                    value={activity.place?.name ?? ""}
+                                    onChange={(e) =>
+                                      handleUpdateActivityPlace(
+                                        dayIndex,
+                                        i,
+                                        e.target.value,
+                                      )
+                                    }
+                                    placeholder="Lugar / Dirección"
+                                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                  />
                                   <div className="flex gap-2 items-center">
                                     <span className="text-xs text-gray-500 shrink-0">
                                       Costo ({trip.currency ?? "MXN"})
@@ -686,10 +711,20 @@ export function ItinerarySection({
                                     {activity.title}
                                     {(isOwner ||
                                       currentUserRole === "co-organizer") && (
-                                      <span className="text-gray-600 hover:text-yellow-400 text-xs ml-2 items-center text-center opacity-0 group-hover:opacity-100 flex gap-1 transition">
+                                      <button
+                                        onClick={() =>
+                                          setEditingActivity(
+                                            editingActivity?.dayIndex === dayIndex &&
+                                              editingActivity?.activityIndex === i
+                                              ? null
+                                              : { dayIndex, activityIndex: i },
+                                          )
+                                        }
+                                        className="text-gray-600 hover:text-yellow-400 text-xs ml-2 items-center text-center opacity-0 group-hover:opacity-100 flex gap-1 transition"
+                                      >
                                         Editar
                                         <EditIcon />
-                                      </span>
+                                      </button>
                                     )}
                                     {"  "}
                                     {(isOwner ||

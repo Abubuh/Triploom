@@ -2,7 +2,7 @@ import {
   Activity,
   PACE_MAX_ACTIVITIES,
 } from "../../types/itinerary.generated.types";
-import { GenerateItineraryParams, ItineraryDay } from "../../types/trip.types";
+import { GenerateItineraryParams, ItineraryActivity, ItineraryDay } from "../../types/trip.types";
 import { dominantPace } from "./utils/pace";
 
 export interface ValidationIssue {
@@ -19,7 +19,7 @@ interface Phase2Result {
   maxActivities: number;
 }
 
-const VALID_TYPES = ["activity", "food", "transport"];
+const VALID_TYPES = ["activity", "food", "transport", "buffer"];
 const VALID_TIME = ["morning", "afternoon", "evening"];
 const VALID_CATEGORY = [
   "breakfast",
@@ -54,16 +54,27 @@ function timeToMinutes(time?: string): number {
 
 function normalizeActivity(a: Partial<Activity>): Activity {
   return {
+    id: a.id ?? crypto.randomUUID(),
     title: a.title ?? "",
     description: a.description ?? "",
     time_start: a.time_start ?? "",
     time_end: a.time_end ?? "",
     full_day: a.full_day ?? false,
-    place: a.place ?? { name: "", address: "", search_query: "", lat: null, lng: null },
+    place: {
+      name: a.place?.name ?? "",
+      address: a.place?.address ?? "",
+      search_query: a.place?.search_query ?? "",
+      lat: a.place?.lat ?? null,
+      lng: a.place?.lng ?? null,
+    },
 
     type: a.type?.toLowerCase() ?? "",
     category: a.category?.toLowerCase() ?? "",
     time_of_day: a.time_of_day?.toLowerCase() ?? "",
+    estimated_cost: {
+      min: a.estimated_cost?.min ?? 0,
+      max: a.estimated_cost?.max ?? 0,
+    },
   };
 }
 
@@ -118,6 +129,7 @@ export function validateItinerary(
   }
 
   const days: ItineraryDay[] = parsed.days;
+  const normalizedDays: ItineraryDay[] = [];
 
   // Collect all attraction preferences
   const allAttractions = params.members
@@ -165,6 +177,9 @@ export function validateItinerary(
     );
     for (const a of activities) {
       const title = a.title ?? "Actividad sin nombre";
+      if (a.type === "buffer") {
+        continue;
+      }
       if (!a.place?.search_query) {
         issues.push({
           type: "error",
@@ -181,14 +196,14 @@ export function validateItinerary(
         });
       }
 
-      if (!VALID_TIME.includes(a.time_of_day)) {
+      if (a.time_of_day && !VALID_TIME.includes(a.time_of_day)) {
         issues.push({
           type: "warning",
           day: dayNum,
           message: `Actividad "${title}": time_of_day inválido ("${a.time_of_day}")`,
         });
       }
-      if (!VALID_CATEGORY.includes(a.category)) {
+      if (a.category && !VALID_CATEGORY.includes(a.category)) {
         issues.push({
           type: "warning",
           day: dayNum,
@@ -278,7 +293,11 @@ export function validateItinerary(
       const intermediates = activities.filter(
         (a) =>
           a !== fullDayActivity &&
-          !(a.type === "food" && ["breakfast", "dinner"].includes(a.category)),
+          !(
+            a.type === "food" &&
+            a.category &&
+            ["breakfast", "dinner"].includes(a.category)
+          ),
       );
       if (intermediates.length > 0) {
         issues.push({
@@ -311,7 +330,12 @@ export function validateItinerary(
         });
       }
     }
+
+    normalizedDays.push({
+      ...day,
+      activities: activities as unknown as ItineraryActivity[],
+    });
   }
 
-  return { itinerary: days, issues, summary, budgetWarnings, maxActivities };
+  return { itinerary: normalizedDays, issues, summary, budgetWarnings, maxActivities };
 }
