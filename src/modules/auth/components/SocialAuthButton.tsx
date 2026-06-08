@@ -1,5 +1,26 @@
 import { useLogin } from "../hooks/useLogin";
 
+const GoogleLogo = () => (
+  <svg width="18" height="18" viewBox="0 0 48 48">
+    <path
+      fill="#FFC107"
+      d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.2-.1-2.4-.4-3.5z"
+    />
+    <path
+      fill="#FF3D00"
+      d="m6.3 14.7 6.6 4.8C14.6 16 18.9 13 24 13c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"
+    />
+    <path
+      fill="#4CAF50"
+      d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.3-11.2-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"
+    />
+    <path
+      fill="#1976D2"
+      d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.7l6.2 5.2C41.5 35.7 44 30.3 44 24c0-1.2-.1-2.4-.4-3.5z"
+    />
+  </svg>
+);
+
 export function SocialAuthButton() {
   const { loginWithGoogle, error } = useLogin();
 
@@ -10,36 +31,15 @@ export function SocialAuthButton() {
           {error}
         </div>
       )}
-      <button
-        type="button"
-        onClick={loginWithGoogle}
-        className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-800 font-semibold rounded-lg py-3 transition mb-6"
-      >
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 18 18"
-          xmlns="http://www.w3.org/2000/svg"
+      <div className="flex justify-center items-center mb-5">
+        <button
+          type="button"
+          onClick={loginWithGoogle}
+          className="input-base flex justify-center gap-2 rounded-xl py-3 cursor-pointer"
         >
-          <path
-            d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
-            fill="#4285F4"
-          />
-          <path
-            d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"
-            fill="#34A853"
-          />
-          <path
-            d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"
-            fill="#FBBC05"
-          />
-          <path
-            d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.96L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"
-            fill="#EA4335"
-          />
-        </svg>
-        Continuar con Google
-      </button>
+          <GoogleLogo /> Google
+        </button>
+      </div>
     </>
   );
 }

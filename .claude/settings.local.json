@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm install *)",
+      "Bash(findstr \"error TS\")",
+      "Bash(findstr \"ThemeContext\\\\|context/Theme\\\\|Landing\\\\|Auth.tsx\\\\|Dashboard.tsx\\\\|CreateTrip.tsx\\\\|TripDetail.tsx\")",
+      "Bash(findstr \"Auth\\\\|Dashboard\\\\|CreateTrip\\\\|TripDetail\\\\|ThemeContext\\\\|Landing\")",
+      "Bash(findstr \"Auth\\\\|Dashboard\\\\|CreateTrip\\\\|TripDetail\\\\|Landing\\\\|ThemeContext\")"
     ]
   }
 }

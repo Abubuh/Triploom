@@ -8,10 +8,57 @@ import {
   PACE_OPTIONS,
 } from "../constants/tripOptions.tsx";
 import PlaneIcon from "../components/Icons/PlaneIcon";
-import House from "../components/Icons/House";
+import CheckIcon from "../components/Icons/CheckIcon";
 import StarsIcon from "../components/Icons/StarsIcon";
+import House from "../components/Icons/House";
+import HotelIcon from "../components/Icons/HotelIcon.tsx";
 
 const STEPS = ["Información", "Destinos", "Alojamiento", "Preferencias"];
+
+const inputCls =
+  "w-full px-4 py-3 rounded-xl text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-white dark:bg-gray-900 border border-slate-300 dark:border-[#28344a] text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500";
+
+const selectArrow = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
+
+function Stepper({ step }: { step: number }) {
+  return (
+    <div className="flex items-center mb-11">
+      {STEPS.map((label, i) => (
+        <div key={i} className="flex items-center flex-1 last:flex-none">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all border ${
+                i <= step
+                  ? "bg-blue-600 border-blue-600 text-white"
+                  : "bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500"
+              } ${i === step ? "shadow-[0_0_0_4px_rgba(37,99,235,0.18)]" : ""}`}
+            >
+              {i < step ? <CheckIcon /> : i + 1}
+            </div>
+            <span
+              className={`text-sm font-semibold hidden md:block ${
+                i === step
+                  ? "text-slate-900 dark:text-slate-100"
+                  : i < step
+                    ? "text-slate-500 dark:text-slate-400"
+                    : "text-slate-400 dark:text-slate-500"
+              }`}
+            >
+              {label}
+            </span>
+          </div>
+          {i < STEPS.length - 1 && (
+            <div
+              className={`flex-1 h-0.5 mx-3 min-w-6 transition-all ${
+                i < step ? "bg-blue-600" : "bg-slate-200 dark:bg-slate-800"
+              }`}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function CreateTrip() {
   const navigate = useNavigate();
@@ -25,6 +72,8 @@ function CreateTrip() {
   const [attractions, setAttractions] = useState<string[]>([]);
   const [attractionInput, setAttractionInput] = useState("");
 
+  const [showErrors, setShowErrors] = useState(false);
+
   const store = useTripStore();
 
   useEffect(() => {
@@ -33,33 +82,27 @@ function CreateTrip() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
-
       const { data } = await supabase
         .from("profiles")
         .select("currency")
         .eq("id", user.id)
         .single();
-
-      if (data?.currency) {
-        store.setField("currency", data.currency);
-      }
+      if (data?.currency) store.setField("currency", data.currency);
     };
-
     fetchProfile();
   }, []);
-
-  const handleNext = () => setStep((s) => s + 1);
-  const handleBack = () => setStep((s) => s - 1);
 
   const toggleOption = (
     field: "foodPreferences" | "activityPreferences",
     value: string,
   ) => {
     const current = store[field];
-    const updated = current.includes(value)
-      ? current.filter((v) => v !== value)
-      : [...current, value];
-    store.setField(field, updated);
+    store.setField(
+      field,
+      current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value],
+    );
   };
 
   const handleAddDestination = () => {
@@ -76,13 +119,11 @@ function CreateTrip() {
 
   const handleSubmit = async () => {
     setLoading(true);
-
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Crear el viaje
     const { data: trip, error } = await supabase
       .from("trips")
       .insert({
@@ -103,14 +144,10 @@ function CreateTrip() {
       return;
     }
 
-    // Agregar owner como miembro primero (requerido por RLS de destinations)
-    await supabase.from("trip_members").insert({
-      trip_id: trip.id,
-      user_id: user.id,
-      role: "owner",
-    });
+    await supabase
+      .from("trip_members")
+      .insert({ trip_id: trip.id, user_id: user.id, role: "owner" });
 
-    // Agregar destinos
     if (store.destinations.length > 0) {
       await supabase.from("destinations").insert(
         store.destinations.map((d, i) => ({
@@ -123,7 +160,6 @@ function CreateTrip() {
       );
     }
 
-    // Guardar preferencias
     await supabase.from("member_preferences").insert({
       trip_id: trip.id,
       user_id: user.id,
@@ -140,126 +176,144 @@ function CreateTrip() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      {/* Navbar */}
-      <nav className="flex items-center justify-between px-8 py-6 max-w-3xl mx-auto border-b border-gray-800">
-        <h1
-          className="text-2xl font-bold cursor-pointer flex items-center gap-2"
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0a0e1a] text-slate-900 dark:text-slate-100">
+      {/* Nav */}
+      <nav className="flex items-center justify-between px-10 py-5 border-b border-slate-200 dark:border-slate-800">
+        <span
+          className="flex items-center gap-2 text-2xl font-bold tracking-tight cursor-pointer"
           onClick={() => navigate("/dashboard")}
+          style={{
+            background: "linear-gradient(135deg, #60a5fa, #06b6d4)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
         >
-          Triploom <PlaneIcon />
-        </h1>
+          <span style={{ WebkitTextFillColor: "#60a5fa" }}>
+            <PlaneIcon />
+          </span>
+          Triploom
+        </span>
         <button
           onClick={() => navigate("/dashboard")}
-          className="text-gray-400 hover:text-white text-sm transition"
+          className="text-sm font-medium transition text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
         >
           Cancelar
         </button>
       </nav>
 
-      <main className="max-w-3xl mx-auto px-8 py-12">
-        {/* Progress */}
-        <div className="flex items-center gap-2 mb-12">
-          {STEPS.map((s, i) => (
-            <div key={s} className="flex items-center gap-2 flex-1">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition ${
-                  i < step
-                    ? "bg-blue-600 text-white"
-                    : i === step
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-800 text-gray-400"
-                }`}
-              >
-                {i < step ? "✓" : i + 1}
-              </div>
-              <span
-                className={`text-sm hidden md:block ${i === step ? "text-white" : "text-gray-500"}`}
-              >
-                {s}
-              </span>
-              {i < STEPS.length - 1 && (
-                <div
-                  className={`flex-1 h-px ${i < step ? "bg-blue-600" : "bg-gray-800"}`}
-                />
-              )}
-            </div>
-          ))}
-        </div>
+      <main className="max-w-[820px] mx-auto px-8 py-10 w-full">
+        <Stepper step={step} />
 
-        {/* Step 1 — Información básica */}
+        {/* Step 0 — Info */}
         {step === 0 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold mb-1">
-                ¿Cómo se llama tu viaje?
-              </h2>
-              <p className="text-gray-400">
-                Dale un nombre para identificarlo fácilmente
-              </p>
-            </div>
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight mb-1">
+              ¿Cómo se llama tu viaje?
+            </h2>
+            <p className="text-sm mb-8 text-slate-500 dark:text-slate-400">
+              Dale un nombre para identificarlo fácilmente
+            </p>
 
-            <div>
-              <label className="text-gray-400 text-sm mb-1 block">
+            <div className="mb-6">
+              <label className="block text-xs font-medium mb-2 text-slate-600 dark:text-slate-300">
                 Nombre del viaje
               </label>
               <input
-                type="text"
+                className={
+                  inputCls +
+                  (showErrors && !store.name
+                    ? " border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                    : "")
+                }
+                placeholder="Ej: Verano en la playa"
                 value={store.name}
                 onChange={(e) => store.setField("name", e.target.value)}
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Ej: Verano en la playa"
               />
+              {showErrors && !store.name && (
+                <p className="mt-1 text-xs text-red-500">
+                  El nombre del viaje es obligatorio
+                </p>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-gray-400 text-sm mb-1 block">
-                  Fecha de inicio
-                </label>
-                <input
-                  type="date"
-                  value={store.startDate}
-                  onChange={(e) => store.setField("startDate", e.target.value)}
-                  className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="text-gray-400 text-sm mb-1 block">
-                  Fecha de regreso
-                </label>
-                <input
-                  type="date"
-                  value={store.endDate}
-                  onChange={(e) => store.setField("endDate", e.target.value)}
-                  className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                />
+            <div className="mb-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium mb-2 text-slate-600 dark:text-slate-300">
+                    Fecha de inicio
+                  </label>
+                  <input
+                    type="date"
+                    className={
+                      inputCls +
+                      (showErrors && !store.startDate
+                        ? " border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                        : "")
+                    }
+                    value={store.startDate}
+                    onChange={(e) =>
+                      store.setField("startDate", e.target.value)
+                    }
+                  />
+                  {showErrors && !store.startDate && (
+                    <p className="mt-1 text-xs text-red-500">
+                      La fecha de inicio es obligatoria
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-2 text-slate-600 dark:text-slate-300">
+                    Fecha de regreso
+                  </label>
+                  <input
+                    type="date"
+                    className={
+                      inputCls +
+                      (showErrors && !store.endDate
+                        ? " border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                        : "")
+                    }
+                    value={store.endDate}
+                    onChange={(e) => store.setField("endDate", e.target.value)}
+                  />
+                  {showErrors && !store.endDate && (
+                    <p className="mt-1 text-xs text-red-500">
+                      La fecha de regreso es obligatoria
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="text-gray-400 text-sm mb-1 block">
+            <div className="mb-6">
+              <label className="block text-xs font-medium mb-2 text-slate-600 dark:text-slate-300">
                 ¿Cuántas personas van?
               </label>
               <input
                 type="number"
                 min={1}
+                className={inputCls}
                 value={store.totalPeople}
                 onChange={(e) =>
                   store.setField("totalPeople", Number(e.target.value))
                 }
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
-            <div>
-              <label className="text-gray-400 text-sm mb-1 block">
+            <div className="mb-10">
+              <label className="block text-xs font-medium mb-2 text-slate-600 dark:text-slate-300">
                 Moneda del viaje
               </label>
               <select
+                className={inputCls + " cursor-pointer appearance-none pr-10"}
+                style={{
+                  backgroundImage: selectArrow,
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 1rem center",
+                }}
                 value={store.currency}
                 onChange={(e) => store.setField("currency", e.target.value)}
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {["MXN", "USD", "EUR", "GBP", "CAD", "ARS", "COP", "CLP"].map(
                   (c) => (
@@ -270,97 +324,59 @@ function CreateTrip() {
                 )}
               </select>
             </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => {
+                  if (!store.name || !store.startDate || !store.endDate) {
+                    setShowErrors(true);
+                    return;
+                  }
+                  setShowErrors(false);
+                  setStep(1);
+                }}
+                className="px-6 py-3 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 transition hover:-translate-y-px"
+              >
+                Siguiente →
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Step 2 — Destinos */}
+        {/* Step 1 — Destinos */}
         {step === 1 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold mb-1">¿A dónde van?</h2>
-              <p className="text-gray-400">
-                Agrega uno o varios destinos en orden
-              </p>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-1">
-                <label className="text-gray-400 text-sm mb-1 block">
-                  Ciudad
-                </label>
-                <input
-                  type="text"
-                  value={newDestination.city}
-                  onChange={(e) =>
-                    setNewDestination({
-                      ...newDestination,
-                      city: e.target.value,
-                    })
-                  }
-                  className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Ej: Guadalajara"
-                />
-              </div>
-              <div className="col-span-1">
-                <label className="text-gray-400 text-sm mb-1 block">País</label>
-                <input
-                  type="text"
-                  value={newDestination.country}
-                  onChange={(e) =>
-                    setNewDestination({
-                      ...newDestination,
-                      country: e.target.value,
-                    })
-                  }
-                  className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Ej: México"
-                />
-              </div>
-              <div className="col-span-1">
-                <label className="text-gray-400 text-sm mb-1 block">Días</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={newDestination.days}
-                  onChange={(e) =>
-                    setNewDestination({
-                      ...newDestination,
-                      days: Number(e.target.value),
-                    })
-                  }
-                  className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <button
-              onClick={handleAddDestination}
-              className="w-full border border-dashed border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400 rounded-lg py-3 transition"
-            >
-              + Confirmar destino
-            </button>
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight mb-1">
+              ¿A dónde van?
+            </h2>
+            <p className="text-sm mb-8 text-slate-500 dark:text-slate-400">
+              Agrega uno o varios destinos en orden
+            </p>
 
             {store.destinations.length > 0 && (
-              <div className="space-y-3">
+              <div className="flex flex-col gap-2 mb-5">
                 {store.destinations.map((d, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between bg-gray-800 rounded-lg px-4 py-3"
+                    className="flex items-center justify-between px-4 py-3 rounded-xl bg-slate-100 dark:bg-[#161e2e] border border-slate-300 dark:border-[#28344a]"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-blue-400 font-semibold">
-                        #{i + 1}
+                    <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white bg-blue-600">
+                        {i + 1}
                       </span>
-                      <span>
-                        {d.city}, {d.country}
-                      </span>
-                      <span className="text-gray-400 text-sm">
-                        {d.days} días
+                      <span className="font-semibold">{d.city}</span>
+                      {d.country && (
+                        <span className="text-slate-400 dark:text-slate-500">
+                          · {d.country}
+                        </span>
+                      )}
+                      <span className="text-blue-400 dark:text-blue-400 font-semibold">
+                        {d.days} {d.days === 1 ? "día" : "días"}
                       </span>
                     </div>
                     <button
                       onClick={() => store.removeDestination(i)}
-                      className="text-gray-500 hover:text-red-400 transition"
+                      className="text-slate-400 hover:text-red-400 transition text-sm px-1"
                     >
                       ✕
                     </button>
@@ -368,61 +384,151 @@ function CreateTrip() {
                 ))}
               </div>
             )}
+
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div>
+                <label className="block text-xs font-medium mb-2 text-slate-600 dark:text-slate-300">
+                  Ciudad
+                </label>
+                <input
+                  className={inputCls}
+                  placeholder="Ej: Guadalajara"
+                  value={newDestination.city}
+                  onChange={(e) =>
+                    setNewDestination({
+                      ...newDestination,
+                      city: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-2 text-slate-600 dark:text-slate-300">
+                  País
+                </label>
+                <input
+                  className={inputCls}
+                  placeholder="Ej: México"
+                  value={newDestination.country}
+                  onChange={(e) =>
+                    setNewDestination({
+                      ...newDestination,
+                      country: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-2 text-slate-600 dark:text-slate-300">
+                  Días
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  className={inputCls}
+                  value={newDestination.days}
+                  onChange={(e) =>
+                    setNewDestination({
+                      ...newDestination,
+                      days: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleAddDestination}
+              className="w-full py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-blue-400 hover:border-blue-500 transition border-[1.5px] border-dashed border-slate-300 dark:border-slate-700 bg-transparent"
+            >
+              + Confirmar destino
+            </button>
+
+            {showErrors && store.destinations.length === 0 && (
+              <p className="mt-2 mb-8 text-xs text-red-500">
+                Agrega al menos un destino para continuar
+              </p>
+            )}
+            {!(showErrors && store.destinations.length === 0) && (
+              <div className="mb-10" />
+            )}
+
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => {
+                  setShowErrors(false);
+                  setStep(0);
+                }}
+                className="px-5 py-3 rounded-xl text-sm font-semibold transition bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-300 dark:hover:bg-slate-700"
+              >
+                ← Atrás
+              </button>
+              <button
+                onClick={() => {
+                  if (store.destinations.length === 0) {
+                    setShowErrors(true);
+                    return;
+                  }
+                  setShowErrors(false);
+                  setStep(2);
+                }}
+                className="px-6 py-3 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 transition hover:-translate-y-px"
+              >
+                Siguiente →
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Step 3 — Alojamiento */}
+        {/* Step 2 — Alojamiento */}
         {step === 2 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold mb-1">
-                ¿Cómo se van a alojar?
-              </h2>
-              <p className="text-gray-400">
-                Esto nos ayuda a darte mejores recomendaciones
-              </p>
-            </div>
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight mb-1">
+              ¿Cómo se van a alojar?
+            </h2>
+            <p className="text-sm mb-8 text-slate-500 dark:text-slate-400">
+              Esto nos ayuda a darte mejores recomendaciones
+            </p>
 
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                {
-                  value: "together",
-                  icon: <House />,
-                  label: "Todos juntos",
-                  desc: "Un Airbnb o casa para el grupo",
-                },
-                {
-                  value: "separate",
-                  icon: <House />,
-                  label: "Por separado",
-                  desc: "Cada quien elige su alojamiento",
-                },
-              ].map((opt) => (
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {(
+                [
+                  {
+                    value: "together",
+                    label: "Todos juntos",
+                    desc: "Un Airbnb o casa para el grupo",
+                  },
+                  {
+                    value: "separate",
+                    label: "Por separado",
+                    desc: "Cada quien elige su alojamiento",
+                  },
+                ] as const
+              ).map((opt) => (
                 <button
                   key={opt.value}
-                  onClick={() =>
-                    store.setField(
-                      "accommodationType",
-                      opt.value as "together" | "separate",
-                    )
-                  }
-                  className={`p-6 rounded-xl border-2 text-left transition ${
+                  onClick={() => store.setField("accommodationType", opt.value)}
+                  className={`text-left p-5 rounded-2xl transition border-[1.5px] ${
                     store.accommodationType === opt.value
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "border-gray-700 hover:border-gray-500"
+                      ? "bg-blue-500/10 border-blue-500"
+                      : "bg-white dark:bg-gray-900 border-slate-300 dark:border-[#28344a] hover:border-blue-400"
                   }`}
                 >
-                  <p className="text-lg font-semibold mb-1 flex items-center gap-2">
-                    {opt.icon}
+                  <p className="flex items-center gap-2 text-base font-bold mb-1 text-slate-900 dark:text-slate-100">
+                    <span className="text-blue-500 dark:text-blue-400">
+                      {opt.value === "together" ? <HotelIcon /> : <House />}
+                    </span>
                     {opt.label}
                   </p>
-                  <p className="text-gray-400 text-sm">{opt.desc}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {opt.desc}
+                  </p>
                 </button>
               ))}
             </div>
 
-            <div>
-              <label className="text-gray-400 text-sm mb-1 block">
+            <div className="mb-10">
+              <label className="block text-xs font-medium mb-2 text-slate-600 dark:text-slate-300">
                 {store.accommodationType === "together"
                   ? `Presupuesto total del grupo para alojamiento (${store.currency})`
                   : `Tu presupuesto personal para alojamiento (${store.currency})`}
@@ -430,90 +536,126 @@ function CreateTrip() {
               <input
                 type="number"
                 min={0}
-                value={store.accommodationBudget}
+                className={inputCls + (showErrors && !store.accommodationBudget ? " border-red-500 focus:border-red-500 focus:ring-red-500/20" : "")}
+                placeholder="0"
+                value={
+                  store.accommodationBudget === 0
+                    ? ""
+                    : store.accommodationBudget
+                }
                 onChange={(e) =>
                   store.setField("accommodationBudget", Number(e.target.value))
                 }
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Ej: 5000"
               />
+              {showErrors && !store.accommodationBudget && (
+                <p className="mt-1 text-xs text-red-500">Ingresa un presupuesto para el alojamiento</p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => { setShowErrors(false); setStep(1); }}
+                className="px-5 py-3 rounded-xl text-sm font-semibold transition bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-300 dark:hover:bg-slate-700"
+              >
+                ← Atrás
+              </button>
+              <button
+                onClick={() => {
+                  if (!store.accommodationBudget) {
+                    setShowErrors(true);
+                    return;
+                  }
+                  setShowErrors(false);
+                  setStep(3);
+                }}
+                className="px-6 py-3 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 transition hover:-translate-y-px"
+              >
+                Siguiente →
+              </button>
             </div>
           </div>
         )}
 
-        {/* Step 4 — Preferencias */}
+        {/* Step 3 — Preferencias */}
         {step === 3 && (
-          <div className="space-y-8">
-            <div>
-              <h2 className="text-2xl font-bold mb-1">Tu estilo de viaje</h2>
-              <p className="text-gray-400">
-                La IA usará esto para personalizar tu itinerario
-              </p>
-            </div>
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight mb-1">
+              Tu estilo de viaje
+            </h2>
+            <p className="text-sm mb-8 text-slate-500 dark:text-slate-400">
+              La IA usará esto para personalizar tu itinerario
+            </p>
 
-            <div>
-              <label className="text-white font-semibold mb-3 block">
-                {`Presupuesto personal total (${store.currency})`}
-              </label>
+            <div className="mb-7">
+              <label className="block text-xs font-medium mb-2 text-slate-600 dark:text-slate-300">{`Presupuesto personal total (${store.currency})`}</label>
               <input
                 type="number"
                 min={0}
-                value={store.budget}
+                className={inputCls + (showErrors && !store.budget ? " border-red-500 focus:border-red-500 focus:ring-red-500/20" : "")}
+                placeholder="0"
+                value={store.budget === 0 ? "" : store.budget}
                 onChange={(e) =>
                   store.setField("budget", Number(e.target.value))
                 }
-                className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Ej: 15000"
               />
+              {showErrors && !store.budget && (
+                <p className="mt-1 text-xs text-red-500">Ingresa tu presupuesto personal</p>
+              )}
             </div>
 
-            <div>
-              <label className="text-white font-semibold mb-3 block">
+            <div className="mb-7">
+              <p className="text-base font-bold mb-3">
                 ¿Qué tipo de comida te gusta?
-              </label>
+              </p>
               <div className="flex flex-wrap gap-2">
                 {FOOD_OPTIONS.map((opt) => (
                   <button
                     key={opt}
                     onClick={() => toggleOption("foodPreferences", opt)}
-                    className={`px-4 py-2 rounded-full text-sm transition ${
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition border ${
                       store.foodPreferences.includes(opt)
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                        ? "bg-blue-500/15 border-blue-500 text-blue-300"
+                        : "bg-slate-100 dark:bg-[#161e2e] border-slate-300 dark:border-[#28344a] text-slate-600 dark:text-slate-300 hover:border-blue-400"
                     }`}
                   >
                     {opt}
                   </button>
                 ))}
               </div>
+              {showErrors && store.foodPreferences.length === 0 && (
+                <p className="mt-2 text-xs text-red-500">Selecciona al menos un tipo de comida</p>
+              )}
             </div>
 
-            <div>
-              <label className="text-white font-semibold mb-3 block">
+            <div className="mb-7">
+              <p className="text-base font-bold mb-3">
                 ¿Qué actividades te interesan?
-              </label>
+              </p>
               <div className="flex flex-wrap gap-2">
                 {ACTIVITY_OPTIONS.map((opt) => (
                   <button
                     key={opt}
                     onClick={() => toggleOption("activityPreferences", opt)}
-                    className={`px-4 py-2 rounded-full text-sm transition ${
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition border ${
                       store.activityPreferences.includes(opt)
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                        ? "bg-blue-500/15 border-blue-500 text-blue-300"
+                        : "bg-slate-100 dark:bg-[#161e2e] border-slate-300 dark:border-[#28344a] text-slate-600 dark:text-slate-300 hover:border-blue-400"
                     }`}
                   >
                     {opt}
                   </button>
                 ))}
               </div>
+              {showErrors && store.activityPreferences.length === 0 && (
+                <p className="mt-2 text-xs text-red-500">Selecciona al menos una actividad</p>
+              )}
             </div>
 
-            <div>
-              <label className="text-white font-semibold mb-3 block">
+            <div className="mb-7">
+              <p className="text-base font-bold mb-3">
                 ¿Cuál es tu ritmo de viaje?
-              </label>
-              <div className="grid grid-cols-3 gap-4">
+              </p>
+              <div className="grid grid-cols-3 gap-3">
                 {PACE_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
@@ -523,39 +665,43 @@ function CreateTrip() {
                         opt.value as "relaxed" | "moderate" | "intense",
                       )
                     }
-                    className={`p-4 rounded-xl border-2 text-left transition ${
+                    className={`text-left p-5 rounded-2xl transition border-[1.5px] ${
                       store.travelPace === opt.value
-                        ? "border-blue-500 bg-blue-500/10"
-                        : "border-gray-700 hover:border-gray-500"
+                        ? "bg-blue-500/10 border-blue-500"
+                        : "bg-white dark:bg-gray-900 border-slate-300 dark:border-[#28344a] hover:border-blue-400"
                     }`}
                   >
-                    <p className="font-semibold mb-1 flex items-center gap-2">
-                      {opt.icon} {opt.label}
+                    <p className="flex items-center gap-2 font-bold mb-1 text-sm text-slate-900 dark:text-slate-100">
+                      <span className="text-blue-500 dark:text-blue-400">
+                        {opt.icon}
+                      </span>{" "}
+                      {opt.label}
                     </p>
-                    <p className="text-gray-400 text-xs">{opt.desc}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {opt.desc}
+                    </p>
                   </button>
                 ))}
               </div>
             </div>
-            <div>
-              <label className="text-white font-semibold mb-3 block">
+
+            <div className="mb-10">
+              <p className="text-base font-bold mb-3">
                 ¿Qué lugares te gustaría visitar?
-              </label>
-              <div className="flex gap-2">
+              </p>
+              <div className="flex gap-3">
                 <input
-                  type="text"
+                  className={inputCls + " flex-1"}
+                  placeholder="Ej: Chichén Itzá"
                   value={attractionInput}
                   onChange={(e) => setAttractionInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddAttraction()}
-                  placeholder="Ej: Chichén Itzá"
-                  className="flex-1 bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
                   onClick={handleAddAttraction}
-                  disabled={!attractionInput.trim()}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-3 rounded-lg font-semibold transition"
+                  className="flex items-center gap-1.5 px-5 py-3 rounded-xl text-sm font-semibold whitespace-nowrap transition bg-blue-500/15 border border-blue-500 text-blue-300 hover:bg-blue-500/25"
                 >
-                  Confirmar ✓
+                  Confirmar <CheckIcon />
                 </button>
               </div>
               {attractions.length > 0 && (
@@ -563,7 +709,7 @@ function CreateTrip() {
                   {attractions.map((a, i) => (
                     <span
                       key={i}
-                      className="flex items-center gap-1 bg-gray-800 text-gray-300 text-sm px-3 py-1 rounded-full"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-slate-100 dark:bg-[#161e2e] border border-slate-300 dark:border-[#28344a] text-slate-600 dark:text-slate-300"
                     >
                       {a}
                       <button
@@ -572,7 +718,7 @@ function CreateTrip() {
                             prev.filter((_, idx) => idx !== i),
                           )
                         }
-                        className="text-gray-500 hover:text-red-400 transition ml-1"
+                        className="text-slate-400 hover:text-red-400 transition text-xs"
                       >
                         ✕
                       </button>
@@ -581,47 +727,36 @@ function CreateTrip() {
                 </div>
               )}
             </div>
+
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => { setShowErrors(false); setStep(2); }}
+                className="px-5 py-3 rounded-xl text-sm font-semibold transition bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-300 dark:hover:bg-slate-700"
+              >
+                ← Atrás
+              </button>
+              <button
+                onClick={() => {
+                  if (!store.budget || store.foodPreferences.length === 0 || store.activityPreferences.length === 0) {
+                    setShowErrors(true);
+                    return;
+                  }
+                  handleSubmit();
+                }}
+                disabled={loading}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 transition hover:-translate-y-px disabled:opacity-50"
+              >
+                {loading ? (
+                  "Creando viaje..."
+                ) : (
+                  <>
+                    Crear viaje <StarsIcon />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         )}
-
-        {/* Navigation */}
-        <div className="flex justify-between mt-12">
-          <button
-            onClick={handleBack}
-            className={`px-6 py-3 rounded-xl font-semibold transition ${
-              step === 0
-                ? "invisible"
-                : "bg-gray-800 hover:bg-gray-700 text-white"
-            }`}
-          >
-            ← Atrás
-          </button>
-
-          {step < STEPS.length - 1 ? (
-            <button
-              onClick={handleNext}
-              disabled={step === 0 && !store.name}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition disabled:opacity-50"
-            >
-              Siguiente →
-            </button>
-          ) : (
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="bg-blue-600 gap-2 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition disabled:opacity-50 flex"
-            >
-              {loading ? (
-                "Creando viaje..."
-              ) : (
-                <>
-                  Crear viaje
-                  <StarsIcon />
-                </>
-              )}
-            </button>
-          )}
-        </div>
       </main>
     </div>
   );

@@ -51,15 +51,12 @@ export function MembersSection({
 
   const handleRemoveMember = async (memberId: string, memberUserId: string) => {
     if (!confirm("¿Seguro que quieres remover a este viajero?")) return;
-
     await supabase
       .from("member_preferences")
       .delete()
       .eq("trip_id", trip.id)
       .eq("user_id", memberUserId);
-
     await supabase.from("trip_members").delete().eq("id", memberId);
-
     onMembersChange(members.filter((m) => m.id !== memberId));
   };
 
@@ -71,9 +68,7 @@ export function MembersSection({
       .from("trip_members")
       .update({ role: newRole })
       .eq("id", memberId);
-
     if (error) return;
-
     onMembersChange(
       members.map((m) => (m.id === memberId ? { ...m, role: newRole } : m)),
     );
@@ -82,51 +77,62 @@ export function MembersSection({
 
   const handleLeaveTrip = async () => {
     if (!confirm("¿Seguro que quieres salir de este viaje?")) return;
-
     const member = members.find((m) => m.user_id === currentUserId);
     if (!member) return;
-
     await supabase
       .from("member_preferences")
       .delete()
       .eq("trip_id", trip.id)
       .eq("user_id", currentUserId!);
-
     await supabase.from("trip_members").delete().eq("id", member.id);
-
     navigate("/dashboard");
   };
 
   return (
     <section>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-semibold flex gap-1 items-center">
+        <h3 className="text-xl font-semibold flex gap-1 items-center text-text-base dark:text-slate-300">
           <GroupIcon /> Viajeros
         </h3>
         {isOwner && (
           <button
             onClick={handleCopyInviteLink}
-            className="text-blue-400 hover:text-blue-300 text-sm transition"
+            className="text-brand-mid hover:text-brand-dark dark:hover:text-brand-light px-3 py-2 rounded-md transition text-sm font-medium cursor-pointer"
           >
             + Invitar persona
           </button>
         )}
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {members.map((m) => (
-          <div key={m.id} className="bg-gray-900 rounded-2xl p-6 space-y-4">
+          <div
+            key={m.id}
+            className="bg-surface-card border border-border-base dark:border-[#4a6b57] rounded-2xl p-6 space-y-4"
+          >
             <div className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold">{m.profiles?.name}</p>
+              <div className="flex gap-4 justify-center items-center">
+                <p className="font-semibold text-text-base dark:text-brand-subtle">
+                  {m.profiles?.name}
+                </p>
+                {m.user_id === currentUserId && (
+                  <button
+                    onClick={() => setEditingPrefs(true)}
+                    className="text-text-faint flex gap-2 hover:text-text-muted cursor-pointer w-fit text-xs transition items-center"
+                  >
+                    Editar <EditIcon />
+                  </button>
+                )}
               </div>
+
               <div className="flex items-center gap-2">
                 <span
-                  className={`text-xs flex gap-2 items-center px-3 py-1 rounded-full font-medium ${
+                  className={`text-xs flex gap-2 items-center px-3 py-1 rounded-full font-medium bg-readybg ${
                     m.role === "owner"
-                      ? "bg-yellow-500/10 text-yellow-400"
+                      ? " text-text-muted"
                       : m.role === "co-organizer"
-                        ? "bg-blue-500/10 text-blue-400"
-                        : "bg-gray-700 text-gray-400"
+                        ? " text-brand-mid dark:text-brand-light"
+                        : " text-text-muted"
                   }`}
                 >
                   {m.role === "owner" ? (
@@ -139,13 +145,12 @@ export function MembersSection({
                     </>
                   ) : (
                     <>
-                      <PlaneIcon />
-                      Viajero
+                      <PlaneIcon /> Viajero
                     </>
                   )}
                 </span>
 
-                {/* Kebab menu para cambiar rol (solo owner, solo no-owners) */}
+                {/* Menú de rol */}
                 {isOwner && m.role !== "owner" && (
                   <div className="relative">
                     <button
@@ -154,12 +159,12 @@ export function MembersSection({
                           roleMenuOpenFor === m.id ? null : m.id,
                         )
                       }
-                      className="text-gray-500 hover:text-white px-1 transition text-lg leading-none"
+                      className="text-text-faint hover:text-text-base px-1 transition text-lg leading-none"
                     >
                       ⋮
                     </button>
                     {roleMenuOpenFor === m.id && (
-                      <div className="absolute right-0 top-6 z-10 bg-gray-800 border border-gray-700 rounded-lg shadow-lg py-1 min-w-max">
+                      <div className="absolute right-0 top-6 z-10 bg-surface-card border border-border-base dark:border-[#4a6b57] rounded-lg shadow-lg py-1 min-w-max">
                         <button
                           onClick={() =>
                             handleChangeRole(
@@ -169,7 +174,7 @@ export function MembersSection({
                                 : "co-organizer",
                             )
                           }
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-gray-700 transition"
+                          className="w-full text-left px-4 py-2 text-sm text-text-muted hover:bg-surface-subtle hover:text-text-base transition"
                         >
                           {m.role === "co-organizer"
                             ? "Cambiar a viajero"
@@ -180,21 +185,21 @@ export function MembersSection({
                   </div>
                 )}
 
-                {/* Owner puede remover a otros */}
+                {/* Remover miembro */}
                 {isOwner && m.user_id !== currentUserId && (
                   <button
                     onClick={() => handleRemoveMember(m.id, m.user_id)}
-                    className="text-gray-600 hover:text-red-400 transition text-sm"
+                    className="text-text-faint hover:text-red-400 transition text-sm"
                   >
                     ✕
                   </button>
                 )}
 
-                {/* Cualquier miembro puede salirse (excepto owner) */}
+                {/* Salir del viaje */}
                 {m.user_id === currentUserId && !isOwner && (
                   <button
                     onClick={handleLeaveTrip}
-                    className="text-gray-600 hover:text-red-400 text-xs transition"
+                    className="text-text-faint hover:text-red-400 text-xs transition"
                   >
                     Salir
                   </button>
@@ -202,27 +207,19 @@ export function MembersSection({
               </div>
             </div>
 
+            {/* Preferencias */}
             {m.member_preferences && (
-              <div className="space-y-3 border-t border-gray-800 pt-3">
-                {m.user_id === currentUserId && (
-                  <div className=" flex flex-col items-end">
-                    <button
-                      onClick={() => setEditingPrefs(true)}
-                      className="text-gray-500  flex gap-2 hover:text-blue-400 w-fit text-xs transition"
-                    >
-                      Editar
-                      <EditIcon />
-                    </button>
-                  </div>
-                )}
+              <div className="space-y-3 border-t border-border-base pt-3">
                 {m.member_preferences.food_preferences?.length > 0 && (
                   <div>
-                    <p className="text-gray-400 text-sm mb-2">Comida</p>
+                    <p className="dark:text-text-faint text-text-base text-sm mb-2">
+                      Comida
+                    </p>
                     <div className="flex flex-wrap gap-1">
                       {m.member_preferences.food_preferences.map((f) => (
                         <span
                           key={f}
-                          className="bg-gray-800 text-gray-300 text-xs px-2 py-1 rounded-full"
+                          className="bg-surface-subtle text-text-muted text-xs px-2 py-1 rounded-full dark:text-text-faint"
                         >
                           {f}
                         </span>
@@ -232,12 +229,14 @@ export function MembersSection({
                 )}
                 {m.member_preferences.activity_preferences?.length > 0 && (
                   <div>
-                    <p className="text-gray-400 text-sm mb-2">Actividades</p>
+                    <p className="text-text-base dark:text-text-faint text-sm mb-2">
+                      Actividades
+                    </p>
                     <div className="flex flex-wrap gap-1">
                       {m.member_preferences.activity_preferences.map((a) => (
                         <span
                           key={a}
-                          className="bg-gray-800 text-gray-300 text-xs px-2 py-1 rounded-full"
+                          className="bg-surface-subtle text-text-muted text-xs px-2 py-1 rounded-full dark:text-text-faint"
                         >
                           {a}
                         </span>
@@ -247,14 +246,14 @@ export function MembersSection({
                 )}
                 {m.member_preferences.attractions_preferences?.length > 0 && (
                   <div>
-                    <p className="text-gray-400 text-sm mb-2">
+                    <p className="text-text-base dark:text-text-faint text-sm mb-2">
                       Lugares de interés
                     </p>
                     <div className="flex flex-wrap gap-1">
                       {m.member_preferences.attractions_preferences.map((a) => (
                         <span
                           key={a}
-                          className="bg-gray-800 text-gray-300 text-xs px-2 flex gap-1 items-center py-1 rounded-full"
+                          className="bg-surface-subtle text-text-muted text-xs px-2 flex gap-1 items-center py-1 rounded-full dark:text-text-faint"
                         >
                           <PinIcon /> {a}
                         </span>

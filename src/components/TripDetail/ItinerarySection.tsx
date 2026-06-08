@@ -6,11 +6,11 @@ import {
   ItineraryActivity,
 } from "../../types/trip.types";
 import CalendarIcon from "../Icons/CalendarIcon";
-import WarningIcon from "../Icons/WarningIcon";
 import EditIcon from "../Icons/EditIcon";
 import TrashIcon from "../Icons/TrashIcon";
 import House from "../Icons/House";
 import CheckIcon from "../Icons/CheckIcon";
+import PinIcon from "../Icons/PinIcon";
 
 interface PendingAccommodationExpense {
   amount: number;
@@ -73,9 +73,7 @@ export function ItinerarySection({
       ...updatedDays[dayIndex].activities[activityIndex],
       [field]: value,
     };
-
     onItineraryChange({ ...itinerary, days: updatedDays });
-
     await supabase
       .from("itinerary_days")
       .update({ activities: updatedDays[dayIndex] })
@@ -93,14 +91,9 @@ export function ItinerarySection({
     const current = updatedDays[dayIndex].activities[activityIndex];
     updatedDays[dayIndex].activities[activityIndex] = {
       ...current,
-      estimated_cost: {
-        ...current.estimated_cost,
-        [field]: value,
-      },
+      estimated_cost: { ...current.estimated_cost, [field]: value },
     };
-
     onItineraryChange({ ...itinerary, days: updatedDays });
-
     await supabase
       .from("itinerary_days")
       .update({ activities: updatedDays[dayIndex] })
@@ -123,9 +116,7 @@ export function ItinerarySection({
         search_query: `${value}, ${updatedDays[dayIndex].destination}`,
       },
     };
-
     onItineraryChange({ ...itinerary, days: updatedDays });
-
     await supabase
       .from("itinerary_days")
       .update({ activities: updatedDays[dayIndex] })
@@ -149,28 +140,22 @@ export function ItinerarySection({
       type: "activity",
       full_day: false,
     };
-
     const updatedDays = [...itinerary.days];
     const activities = [...updatedDays[dayIndex].activities];
-
     const insertAt =
       activities.length === 0 || activityIndex === -1
         ? 0
         : position === "before"
           ? activityIndex
           : activityIndex + 1;
-
     activities.splice(insertAt, 0, newActivity);
     updatedDays[dayIndex] = { ...updatedDays[dayIndex], activities };
-
     onItineraryChange({ ...itinerary, days: updatedDays });
-
     await supabase
       .from("itinerary_days")
       .update({ activities: updatedDays[dayIndex] })
       .eq("trip_id", trip.id)
       .eq("day_number", updatedDays[dayIndex].day_number);
-
     setEditingActivity({ dayIndex, activityIndex: insertAt });
   };
 
@@ -179,14 +164,11 @@ export function ItinerarySection({
     activityIndex: number,
   ) => {
     if (!confirm("¿Seguro que quieres eliminar esta actividad?")) return;
-
     const updatedDays = [...itinerary.days];
     updatedDays[dayIndex].activities = updatedDays[dayIndex].activities.filter(
       (_, i) => i !== activityIndex,
     );
-
     onItineraryChange({ ...itinerary, days: updatedDays });
-
     await supabase
       .from("itinerary_days")
       .update({ activities: updatedDays[dayIndex] })
@@ -200,13 +182,8 @@ export function ItinerarySection({
     value: string,
   ) => {
     const updatedDays = [...itinerary.days];
-    updatedDays[dayIndex] = {
-      ...updatedDays[dayIndex],
-      [field]: value,
-    };
-
+    updatedDays[dayIndex] = { ...updatedDays[dayIndex], [field]: value };
     onItineraryChange({ ...itinerary, days: updatedDays });
-
     await supabase
       .from("itinerary_days")
       .update({ [field]: value, activities: updatedDays[dayIndex] })
@@ -216,16 +193,13 @@ export function ItinerarySection({
 
   const handleDeleteDay = async (dayIndex: number) => {
     if (!confirm("¿Seguro que quieres eliminar este día?")) return;
-
     const updatedDays = itinerary.days
       .filter((_, i) => i !== dayIndex)
       .map((d, idx) => ({ ...d, day_number: idx + 1 }));
-
     onItineraryChange({ ...itinerary, days: updatedDays });
     setSelectedDayIndex((i) =>
       Math.min(i, Math.max(0, updatedDays.length - 1)),
     );
-
     await supabase.from("itinerary_days").delete().eq("trip_id", trip.id);
     if (updatedDays.length > 0) {
       await supabase.from("itinerary_days").insert(
@@ -245,15 +219,10 @@ export function ItinerarySection({
     dayIndex: number,
   ) => {
     const referenceDay = itinerary.days[dayIndex];
-    const referenceDate = new Date(referenceDay.date);
-
-    const newDate = new Date(referenceDate);
-    if (position === "before") {
-      newDate.setDate(newDate.getDate() - 1);
-    } else {
-      newDate.setDate(newDate.getDate() + 1);
-    }
-
+    const newDate = new Date(referenceDay.date);
+    position === "before"
+      ? newDate.setDate(newDate.getDate() - 1)
+      : newDate.setDate(newDate.getDate() + 1);
     const newDay = {
       day_number: 0,
       date: newDate.toISOString().split("T")[0],
@@ -275,20 +244,15 @@ export function ItinerarySection({
         activity_count: 0,
       },
     };
-
     const updatedDays = [...itinerary.days];
     const insertAt = position === "before" ? dayIndex : dayIndex + 1;
     updatedDays.splice(insertAt, 0, newDay);
-
     const renumbered = updatedDays.map((d, idx) => ({
       ...d,
       day_number: idx + 1,
     }));
-
     onItineraryChange({ ...itinerary, days: renumbered });
-    if (position === "after") setSelectedDayIndex(dayIndex + 1);
-    else setSelectedDayIndex(dayIndex);
-
+    setSelectedDayIndex(position === "after" ? dayIndex + 1 : dayIndex);
     await supabase.from("itinerary_days").delete().eq("trip_id", trip.id);
     await supabase.from("itinerary_days").insert(
       renumbered.map((d) => ({
@@ -315,10 +279,7 @@ export function ItinerarySection({
     const updatedDays = [...itinerary.days];
     updatedDays[dayIndex] = {
       ...updatedDays[dayIndex],
-      accommodation: {
-        ...updatedDays[dayIndex].accommodation,
-        [field]: value,
-      },
+      accommodation: { ...updatedDays[dayIndex].accommodation, [field]: value },
     };
     onItineraryChange({ ...itinerary, days: updatedDays });
     await supabase
@@ -341,25 +302,20 @@ export function ItinerarySection({
         booking_url: null,
       },
     };
-
     onItineraryChange({ ...itinerary, days: updatedDays });
-
     await supabase
       .from("itinerary_days")
       .update({ activities: updatedDays[dayIndex] })
       .eq("trip_id", trip.id)
       .eq("day_number", updatedDays[dayIndex].day_number);
-
     setEditingAccommodation(dayIndex);
   };
 
-  // Backward compat: old itineraries stored in Supabase use `time`, new ones use `time_start`
   const getTime = (activity: ItineraryActivity): string =>
     activity.time_start ??
     (activity as unknown as { time?: string }).time ??
     "";
 
-  // Backward compat: old itineraries use `estimatedCost` string, new ones use `estimated_cost: { min, max }`
   const getCostDisplay = (activity: ItineraryActivity): string | null => {
     if (
       activity.estimated_cost &&
@@ -371,9 +327,9 @@ export function ItinerarySection({
         ? `${min.toLocaleString()} ${currency}`
         : `${min.toLocaleString()}–${max.toLocaleString()} ${currency}`;
     }
-    const legacy = (activity as unknown as { estimatedCost?: string })
-      .estimatedCost;
-    return legacy ?? null;
+    return (
+      (activity as unknown as { estimatedCost?: string }).estimatedCost ?? null
+    );
   };
 
   const FLAG_LABELS: Record<string, string> = {
@@ -382,14 +338,16 @@ export function ItinerarySection({
     sin_almuerzo: "Sin almuerzo planeado",
   };
 
+  const inputCls = "w-full input-base";
+  const canbEdit = isOwner || currentUserRole === "co-organizer";
+
   return (
     <section>
-      <h3 className="text-xl font-semibold mb-2 flex items-center gap-2">
+      <h3 className="text-xl font-semibold mb-2 flex items-center gap-2 text-text-base dark:text-slate-300">
         <CalendarIcon /> Itinerario
       </h3>
-      <p className="text-gray-400 mb-6">{itinerary.summary}</p>
+      <p className="text-text-muted mb-6">{itinerary.summary}</p>
 
-      {/* Navegación horizontal de días */}
       <div className="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-none">
         {itinerary.days.map((day, i) => (
           <button
@@ -397,8 +355,8 @@ export function ItinerarySection({
             onClick={() => setSelectedDayIndex(i)}
             className={
               i === selectedDayIndex
-                ? "shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold bg-blue-600 text-white transition"
-                : "shrink-0 px-4 py-1.5 rounded-full text-sm text-gray-400 border border-gray-700 hover:border-gray-500 transition"
+                ? "shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold bg-brand-dark text-brand-light transition"
+                : "shrink-0 px-4 py-1.5 rounded-full text-sm text-text-muted border border-border-base dark:border-[#4a6b57] hover:border-brand-mid transition"
             }
           >
             Día {day.day_number}
@@ -406,34 +364,35 @@ export function ItinerarySection({
         ))}
       </div>
 
-      {/* Botones discretos de agregar día */}
-      {(isOwner || currentUserRole === "co-organizer") && (
+      {/* Botones agregar día */}
+      {canbEdit && (
         <div className="flex gap-4 mb-4">
           <button
             onClick={() => handleAddDay("before", 0)}
-            className="text-xs text-gray-500 hover:text-blue-400 transition"
+            className="text-xs text-text-faint hover:text-brand-mid transition"
           >
             + Agregar día al inicio
           </button>
           <button
             onClick={() => handleAddDay("after", itinerary.days.length - 1)}
-            className="text-xs text-gray-500 hover:text-blue-400 transition"
+            className="text-xs text-text-faint hover:text-brand-mid transition"
           >
             + Agregar día al final
           </button>
         </div>
       )}
 
-      {/* Card del día seleccionado */}
+      {/* Card del día */}
       {itinerary.days.length > 0 &&
         (() => {
           const day = itinerary.days[selectedDayIndex];
           const dayIndex = selectedDayIndex;
           return (
             <div className="relative group/day">
-              <div className="bg-gray-900 rounded-2xl p-6">
+              <div className="bg-surface-card border border-border-base dark:border-[#4a6b57] rounded-2xl p-6">
+                {/* Header del día */}
                 <div className="flex items-center gap-3 mb-4 flex-wrap">
-                  <span className="bg-blue-600 text-white text-sm font-bold px-3 py-1 rounded-full">
+                  <span className="bg-brand-dark text-brand-light text-sm font-bold px-3 py-1 rounded-full">
                     Día {day.day_number}
                   </span>
 
@@ -448,7 +407,7 @@ export function ItinerarySection({
                         onChange={(e) =>
                           handleUpdateDay(dayIndex, "date", e.target.value)
                         }
-                        className="bg-gray-800 text-white rounded-lg px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        className="input-base w-auto"
                       />
                       <input
                         type="text"
@@ -460,36 +419,36 @@ export function ItinerarySection({
                             e.target.value,
                           )
                         }
-                        className="flex-1 bg-gray-800 text-white rounded-lg px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        className="input-base flex-1"
                         placeholder="Destino"
                       />
                       <button
                         onClick={() => setEditingDay(null)}
-                        className="text-blue-400 text-xs hover:underline shrink-0"
+                        className="text-brand-mid text-xs hover:underline shrink-0"
                       >
                         ✓ Listo
                       </button>
                     </div>
                   ) : (
                     <>
-                      <span className="text-gray-400 text-sm">
+                      <span className="text-text-muted text-sm dark:text-text-faint">
                         {formatDate(day.date)}
                       </span>
-                      <span className="text-white font-semibold">
+                      <span className="text-text-base font-semibold dark:text-slate-300">
                         {day.destination}
                       </span>
-                      {(isOwner || currentUserRole === "co-organizer") && (
+                      {canbEdit && (
                         <button
                           onClick={() => setEditingDay(dayIndex)}
-                          className="text-gray-600 hover:text-yellow-400 text-xs transition "
+                          className="text-text-faint hover:text-plan text-xs transition"
                         >
                           <EditIcon />
                         </button>
                       )}
-                      {(isOwner || currentUserRole === "co-organizer") && (
+                      {canbEdit && (
                         <button
                           onClick={() => handleDeleteDay(dayIndex)}
-                          className="text-gray-600 hover:text-red-400 text-xs transition"
+                          className="text-text-faint hover:text-red-400 text-xs transition"
                         >
                           <TrashIcon />
                         </button>
@@ -498,13 +457,13 @@ export function ItinerarySection({
                   )}
                 </div>
 
-                {/* Flags del día */}
+                {/* Flags */}
                 {day.flags && day.flags.length > 0 && (
                   <div className="flex gap-2 flex-wrap mb-4">
                     {day.flags.map((flag) => (
                       <span
                         key={flag}
-                        className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/20"
+                        className="text-xs px-2 py-0.5 rounded-full bg-plan/15 text-plan border border-plan/20"
                       >
                         {FLAG_LABELS[flag] ?? flag}
                       </span>
@@ -516,7 +475,7 @@ export function ItinerarySection({
                 {day.day_summary &&
                   (day.day_summary.total_hours > 0 ||
                     day.day_summary.activity_count > 0) && (
-                    <div className="flex gap-4 mb-4 text-xs text-gray-500">
+                    <div className="flex gap-4 mb-4 text-xs text-text-muted dark:text-text-faint">
                       <span>{day.day_summary.activity_count} actividades</span>
                       <span>{day.day_summary.total_hours}h planeadas</span>
                       {day.day_summary.total_cost_max > 0 && (
@@ -528,56 +487,51 @@ export function ItinerarySection({
                       )}
                     </div>
                   )}
-
                 <div className="space-y-3 mb-4">
                   {day.activities.map((activity, i) => (
                     <div
                       key={activity.id ?? i}
                       className="relative group/activity"
                     >
-                      {/* Buffer de traslado */}
                       {activity.type === "buffer" ? (
                         <div className="flex gap-4 py-1 opacity-50">
-                          <span className="text-gray-600 text-xs w-12 shrink-0">
+                          <span className="text-text-faint text-sm w-12 shrink-0">
                             {getTime(activity)}
                           </span>
                           <div className="flex flex-col items-center">
-                            <div className="w-px flex-1 border-l border-dashed border-gray-700" />
+                            <div className="w-px flex-1 border-l border-dashed border-border-base" />
                           </div>
-                          <span className="text-gray-600 text-xs italic self-center">
+                          <span className="text-text-muted dark:text-text-faint text-sm italic self-center ">
                             {activity.title}
                           </span>
                         </div>
                       ) : (
                         <>
-                          {/* Botón agregar ANTES */}
-                          {(isOwner || currentUserRole === "co-organizer") && (
+                          {/* Agregar antes */}
+                          {canbEdit && (
                             <div className="flex items-center gap-2 opacity-0 group-hover/activity:opacity-100 transition my-1">
-                              <div className="flex-1 h-px bg-gray-800" />
+                              <div className="flex-1 h-px bg-border-base" />
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleAddActivity(dayIndex, "before", i);
                                 }}
-                                className="text-gray-600 hover:text-blue-400 hover:bg-gray-800 text-xs px-3 py-0.5 rounded-full transition shrink-0"
+                                className="text-text-faint hover:text-brand-mid hover:bg-surface-subtle text-xs px-3 py-0.5 rounded-full transition shrink-0"
                               >
                                 + Agregar antes
                               </button>
-                              <div className="flex-1 h-px bg-gray-800" />
+                              <div className="flex-1 h-px bg-border-base" />
                             </div>
                           )}
 
-                          <div
-                            className="flex gap-4 group"
-                          >
-                            <span className="text-gray-500 text-sm w-12 shrink-0">
+                          <div className="flex gap-4 group">
+                            <span className="text-text-faint text-sm w-12 shrink-0">
                               {getTime(activity)}
                             </span>
-
                             <div className="flex flex-col items-center">
-                              <div className="w-2.5 h-2.5 rounded-full bg-blue-600 border-2 border-[#111121] z-10 shrink-0" />
+                              <div className="w-2.5 h-2.5 rounded-full bg-brand-mid border-2 border-surface-card z-10 shrink-0" />
                               {i < day.activities.length - 1 && (
-                                <div className="w-px flex-1 bg-white" />
+                                <div className="w-px flex-1 bg-border-base" />
                               )}
                             </div>
                             <div className="flex-1">
@@ -589,7 +543,7 @@ export function ItinerarySection({
                                 >
                                   <div className="flex gap-2">
                                     <div className="flex-1">
-                                      <label className="text-xs text-gray-500 mb-1 block">
+                                      <label className="text-xs text-text-faint mb-1 block">
                                         Inicio
                                       </label>
                                       <input
@@ -603,11 +557,11 @@ export function ItinerarySection({
                                             e.target.value,
                                           )
                                         }
-                                        className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                        className={inputCls}
                                       />
                                     </div>
                                     <div className="flex-1">
-                                      <label className="text-xs text-gray-500 mb-1 block">
+                                      <label className="text-xs text-text-faint mb-1 block">
                                         Fin
                                       </label>
                                       <input
@@ -621,7 +575,7 @@ export function ItinerarySection({
                                             e.target.value,
                                           )
                                         }
-                                        className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                        className={inputCls}
                                       />
                                     </div>
                                   </div>
@@ -636,7 +590,7 @@ export function ItinerarySection({
                                         e.target.value,
                                       )
                                     }
-                                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                    className={inputCls}
                                   />
                                   <textarea
                                     value={activity.description}
@@ -648,7 +602,7 @@ export function ItinerarySection({
                                         e.target.value,
                                       )
                                     }
-                                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                    className={`${inputCls} resize-none`}
                                     rows={2}
                                   />
                                   <input
@@ -662,10 +616,10 @@ export function ItinerarySection({
                                       )
                                     }
                                     placeholder="Lugar / Dirección"
-                                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                    className={inputCls}
                                   />
                                   <div className="flex gap-2 items-center">
-                                    <span className="text-xs text-gray-500 shrink-0">
+                                    <span className="text-xs text-text-faint shrink-0">
                                       Costo ({trip.currency ?? "MXN"})
                                     </span>
                                     <input
@@ -680,9 +634,9 @@ export function ItinerarySection({
                                         )
                                       }
                                       placeholder="Mín"
-                                      className="flex-1 bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                      className="flex-1 input-base"
                                     />
-                                    <span className="text-gray-600">–</span>
+                                    <span className="text-text-faint">–</span>
                                     <input
                                       type="number"
                                       value={activity.estimated_cost?.max ?? 0}
@@ -695,77 +649,74 @@ export function ItinerarySection({
                                         )
                                       }
                                       placeholder="Máx"
-                                      className="flex-1 bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                      className="flex-1 input-base"
                                     />
                                   </div>
                                   <button
                                     onClick={() => setEditingActivity(null)}
-                                    className="text-blue-400 text-xs hover:underline border border-blue-400 px-3 py-1 rounded-full transition "
+                                    className="text-brand-mid text-xs hover:underline border border-brand-mid px-3 py-1 rounded-full transition"
                                   >
                                     ✓ Listo
                                   </button>
                                 </div>
                               ) : (
                                 <>
-                                  <p className="font-semibold text-sm group-hover:text-blue-400 transition flex gap-2 items-center">
+                                  <p className="font-semibold text-text-base dark:text-brand-subtle group-hover:text-brand-mid transition flex gap-2 items-center">
                                     {activity.title}
-                                    {(isOwner ||
-                                      currentUserRole === "co-organizer") && (
+                                    {canbEdit && (
                                       <button
                                         onClick={() =>
                                           setEditingActivity(
-                                            editingActivity?.dayIndex === dayIndex &&
-                                              editingActivity?.activityIndex === i
+                                            editingActivity?.dayIndex ===
+                                              dayIndex &&
+                                              editingActivity?.activityIndex ===
+                                                i
                                               ? null
                                               : { dayIndex, activityIndex: i },
                                           )
                                         }
-                                        className="text-gray-600 hover:text-yellow-400 text-xs ml-2 items-center text-center opacity-0 group-hover:opacity-100 flex gap-1 transition"
+                                        className="text-text-faint hover:text-plan text-xs ml-2 opacity-0 group-hover:opacity-100 flex gap-1 items-center transition"
                                       >
-                                        Editar
-                                        <EditIcon />
+                                        Editar <EditIcon />
                                       </button>
                                     )}
-                                    {"  "}
-                                    {(isOwner ||
-                                      currentUserRole === "co-organizer") && (
+                                    {canbEdit && (
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           handleDeleteActivity(dayIndex, i);
                                         }}
-                                        className="text-gray-600 flex items-center hover:text-red-400 text-xs transition opacity-0 group-hover:opacity-100 gap-1"
+                                        className="text-text-faint hover:text-red-400 text-xs opacity-0 group-hover:opacity-100 flex gap-1 items-center transition"
                                       >
                                         Eliminar <TrashIcon />
                                       </button>
                                     )}
                                   </p>
-                                  <p className="text-gray-400 text-sm">
+                                  <p className="text-text-muted text-sm dark:text-text-faint">
                                     {activity.description}
                                   </p>
-                                  {activity.place?.name && (
-                                    activity.place.search_query ? (
+                                  {activity.place?.name &&
+                                    (activity.place.search_query ? (
                                       <a
                                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.place.search_query)}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-gray-600 hover:text-blue-400 text-xs mt-0.5 flex items-center gap-1 transition w-fit"
+                                        className="text-text-muted dark:text-text-faint hover:text-brand-mid  mt-0.5 flex items-center gap-1 transition w-fit"
                                       >
-                                        📍 {activity.place.name}
+                                        <PinIcon /> {activity.place.name}
                                       </a>
                                     ) : (
-                                      <p className="text-gray-600 text-xs mt-0.5">
-                                        📍 {activity.place.name}
+                                      <p className="text-text-faint text-xs mt-0.5">
+                                        <PinIcon /> {activity.place.name}
                                       </p>
-                                    )
-                                  )}
+                                    ))}
                                   {getCostDisplay(activity) && (
-                                    <p className="text-blue-400 text-xs mt-1">
+                                    <p className="text-brand-mid text-sm mt-1">
                                       {getCostDisplay(activity)}
                                     </p>
                                   )}
                                   {activity.time_end && (
-                                    <p className="text-gray-600 text-xs mt-0.5">
+                                    <p className="text-brand-mid dark:text-text-faint text-sm mt-0.5">
                                       Hasta las {activity.time_end}
                                     </p>
                                   )}
@@ -774,20 +725,20 @@ export function ItinerarySection({
                             </div>
                           </div>
 
-                          {/* Botón agregar DESPUÉS */}
-                          {(isOwner || currentUserRole === "co-organizer") && (
+                          {/* Agregar después */}
+                          {canbEdit && (
                             <div className="flex items-center gap-2 opacity-0 group-hover/activity:opacity-100 transition my-1">
-                              <div className="flex-1 h-px bg-gray-800" />
+                              <div className="flex-1 h-px bg-border-base" />
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleAddActivity(dayIndex, "after", i);
                                 }}
-                                className="text-gray-600 hover:text-blue-400 hover:bg-gray-800 text-xs px-3 py-0.5 rounded-full transition shrink-0"
+                                className="text-text-faint hover:text-brand-mid hover:bg-surface-subtle text-xs px-3 py-0.5 rounded-full transition shrink-0"
                               >
-                                + Agregar despues
+                                + Agregar después
                               </button>
-                              <div className="flex-1 h-px bg-gray-800" />
+                              <div className="flex-1 h-px bg-border-base" />
                             </div>
                           )}
                         </>
@@ -796,16 +747,14 @@ export function ItinerarySection({
                   ))}
                 </div>
 
-                {day.accommodation &&
-                (day.accommodation.name ||
-                  isOwner ||
-                  currentUserRole === "co-organizer") ? (
-                  <div className="border-t border-gray-800 pt-4">
+                {/* Alojamiento */}
+                {day.accommodation && (day.accommodation.name || canbEdit) ? (
+                  <div className="border-t border-border-base pt-4">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-gray-400 text-sm flex gap-2 items-center">
+                      <p className="text-text-muted dark:text-brand-subtle text-sm flex gap-2 items-center">
                         <House /> Alojamiento
                       </p>
-                      {(isOwner || currentUserRole === "co-organizer") && (
+                      {canbEdit && (
                         <button
                           onClick={() =>
                             setEditingAccommodation(
@@ -814,15 +763,15 @@ export function ItinerarySection({
                                 : dayIndex,
                             )
                           }
-                          className="text-gray-600 hover:text-blue-400 items-center flex gap-2 transition"
+                          className="text-text-faint hover:text-brand-mid items-center flex gap-2 transition text-sm"
                         >
                           {editingAccommodation === dayIndex ? (
                             <>
-                              Listo <CheckIcon />
+                              <span>Listo</span> <CheckIcon />
                             </>
                           ) : (
                             <>
-                              Ingresar datos <EditIcon />
+                              <span>Ingresar datos</span> <EditIcon />
                             </>
                           )}
                         </button>
@@ -842,7 +791,7 @@ export function ItinerarySection({
                             )
                           }
                           placeholder="Nombre del alojamiento"
-                          className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                          className={inputCls}
                         />
                         <input
                           type="text"
@@ -855,7 +804,7 @@ export function ItinerarySection({
                             )
                           }
                           placeholder="Zona / Colonia"
-                          className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                          className={inputCls}
                         />
                         <div className="flex gap-2">
                           <input
@@ -869,7 +818,7 @@ export function ItinerarySection({
                               )
                             }
                             placeholder="Costo"
-                            className="flex-1 bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 input-base"
                           />
                           <select
                             value={day.accommodation.currency || userCurrency}
@@ -880,7 +829,7 @@ export function ItinerarySection({
                                 e.target.value,
                               )
                             }
-                            className="bg-gray-800 text-white rounded-lg px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                            className="input-base w-auto"
                           >
                             {["MXN", "USD", "EUR", "GBP"].map((c) => (
                               <option key={c} value={c}>
@@ -900,7 +849,7 @@ export function ItinerarySection({
                             )
                           }
                           placeholder="Link de Airbnb"
-                          className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                          className={inputCls}
                         />
                         <input
                           type="text"
@@ -913,7 +862,7 @@ export function ItinerarySection({
                             )
                           }
                           placeholder="Link de Booking"
-                          className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                          className={inputCls}
                         />
                         <button
                           onClick={() => {
@@ -931,17 +880,17 @@ export function ItinerarySection({
                               });
                             }
                           }}
-                          className="text-blue-400 text-xs hover:underline border border-blue-400 px-3 py-1 rounded-full transition"
+                          className="text-brand-mid text-xs hover:underline border border-brand-mid px-3 py-1 rounded-full transition"
                         >
                           ✓ Listo
                         </button>
                       </div>
                     ) : (
                       <>
-                        <p className="font-semibold">
+                        <p className="font-semibold text-text-base dark:text-brand-subtle ">
                           {day.accommodation.name || "Sin nombre"}
                         </p>
-                        <p className="text-gray-400 text-sm">
+                        <p className="text-text-muted dark:text-text-faint text-sm">
                           {day.accommodation.zone &&
                             `Zona: ${day.accommodation.zone}`}
                           {day.accommodation.zone &&
@@ -958,7 +907,7 @@ export function ItinerarySection({
                                 href={day.accommodation.airbnb_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-400 hover:underline text-sm"
+                                className="text-brand-mid hover:underline text-sm"
                               >
                                 Ver en Airbnb →
                               </a>
@@ -968,7 +917,7 @@ export function ItinerarySection({
                                 href={day.accommodation.booking_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-400 hover:underline text-sm"
+                                className="text-brand-mid hover:underline text-sm"
                               >
                                 Ver en Booking →
                               </a>
@@ -980,7 +929,7 @@ export function ItinerarySection({
                               href={`https://www.airbnb.mx/s/${encodeURIComponent(day.destination)}/homes`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-400 hover:underline text-sm"
+                              className="text-brand-mid hover:underline text-sm"
                             >
                               Buscar en Airbnb →
                             </a>
@@ -988,7 +937,7 @@ export function ItinerarySection({
                               href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(day.destination)}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-400 hover:underline text-sm"
+                              className="text-brand-mid hover:underline text-sm"
                             >
                               Buscar en Booking →
                             </a>
@@ -998,11 +947,11 @@ export function ItinerarySection({
                     )}
                   </div>
                 ) : (
-                  (isOwner || currentUserRole === "co-organizer") && (
-                    <div className="border-t border-gray-800 pt-4">
+                  canbEdit && (
+                    <div className="border-t border-border-base pt-4">
                       <button
                         onClick={() => handleAddAccommodation(dayIndex)}
-                        className="w-full text-gray-500 hover:text-blue-400 hover:bg-gray-800/50 text-sm py-3 rounded-xl transition border border-dashed border-gray-700 hover:border-blue-500/30"
+                        className="w-full text-text-faint hover:text-brand-mid hover:bg-surface-subtle text-sm py-3 rounded-xl transition border border-dashed border-border-base hover:border-brand-mid/30"
                       >
                         + Agregar alojamiento
                       </button>

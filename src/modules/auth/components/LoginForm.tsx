@@ -6,10 +6,18 @@ interface LoginFormProps {
   onSwitchToRegister: () => void;
 }
 
-export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
+export function LoginForm({
+  onSwitchToRegister: _onSwitchToRegister,
+}: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login, loginWithGoogle: _loginWithGoogle, loading, error, clearError } = useLogin();
+  const {
+    login,
+    loginWithGoogle: _loginWithGoogle,
+    loading,
+    error,
+    clearError,
+  } = useLogin();
   const { sendResetEmail, resetSent, error: resetError } = useResetPassword();
 
   const combinedError = error ?? resetError;
@@ -26,70 +34,60 @@ export function LoginForm({ onSwitchToRegister }: LoginFormProps) {
   };
 
   return (
-    <>
+    <form onSubmit={handleSubmit} className="flex flex-col w-full">
       {combinedError && (
-        <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg p-3 mb-6 text-sm">
+        <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg p-3 mb-4 text-sm">
           {combinedError}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="text-gray-400 text-sm mb-1 block">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="tu@email.com"
-            required
-          />
+      {resetSent && (
+        <div className="border text-green-400 rounded-lg p-3 mb-4 text-sm">
+          Te enviamos un email para restablecer tu contraseña.
         </div>
+      )}
 
-        <div>
-          <label className="text-gray-400 text-sm mb-1 block">Contraseña</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="••••••••"
-            required
-          />
-        </div>
+      <div className="mb-4">
+        <label className="block text-xs  font-semibold text-slate-300 mb-1.5 tracking-wide">
+          Correo
+        </label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="input-base "
+          placeholder="tu@correo.com"
+          required
+        />
+      </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg py-3 transition disabled:opacity-50"
-        >
-          {loading ? "Cargando..." : "Entrar"}
-        </button>
+      <div className="mb-3">
+        <label className="block text-xs font-semibold text-slate-300 mb-1.5 tracking-wide">
+          Contraseña
+        </label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="input-base"
+          placeholder="••••••••"
+          required
+        />
+      </div>
 
+      <div className="flex justify-end mb-5">
         <button
           type="button"
           onClick={handleForgotPassword}
-          className="w-full text-gray-400 hover:text-blue-400 text-sm text-center transition mt-1"
+          className="text-xs font-semibold text-blue-400 hover:underline"
         >
           ¿Olvidaste tu contraseña?
         </button>
+      </div>
 
-        {resetSent && (
-          <p className="text-green-400 text-sm text-center">
-            ✅ Te enviamos un email para resetear tu contraseña
-          </p>
-        )}
-      </form>
-
-      <p className="text-gray-400 text-sm text-center mt-6">
-        ¿No tienes cuenta?{" "}
-        <button
-          onClick={onSwitchToRegister}
-          className="text-blue-400 hover:underline"
-        >
-          Regístrate
-        </button>
-      </p>
-    </>
+      <button type="submit" disabled={loading} className="submit-btn">
+        {loading ? "Cargando..." : "Entrar a Triploom"}
+      </button>
+    </form>
   );
 }

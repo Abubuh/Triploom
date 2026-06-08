@@ -65,6 +65,7 @@ Responde siempre en el idioma del usuario.`,
       itineraryText: `ITINERARIO ACTUAL DEL VIAJE "${trip.name}":\n${itineraryJson}`,
     };
   };
+
   const callApi = async (
     conversationMessages: ChatMessage[],
   ): Promise<string> => {
@@ -87,40 +88,38 @@ Responde siempre en el idioma del usuario.`,
           }
         : msg,
     );
-
     const response = await fetch("/api/chat-itinerary", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ instructions, itineraryText, messages: apiMessages }),
+      body: JSON.stringify({
+        instructions,
+        itineraryText,
+        messages: apiMessages,
+      }),
     });
-
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
-    if (!data.content?.[0]?.text) throw new Error(data.error?.message ?? "Sin respuesta de la API");
+    if (!data.content?.[0]?.text)
+      throw new Error(data.error?.message ?? "Sin respuesta de la API");
     return data.content[0].text as string;
   };
 
   const handleSend = async () => {
     const trimmed = input.trim();
     if (!trimmed || sending) return;
-
     const userMessage: ChatMessage = { role: "user", content: trimmed };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setInput("");
     setSending(true);
-
     try {
       const responseText = await callApi(updatedMessages);
-
       const parsed = extractItineraryUpdate(responseText);
       const assistantContent = displayContent(responseText);
-
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: assistantContent },
       ]);
-
       if (parsed) {
         setUpdatingItinerary(true);
         try {
@@ -153,7 +152,7 @@ Responde siempre en el idioma del usuario.`,
 
   return (
     <>
-      {/* Overlay — mobile only */}
+      {/* Overlay mobile */}
       <div
         className={`fixed inset-0 bg-black/50 z-30 md:hidden transition-opacity duration-300 ${
           isOpen
@@ -166,7 +165,8 @@ Responde siempre en el idioma del usuario.`,
       {/* Panel */}
       <div
         className={`
-          fixed z-40 bg-gray-900 border-gray-800 flex flex-col
+          fixed z-40 flex flex-col
+          bg-surface-card border-border-base dark:border-[#4a6b57]
           transition-transform duration-300 ease-in-out
           bottom-0 left-0 right-0 h-[60vh] rounded-t-2xl border-t
           md:top-0 md:right-0 md:bottom-0 md:left-auto md:h-full md:w-96 md:rounded-none md:border-t-0 md:border-l
@@ -174,23 +174,25 @@ Responde siempre en el idioma del usuario.`,
         `}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border-base dark:border-[#4a6b57] shrink-0">
           <div>
-            <p className="font-semibold text-sm">Agente de viajes</p>
-            <p className="text-gray-500 text-xs">{trip.name}</p>
+            <p className="font-semibold text-text-base dark:text-brand-subtle">
+              Agente de viajes
+            </p>
+            <p className="text-text-faint text-sm">{trip.name}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-white transition text-lg leading-none px-1"
+            className="text-text-faint hover:text-text-base transition text-lg leading-none px-1"
           >
             ✕
           </button>
         </div>
 
-        {/* Messages */}
+        {/* Mensajes */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
           {messages.length === 0 && (
-            <p className="text-gray-500 text-sm text-center mt-8">
+            <p className="text-text-faint text-center mt-8">
               Pregúntame sobre el itinerario o pídeme que lo modifique.
             </p>
           )}
@@ -202,8 +204,8 @@ Responde siempre en el idioma del usuario.`,
               <div
                 className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap ${
                   msg.role === "user"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-800 text-gray-100"
+                    ? "bg-brand-dark text-brand-light"
+                    : "bg-surface-subtle text-text-base"
                 }`}
               >
                 {msg.content}
@@ -213,7 +215,7 @@ Responde siempre en el idioma del usuario.`,
 
           {sending && (
             <div className="flex justify-start">
-              <div className="bg-gray-800 rounded-2xl px-4 py-2 text-sm text-gray-400">
+              <div className="bg-surface-subtle rounded-2xl px-4 py-2 text-sm text-text-muted">
                 <span className="animate-pulse">Pensando...</span>
               </div>
             </div>
@@ -221,7 +223,7 @@ Responde siempre en el idioma del usuario.`,
 
           {updatingItinerary && (
             <div className="flex justify-center">
-              <span className="text-blue-400 text-xs font-semibold animate-pulse bg-blue-500/10 px-3 py-1 rounded-full">
+              <span className="text-brand-mid text-xs font-semibold animate-pulse bg-brand-subtle px-3 py-1 rounded-full">
                 Actualizando itinerario...
               </span>
             </div>
@@ -231,7 +233,7 @@ Responde siempre en el idioma del usuario.`,
         </div>
 
         {/* Input */}
-        <div className="px-4 py-3 border-t border-gray-800 shrink-0">
+        <div className="px-4 py-3 border-t border-border-base dark:border-[#4a6b57] shrink-0">
           <div className="flex gap-2 items-end">
             <textarea
               value={input}
@@ -240,13 +242,13 @@ Responde siempre en el idioma del usuario.`,
               placeholder="Escribe un mensaje..."
               rows={1}
               disabled={sending}
-              className="flex-1 bg-gray-800 text-white text-sm rounded-xl px-4 py-2 outline-none border border-gray-700 focus:border-blue-500 resize-none disabled:opacity-50 placeholder-gray-500"
+              className="flex-1 input-base resize-none disabled:opacity-50"
               style={{ maxHeight: "120px" }}
             />
             <button
               onClick={handleSend}
               disabled={sending || !input.trim()}
-              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white px-4 py-2 rounded-xl text-sm font-semibold transition shrink-0"
+              className="btn-primary disabled:opacity-40 px-4 py-2 text-sm shrink-0"
             >
               Enviar
             </button>

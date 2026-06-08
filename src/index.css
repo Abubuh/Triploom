@@ -1,9 +1,141 @@
 @import "tailwindcss";
 
+@theme {
+  /* Backgrounds */
+  --color-brand-dark: #1b4332;
+  --color-brand-mid: #40916c;
+  --color-brand-light: #95d5b2;
+  --color-brand-subtle: #d8ede5; /* Titles en dark mode*/
+
+  --color-surface-page: #f8faf9;
+  --color-surface-card: #ffffff;
+  --color-surface-subtle: #eef7f2;
+
+  --color-text-base: #1b4332;
+  --color-text-muted: #52796f;
+  --color-text-faint: #8aada4; /* Titles en dark mode*/
+
+  --color-ready: #95d5b2;
+  --color-readybg: #e8f7ef;
+  --color-readytx: #1b4332;
+
+  --color-plan: #a0522d;
+  --color-ready: #1e8c55;
+  --color-planbg: #fde8bc;
+  --color-plantx: #7a5010;
+
+  --color-brand-hover: #164a2d;
+  --color-brand-mid-hover: #357a58;
+  /* Botones */
+  --color-btn-bg: #1b4332;
+  --color-btn-bg-dark: "#95d3b2";
+  --color-btn-bg-hover: #40916c;
+  --color-btn-text: #95d5b2;
+
+  --color-btn-outline: #1b4332;
+  --color-btn-outline-hover: #40916c;
+
+  /* Inputs */
+  --color-input-bg: #ffffff;
+  --color-input-bg-dark: #161f1a;
+  --color-input-border: #d8ede5;
+  --color-input-border-hover: #40916c;
+  --color-input-border-dark: #2a3f32;
+  --color-input-border-dark-hover: #ffffff;
+  --color-input-border-focus: #1b4332;
+  --color-input-text: #1b4332;
+  --color-input-placeholder: #8aada4;
+
+  /* Bordes Inputs */
+  --color-border-base: #d8ede5;
+  --color-border-strong: #344d3e;
+
+  /* Acento lima-amarillo */
+  --color-accent-lime: #a3e635;
+  --color-accent-lime-dark: #65a30d;
+  --color-accent-lime-soft: #ecfccb;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-btn-bg hover:bg-btn-bg-hover text-btn-text 
+           font-semibold rounded-lg transition-all duration-300 
+           hover:-translate-y-px px-6 py-2.5;
+  }
+
+  .btn-outline {
+    @apply bg-transparent border-2 border-btn-outline text-btn-outline
+           hover:border-btn-outline-hover hover:text-btn-outline-hover
+           dark:border-btn-text dark:text-btn-text
+           font-semibold rounded-lg transition-all duration-300
+           hover:-translate-y-px px-6 py-2.5;
+  }
+  .input-base {
+    @apply w-full bg-white dark:bg-[#161f1a]
+           border border-input-border dark:text-white
+           hover:border-input-border-hover
+           text-input-text dark:border-input-border-dark placeholder:text-input-placeholder
+           rounded-lg px-4 py-2.5 text-sm
+           transition-colors duration-200
+           outline-none;
+  }
+
+  .modal-subtitle {
+    @apply text-sm text-text-muted dark:text-brand-subtle;
+  }
+
+  .submit-btn {
+    @apply w-full py-3 bg-surface-subtle dark:bg-btn-text dark:text-btn-bg cursor-pointer text-[#0a0e1a] font-bold rounded-xl text-sm transition hover:-translate-y-px hover:shadow-lg disabled:opacity-50;
+  }
+}
+
+@variant dark {
+  /* Dark mode — más vibrantes */
+  --color-plan: #e07a50;
+  --color-ready: #4ade80;
+}
+
+@layer base {
+  .dark {
+    --color-surface-page: #111916;
+    --color-surface-card: #203429;
+    --color-surface-subtle: #1a2920;
+  }
+}
+
+/* Enable class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .animate-fadeIn {
   animation: fadeIn 0.15s ease-out;
+}
+
+/* Button hover glow */
+.btn-glow:hover {
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.4);
+}
+
+/* Landing — How It Works steps */
+.step {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .step {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
 }

@@ -43,7 +43,8 @@ export function PreferencesModal({
         budget: currentPreferences.budget,
         foodPreferences: currentPreferences.food_preferences,
         activityPreferences: currentPreferences.activity_preferences,
-        attractionsPreferences: currentPreferences.attractions_preferences ?? [],
+        attractionsPreferences:
+          currentPreferences.attractions_preferences ?? [],
         travelPace: currentPreferences.travel_pace,
       });
       setAttractionInput("");
@@ -76,21 +77,37 @@ export function PreferencesModal({
     }
   };
 
+  const addAttraction = () => {
+    if (!attractionInput.trim()) return;
+    setEditForm((prev) => ({
+      ...prev,
+      attractionsPreferences: [
+        ...prev.attractionsPreferences,
+        attractionInput.trim(),
+      ],
+    }));
+    setAttractionInput("");
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-lg w-full space-y-6 max-h-[90vh] overflow-y-auto">
+      <div className="bg-surface-card border border-border-base dark:border-[#4a6b57] rounded-2xl p-8 max-w-lg w-full space-y-6 max-h-[90vh] overflow-y-auto">
+        {/* Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold">
+          <h2 className="text-xl font-bold text-text-base flex items-center gap-2">
             <EditIcon /> Editar preferencias
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white">
+          <button
+            onClick={onClose}
+            className="text-text-faint hover:text-text-base transition"
+          >
             ✕
           </button>
         </div>
 
         {/* Presupuesto */}
         <div>
-          <label className="text-white font-semibold mb-2 block">
+          <label className="text-text-base font-semibold mb-2 block">
             Presupuesto ({userCurrency})
           </label>
           <input
@@ -99,13 +116,15 @@ export function PreferencesModal({
             onChange={(e) =>
               setEditForm({ ...editForm, budget: Number(e.target.value) })
             }
-            className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+            className="input-base"
           />
         </div>
 
         {/* Comida */}
         <div>
-          <label className="text-white font-semibold mb-2 block">Comida</label>
+          <label className="text-text-base font-semibold mb-2 block">
+            Comida
+          </label>
           <div className="flex flex-wrap gap-2">
             {FOOD_OPTIONS.map((opt) => (
               <button
@@ -120,8 +139,8 @@ export function PreferencesModal({
                 }
                 className={`px-3 py-1 rounded-full text-sm transition ${
                   editForm.foodPreferences.includes(opt)
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                    ? "bg-brand-dark text-brand-light"
+                    : "bg-surface-subtle text-text-muted hover:border-brand-mid hover:text-brand-mid border border-border-base"
                 }`}
               >
                 {opt}
@@ -132,7 +151,7 @@ export function PreferencesModal({
 
         {/* Actividades */}
         <div>
-          <label className="text-white font-semibold mb-2 block">
+          <label className="text-text-base font-semibold mb-2 block">
             Actividades
           </label>
           <div className="flex flex-wrap gap-2">
@@ -149,8 +168,8 @@ export function PreferencesModal({
                 }
                 className={`px-3 py-1 rounded-full text-sm transition ${
                   editForm.activityPreferences.includes(opt)
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                    ? "bg-brand-dark text-brand-light"
+                    : "bg-surface-subtle text-text-muted hover:border-brand-mid hover:text-brand-mid border border-border-base"
                 }`}
               >
                 {opt}
@@ -161,7 +180,7 @@ export function PreferencesModal({
 
         {/* Lugares de interés */}
         <div>
-          <label className="text-white font-semibold mb-2 block">
+          <label className="text-text-base font-semibold mb-2 block">
             Lugares de interés
           </label>
           <div className="flex gap-2">
@@ -170,36 +189,18 @@ export function PreferencesModal({
               value={attractionInput}
               onChange={(e) => setAttractionInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && attractionInput.trim()) {
-                  setEditForm((prev) => ({
-                    ...prev,
-                    attractionsPreferences: [
-                      ...prev.attractionsPreferences,
-                      attractionInput.trim(),
-                    ],
-                  }));
-                  setAttractionInput("");
-                }
+                if (e.key === "Enter" && attractionInput.trim())
+                  addAttraction();
               }}
               placeholder="Ej: Chichén Itzá"
-              className="flex-1 bg-gray-800 text-white rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 input-base"
             />
             <button
-              onClick={() => {
-                if (!attractionInput.trim()) return;
-                setEditForm((prev) => ({
-                  ...prev,
-                  attractionsPreferences: [
-                    ...prev.attractionsPreferences,
-                    attractionInput.trim(),
-                  ],
-                }));
-                setAttractionInput("");
-              }}
+              onClick={addAttraction}
               disabled={!attractionInput.trim()}
-              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+              className="btn-primary px-4 py-2 text-sm disabled:opacity-50"
             >
-              ✓ Confirmar
+              ✓ Agregar
             </button>
           </div>
           {editForm.attractionsPreferences.length > 0 && (
@@ -207,7 +208,7 @@ export function PreferencesModal({
               {editForm.attractionsPreferences.map((a, i) => (
                 <span
                   key={i}
-                  className="flex items-center gap-1 bg-gray-800 text-gray-300 text-sm px-3 py-1 rounded-full"
+                  className="flex items-center gap-1 bg-surface-subtle text-text-muted text-sm px-3 py-1 rounded-full border border-border-base"
                 >
                   <PinIcon /> {a}
                   <button
@@ -220,7 +221,7 @@ export function PreferencesModal({
                           ),
                       }))
                     }
-                    className="text-gray-500 hover:text-red-400 transition ml-1"
+                    className="text-text-faint hover:text-red-400 transition ml-1"
                   >
                     ✕
                   </button>
@@ -230,9 +231,9 @@ export function PreferencesModal({
           )}
         </div>
 
-        {/* Ritmo */}
+        {/* Ritmo de viaje */}
         <div>
-          <label className="text-white font-semibold mb-2 block">
+          <label className="text-text-base font-semibold mb-2 block">
             Ritmo de viaje
           </label>
           <div className="grid grid-cols-3 gap-3">
@@ -247,13 +248,15 @@ export function PreferencesModal({
                 }
                 className={`p-3 rounded-xl border-2 text-left transition ${
                   editForm.travelPace === opt.value
-                    ? "border-blue-500 bg-blue-500/10"
-                    : "border-gray-700 hover:border-gray-500"
+                    ? "border-brand-mid bg-brand-subtle"
+                    : "border-border-base hover:border-brand-mid"
                 }`}
               >
                 <p>{opt.icon}</p>
-                <p className="font-semibold text-sm">{opt.label}</p>
-                <p className="text-gray-400 text-xs">{opt.desc}</p>
+                <p className="font-semibold text-sm text-text-base">
+                  {opt.label}
+                </p>
+                <p className="text-text-faint text-xs">{opt.desc}</p>
               </button>
             ))}
           </div>
@@ -261,15 +264,12 @@ export function PreferencesModal({
 
         {/* Botones */}
         <div className="flex gap-3 justify-end">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold transition"
-          >
+          <button onClick={onClose} className="btn-outline px-5 py-2 text-sm">
             Cancelar
           </button>
           <button
             onClick={handleSave}
-            className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+            className="btn-primary px-5 py-2 text-sm"
           >
             Guardar
           </button>
