@@ -54,6 +54,10 @@
   --color-accent-lime: #a3e635;
   --color-accent-lime-dark: #65a30d;
   --color-accent-lime-soft: #ecfccb;
+
+  /* Tipografía */
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
 }
 
 @layer components {
