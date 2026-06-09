@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { buildGeoapifyUrl } from "./_geoapify";
 import { isAllowedOrigin } from "./_origin";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -13,22 +14,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(403).json({ error: "Origen no permitido" });
   }
 
-  const { prompt } = req.body;
+  const apiKey = process.env.GEOAPIFY_API_KEY ?? "";
+  const url = buildGeoapifyUrl(req.body ?? {}, apiKey);
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY!,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5",
-      max_tokens: 8000,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
+  if (!url) {
+    return res
+      .status(400)
+      .json({ error: `Acción no soportada: ${req.body?.action}` });
+  }
 
-  const data = await response.json();
+  const upstream = await fetch(url);
+  const data = await upstream.json();
   return res.status(200).json(data);
 }

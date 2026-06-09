@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { isAllowedOrigin } from "./_origin";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === "OPTIONS") {
@@ -6,6 +7,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
     return res.status(200).end();
+  }
+
+  if (!isAllowedOrigin(req)) {
+    return res.status(403).json({ error: "Origen no permitido" });
   }
 
   const { instructions, itineraryText, messages } = req.body;

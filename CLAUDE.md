@@ -71,3 +71,7 @@ Auth is managed in `App.tsx` via `supabase.auth.onAuthStateChange`. Protected ro
 Members have roles: `owner`, `co-organizer`, or `traveler`. Role is checked in `TripDetail` (`currentUserRole`) to gate edit/delete actions.
 
 Antes de hacer cualquier cambio, siempre trabaja en modo Plan. Muéstrame exactamente qué archivos vas a modificar y qué cambios harás en cada uno. No apliques nada hasta que yo confirme explícitamente. Si en algún momento no estás seguro de algo, pregúntame antes de proceder. Trabaja un cambio a la vez.
+
+NUNCA uses emojis en el código ni en la UI. Si existe un ícono en `src/components/Icons/`, úsalo; si no existe, deja texto plano y el usuario agregará el ícono después.
+
+No refactorices y agregues comportamiento en el mismo cambio. El código nuevo nace en su módulo (`src/modules/...`, como `auth`); migrar código existente a módulos es su propio cambio explícito y separado.
