@@ -4,6 +4,7 @@ import {
   Trip,
   GeneratedItinerary,
   ItineraryActivity,
+  ItineraryDay,
 } from "../../types/trip.types";
 import CalendarIcon from "../Icons/CalendarIcon";
 import EditIcon from "../Icons/EditIcon";
@@ -48,6 +49,10 @@ export function ItinerarySection({
     number | null
   >(null);
   const [editingDay, setEditingDay] = useState<number | null>(null);
+  const [editingBuffer, setEditingBuffer] = useState<{
+    dayIndex: number;
+    activityIndex: number;
+  } | null>(null);
 
   const formatDate = (dateStr: string) => {
     const s = new Date(dateStr + "T00:00:00").toLocaleDateString("es-MX", {
@@ -57,6 +62,30 @@ export function ItinerarySection({
       year: "numeric",
     });
     return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+
+  const persistDay = async (day: ItineraryDay): Promise<void> => {
+    const { error } = await supabase
+      .from("itinerary_days")
+      .update({ activities: day })
+      .eq("trip_id", trip.id)
+      .eq("day_number", day.day_number);
+    if (error) console.error("No se pudo guardar el día:", error);
+  };
+
+  const handleDeleteBuffer = async (
+    dayIndex: number,
+    activityIndex: number,
+  ) => {
+    const updatedDays = [...itinerary.days];
+    updatedDays[dayIndex] = {
+      ...updatedDays[dayIndex],
+      activities: updatedDays[dayIndex].activities.filter(
+        (_, idx) => idx !== activityIndex,
+      ),
+    };
+    onItineraryChange({ ...itinerary, days: updatedDays });
+    await persistDay(updatedDays[dayIndex]);
   };
 
   const handleUpdateActivity = async (
@@ -151,11 +180,7 @@ export function ItinerarySection({
     activities.splice(insertAt, 0, newActivity);
     updatedDays[dayIndex] = { ...updatedDays[dayIndex], activities };
     onItineraryChange({ ...itinerary, days: updatedDays });
-    await supabase
-      .from("itinerary_days")
-      .update({ activities: updatedDays[dayIndex] })
-      .eq("trip_id", trip.id)
-      .eq("day_number", updatedDays[dayIndex].day_number);
+    await persistDay(updatedDays[dayIndex]);
     setEditingActivity({ dayIndex, activityIndex: insertAt });
   };
 
@@ -494,16 +519,84 @@ export function ItinerarySection({
                       className="relative group/activity"
                     >
                       {activity.type === "buffer" ? (
-                        <div className="flex gap-4 py-1 opacity-50">
-                          <span className="text-text-faint text-sm w-12 shrink-0">
+                        <div className="flex gap-4 py-1 group/buffer items-center">
+                          <span className="text-text-faint text-sm w-12 shrink-0 opacity-50">
                             {getTime(activity)}
                           </span>
-                          <div className="flex flex-col items-center">
-                            <div className="w-px flex-1 border-l border-dashed border-border-base" />
+                          <div className="flex flex-col items-center self-stretch">
+                            <div className="w-px flex-1 border-l border-dashed border-border-base opacity-50" />
                           </div>
-                          <span className="text-text-muted dark:text-text-faint text-sm italic self-center ">
-                            {activity.title}
-                          </span>
+                          {editingBuffer?.dayIndex === dayIndex &&
+                          editingBuffer?.activityIndex === i ? (
+                            <div
+                              className="flex items-center gap-2 flex-wrap"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <span className="text-text-muted dark:text-text-faint text-sm italic">
+                                {activity.title}
+                              </span>
+                              <input
+                                type="time"
+                                value={activity.time_start}
+                                onChange={(e) =>
+                                  handleUpdateActivity(
+                                    dayIndex,
+                                    i,
+                                    "time_start",
+                                    e.target.value,
+                                  )
+                                }
+                                className="input-base w-auto"
+                              />
+                              <span className="text-text-faint">–</span>
+                              <input
+                                type="time"
+                                value={activity.time_end}
+                                onChange={(e) =>
+                                  handleUpdateActivity(
+                                    dayIndex,
+                                    i,
+                                    "time_end",
+                                    e.target.value,
+                                  )
+                                }
+                                className="input-base w-auto"
+                              />
+                              <button
+                                onClick={() => setEditingBuffer(null)}
+                                className="text-brand-mid text-xs hover:underline"
+                              >
+                                Listo
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-text-muted dark:text-text-faint text-sm italic self-center flex items-center gap-2">
+                              {activity.title}
+                              {canbEdit && (
+                                <span className="opacity-0 group-hover/buffer:opacity-100 transition flex items-center gap-2">
+                                  <button
+                                    onClick={() =>
+                                      setEditingBuffer({
+                                        dayIndex,
+                                        activityIndex: i,
+                                      })
+                                    }
+                                    className="text-text-faint hover:text-plan transition"
+                                  >
+                                    <EditIcon />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleDeleteBuffer(dayIndex, i)
+                                    }
+                                    className="text-text-faint hover:text-red-400 transition"
+                                  >
+                                    <TrashIcon />
+                                  </button>
+                                </span>
+                              )}
+                            </span>
+                          )}
                         </div>
                       ) : (
                         <>
