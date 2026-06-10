@@ -130,6 +130,16 @@ export default defineConfig({
               const body = JSON.parse(
                 Buffer.concat(chunks).toString() || "{}",
               );
+              if (!apiKey) {
+                res.statusCode = 500;
+                res.setHeader("Content-Type", "application/json");
+                res.end(
+                  JSON.stringify({
+                    error: "GEOAPIFY_API_KEY no está configurada (.env.local)",
+                  }),
+                );
+                return;
+              }
               const url = buildGeoapifyUrl(body, apiKey);
               if (!url) {
                 res.statusCode = 400;
@@ -142,6 +152,7 @@ export default defineConfig({
               }
               const upstream = await fetch(url);
               const data = await upstream.json();
+              res.statusCode = upstream.status;
               res.setHeader("Content-Type", "application/json");
               res.end(JSON.stringify(data));
             } catch (err) {

@@ -15,6 +15,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const apiKey = process.env.GEOAPIFY_API_KEY ?? "";
+  if (!apiKey) {
+    return res
+      .status(500)
+      .json({ error: "GEOAPIFY_API_KEY no está configurada en el servidor" });
+  }
+
   const url = buildGeoapifyUrl(req.body ?? {}, apiKey);
 
   if (!url) {
@@ -25,5 +31,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const upstream = await fetch(url);
   const data = await upstream.json();
-  return res.status(200).json(data);
+  return res.status(upstream.status).json(data);
 }
