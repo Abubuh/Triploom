@@ -88,6 +88,32 @@ export function ItinerarySection({
     await persistDay(updatedDays[dayIndex]);
   };
 
+  const makeBuffer = (start: string, end: string): ItineraryActivity => ({
+    id: `manual-buffer-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    time_start: start,
+    time_end: end,
+    title: "Traslado",
+    description: "Tiempo de desplazamiento entre actividades",
+    estimated_cost: { min: 0, max: 0 },
+    place: { name: "", address: "", search_query: "", lat: null, lng: null },
+    type: "buffer",
+    full_day: false,
+  });
+
+  const handleAddBuffer = async (dayIndex: number, activityIndex: number) => {
+    const updatedDays = [...itinerary.days];
+    const activities = [...updatedDays[dayIndex].activities];
+    const prev = activities[activityIndex];
+    const next = activities[activityIndex + 1];
+    const start = prev?.time_end ?? "12:00";
+    const end =
+      next?.time_start && next.time_start >= start ? next.time_start : start;
+    activities.splice(activityIndex + 1, 0, makeBuffer(start, end));
+    updatedDays[dayIndex] = { ...updatedDays[dayIndex], activities };
+    onItineraryChange({ ...itinerary, days: updatedDays });
+    await persistDay(updatedDays[dayIndex]);
+  };
+
   const handleUpdateActivity = async (
     dayIndex: number,
     activityIndex: number,
@@ -834,6 +860,25 @@ export function ItinerarySection({
                               <div className="flex-1 h-px bg-border-base" />
                             </div>
                           )}
+
+                          {/* Agregar traslado: solo si el siguiente es otra actividad (no hay traslado ya) */}
+                          {canbEdit &&
+                            day.activities[i + 1] &&
+                            day.activities[i + 1].type !== "buffer" && (
+                              <div className="flex items-center gap-2 my-1">
+                                <div className="flex-1 border-t border-dashed border-border-base" />
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddBuffer(dayIndex, i);
+                                  }}
+                                  className="text-text-faint hover:text-brand-mid text-xs px-2 py-0.5 rounded-full transition shrink-0"
+                                >
+                                  + Agregar traslado
+                                </button>
+                                <div className="flex-1 border-t border-dashed border-border-base" />
+                              </div>
+                            )}
                         </>
                       )}
                     </div>
