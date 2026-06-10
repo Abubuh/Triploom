@@ -1,19 +1,25 @@
-import type { GeoProvider, GeocodeResult } from "./GeoProvider";
+import type {
+  GeoProvider,
+  GeocodeResult,
+  Place,
+  PlacesNearParams,
+} from "./GeoProvider";
 
-// Forma cruda (GeoJSON) que devuelve Geoapify vía /api/geo. Solo tomamos lo
-// que necesitamos y lo normalizamos; el resto del motor nunca ve este shape.
-interface GeoapifyFeature {
-  properties: {
-    lat: number;
-    lon: number;
-    formatted?: string;
-    city?: string;
-    country?: string;
-  };
+// Propiedades crudas (GeoJSON) que usamos de Geoapify, comunes a geocode y
+// places. Solo tomamos lo que necesitamos y lo normalizamos; el resto del motor
+// nunca ve este shape.
+interface GeoapifyProperties {
+  lat?: number;
+  lon?: number;
+  formatted?: string;
+  city?: string;
+  country?: string;
+  name?: string;
+  categories?: string[];
 }
 
 interface GeoapifyResponse {
-  features?: GeoapifyFeature[];
+  features?: { properties: GeoapifyProperties }[];
   error?: string;
 }
 
@@ -38,7 +44,11 @@ export const geoapifyProvider: GeoProvider = {
 
     const data = await postGeo({ action: "geocode", text: trimmed, limit: 1 });
     const props = data.features?.[0]?.properties;
-    if (!props || typeof props.lat !== "number" || typeof props.lon !== "number") {
+    if (
+      !props ||
+      typeof props.lat !== "number" ||
+      typeof props.lon !== "number"
+    ) {
       return null;
     }
 
@@ -49,5 +59,44 @@ export const geoapifyProvider: GeoProvider = {
       city: props.city ?? null,
       country: props.country ?? null,
     };
+  },
+
+  async placesNear({
+    lat,
+    lng,
+    categories,
+    radius = 2000,
+    limit = 20,
+  }: PlacesNearParams): Promise<Place[]> {
+    if (categories.length === 0) return [];
+
+    const data = await postGeo({
+      action: "places",
+      categories: categories.join(","),
+      lat,
+      lon: lng,
+      radius,
+      limit,
+    });
+
+    const places: Place[] = [];
+    for (const feature of data.features ?? []) {
+      const p = feature.properties;
+      if (
+        typeof p.name !== "string" ||
+        typeof p.lat !== "number" ||
+        typeof p.lon !== "number"
+      ) {
+        continue;
+      }
+      places.push({
+        name: p.name,
+        lat: p.lat,
+        lng: p.lon,
+        category: p.categories?.[p.categories.length - 1] ?? null,
+        address: p.formatted ?? null,
+      });
+    }
+    return places;
   },
 };

@@ -3,11 +3,16 @@
 // solo lugar. NO debe importar nada de "@vercel/node" para poder usarse en
 // ambos entornos.
 
-export interface GeoapifyRequest {
-  action: "geocode";
-  text?: string;
-  limit?: number;
-}
+export type GeoapifyRequest =
+  | { action: "geocode"; text?: string; limit?: number }
+  | {
+      action: "places";
+      categories?: string;
+      lat?: number;
+      lon?: number;
+      radius?: number; // metros
+      limit?: number;
+    };
 
 export function buildGeoapifyUrl(
   body: GeoapifyRequest,
@@ -21,5 +26,18 @@ export function buildGeoapifyUrl(
     });
     return `https://api.geoapify.com/v1/geocode/search?${q.toString()}`;
   }
+
+  if (body.action === "places") {
+    if (body.lat == null || body.lon == null) return null;
+    const q = new URLSearchParams({
+      categories: body.categories ?? "",
+      filter: `circle:${body.lon},${body.lat},${body.radius ?? 2000}`,
+      bias: `proximity:${body.lon},${body.lat}`,
+      limit: String(body.limit ?? 20),
+      apiKey,
+    });
+    return `https://api.geoapify.com/v2/places?${q.toString()}`;
+  }
+
   return null;
 }

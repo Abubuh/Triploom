@@ -14,15 +14,16 @@ export const FOOD_OPTIONS = [
 ];
 
 export const ACTIVITY_OPTIONS = [
-  "Playa",
-  "Montaña",
-  "Ciudad",
-  "Museos",
-  "Vida nocturna",
-  "Naturaleza",
-  "Aventura",
   "Gastronomía",
+  "Museos",
+  "Atracciones turísticas",
+  "Parques",
+  "Naturaleza",
+  "Playa",
+  "Vida nocturna",
   "Parques de diversiones",
+  "Deportes",
+  "Compras",
 ];
 
 export const PACE_OPTIONS = [
