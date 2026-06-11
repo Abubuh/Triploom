@@ -56,14 +56,17 @@ export function buildPrompt(
     .filter((e) => e.places.length > 0)
     .map((e) => {
       const list = e.places
-        .map((p) => `  - ${p.name}${p.address ? ` (${p.address})` : ""}`)
+        .map(
+          (p) =>
+            `  - ${p.name}${p.address ? ` | ${p.address}` : ""} → search_query: "${p.name}, ${e.city}, ${e.country}"`,
+        )
         .join("\n");
       return `### ${e.city}, ${e.country}\n${list}`;
     })
     .join("\n\n");
 
   const realPlacesSection = enrichedSection
-    ? `\nLUGARES REALES VERIFICADOS (úsalos como actividades; prioriza estos sobre lugares que inventes):\n${enrichedSection}\n`
+    ? `\nLUGARES REALES VERIFICADOS (úsalos como actividades; prioriza estos sobre lugares que inventes):\nPara cada lugar de esta lista, usa EXACTAMENTE el search_query indicado — no lo modifiques:\n${enrichedSection}\n`
     : "";
 
   return `Genera un itinerario día a día basado en estos datos:
