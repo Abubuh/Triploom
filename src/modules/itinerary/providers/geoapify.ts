@@ -5,27 +5,23 @@ import type {
   PlacesNearParams,
 } from "./GeoProvider";
 
-// Propiedades crudas (GeoJSON) que usamos de Geoapify, comunes a geocode y
-// places. Solo tomamos lo que necesitamos y lo normalizamos; el resto del motor
-// nunca ve este shape.
+// ---------------------------------------------------------------------------
+// Geocoding — Geoapify (gratis, sin tarjeta, sin límite ajustable por cuota)
+// ---------------------------------------------------------------------------
+
 interface GeoapifyProperties {
   lat?: number;
   lon?: number;
   formatted?: string;
   city?: string;
   country?: string;
-  name?: string;
-  categories?: string[];
 }
 
-interface GeoapifyResponse {
+interface GeoapifyGeoResponse {
   features?: { properties: GeoapifyProperties }[];
-  error?: string;
 }
 
-async function postGeo(
-  body: Record<string, unknown>,
-): Promise<GeoapifyResponse> {
+async function postGeo(body: Record<string, unknown>): Promise<GeoapifyGeoResponse> {
   const res = await fetch("/api/geo", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -36,6 +32,38 @@ async function postGeo(
   }
   return res.json();
 }
+
+// ---------------------------------------------------------------------------
+// Places — Google Places API (New) (mejor cobertura de POIs reales)
+// ---------------------------------------------------------------------------
+
+interface GooglePlace {
+  displayName?: { text: string };
+  location?: { latitude: number; longitude: number };
+  types?: string[];
+  formattedAddress?: string;
+}
+
+interface GooglePlacesResponse {
+  places?: GooglePlace[];
+  error?: { message: string };
+}
+
+async function postPlaces(body: Record<string, unknown>): Promise<GooglePlacesResponse> {
+  const res = await fetch("/api/places", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    throw new Error(`/api/places respondió ${res.status} ${res.statusText}`);
+  }
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Provider híbrido: geocode → Geoapify, placesNear → Google
+// ---------------------------------------------------------------------------
 
 export const geoapifyProvider: GeoProvider = {
   async geocode(text: string): Promise<GeocodeResult | null> {
@@ -70,31 +98,26 @@ export const geoapifyProvider: GeoProvider = {
   }: PlacesNearParams): Promise<Place[]> {
     if (categories.length === 0) return [];
 
-    const data = await postGeo({
-      action: "places",
-      categories: categories.join(","),
+    const data = await postPlaces({
+      action: "nearby",
       lat,
-      lon: lng,
+      lng,
       radius,
-      limit,
+      types: categories,   // aquí ya son tipos de Google (restaurant, museum…)
+      limit: Math.min(limit, 20),
     });
 
     const places: Place[] = [];
-    for (const feature of data.features ?? []) {
-      const p = feature.properties;
-      if (
-        typeof p.name !== "string" ||
-        typeof p.lat !== "number" ||
-        typeof p.lon !== "number"
-      ) {
-        continue;
-      }
+    for (const p of data.places ?? []) {
+      const name = p.displayName?.text;
+      const loc = p.location;
+      if (!name || !loc) continue;
       places.push({
-        name: p.name,
-        lat: p.lat,
-        lng: p.lon,
-        category: p.categories?.[p.categories.length - 1] ?? null,
-        address: p.formatted ?? null,
+        name,
+        lat: loc.latitude,
+        lng: loc.longitude,
+        category: p.types?.[0] ?? null,
+        address: p.formattedAddress ?? null,
       });
     }
     return places;

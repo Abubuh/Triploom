@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import fs from "fs";
 import { buildGeoapifyUrl } from "./api/_geoapify";
+import { callGooglePlaces, type GooglePlacesRequest } from "./api/_google";
 
 function readAnthropicKey(): string {
   if (process.env.ANTHROPIC_API_KEY) return process.env.ANTHROPIC_API_KEY;
@@ -151,6 +152,58 @@ export default defineConfig({
                 return;
               }
               const upstream = await fetch(url);
+              const data = await upstream.json();
+              res.statusCode = upstream.status;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify(data));
+            } catch (err) {
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: String(err) }));
+            }
+          });
+        });
+      },
+    },
+    {
+      name: "google-places-dev-proxy",
+      configureServer(server) {
+        const apiKey = readEnvKey("GOOGLE_PLACES_API_KEY");
+        server.middlewares.use("/api/places", (req, res) => {
+          const chunks: Buffer[] = [];
+          req.on("data", (chunk) => chunks.push(chunk));
+          req.on("end", async () => {
+            try {
+              const body = JSON.parse(
+                Buffer.concat(chunks).toString() || "{}",
+              ) as GooglePlacesRequest;
+              if (!apiKey) {
+                res.statusCode = 500;
+                res.setHeader("Content-Type", "application/json");
+                res.end(
+                  JSON.stringify({
+                    error:
+                      "GOOGLE_PLACES_API_KEY no está configurada (.env.local)",
+                  }),
+                );
+                return;
+              }
+              if (
+                body?.action !== "nearby" ||
+                typeof body.lat !== "number" ||
+                typeof body.lng !== "number" ||
+                !Array.isArray(body.types) ||
+                body.types.length === 0
+              ) {
+                res.statusCode = 400;
+                res.setHeader("Content-Type", "application/json");
+                res.end(
+                  JSON.stringify({
+                    error: "Parámetros inválidos para /api/places",
+                  }),
+                );
+                return;
+              }
+              const upstream = await callGooglePlaces(body, apiKey);
               const data = await upstream.json();
               res.statusCode = upstream.status;
               res.setHeader("Content-Type", "application/json");
