@@ -2,12 +2,12 @@ import { GenerateItineraryParams } from "../../types/trip.types";
 
 import { PACE_MAX_ACTIVITIES } from "../../types/itinerary.generated.types";
 import { dominantPace } from "./utils/pace";
+import type { EnrichedDestination } from "../../modules/itinerary/types/itinerary.types";
 
-export function buildPrompt({
-  trip,
-  destinations,
-  members,
-}: GenerateItineraryParams): string {
+export function buildPrompt(
+  { trip, destinations, members }: GenerateItineraryParams,
+  enriched: EnrichedDestination[] = [],
+): string {
   const currency = trip.currency ?? "MXN";
 
   const paces = members
@@ -52,6 +52,20 @@ export function buildPrompt({
       ? `\nLUGARES PRIORITARIOS (anclar primero, antes de rellenar con otras actividades):\n${uniqueAttractions.map((a) => `- ${a}`).join("\n")}\n`
       : "";
 
+  const enrichedSection = enriched
+    .filter((e) => e.places.length > 0)
+    .map((e) => {
+      const list = e.places
+        .map((p) => `  - ${p.name}${p.address ? ` (${p.address})` : ""}`)
+        .join("\n");
+      return `### ${e.city}, ${e.country}\n${list}`;
+    })
+    .join("\n\n");
+
+  const realPlacesSection = enrichedSection
+    ? `\nLUGARES REALES VERIFICADOS (úsalos como actividades; prioriza estos sobre lugares que inventes):\n${enrichedSection}\n`
+    : "";
+
   return `Genera un itinerario día a día basado en estos datos:
 VIAJE: ${trip.name}
 FECHAS: ${trip.start_date} al ${trip.end_date}
@@ -59,7 +73,7 @@ ALOJAMIENTO: ${accommodationInstruction}
 MONEDA: ${currency}
 RUTA: ${destinationsText}
 Si hay múltiples destinos, optimiza el orden geográfico para minimizar distancias de traslado.
-${attractionsSection}
+${attractionsSection}${realPlacesSection}
 VIAJEROS:
 ${membersText}
 
