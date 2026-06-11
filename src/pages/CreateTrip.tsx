@@ -105,16 +105,8 @@ function CreateTrip() {
     );
   };
 
-  const MAX_TRIP_DAYS = 14;
-
   const handleAddDestination = () => {
     if (!newDestination.city) return;
-    const currentTotal = store.destinations.reduce((sum, d) => sum + d.days, 0);
-    const newTotal = currentTotal + Math.max(1, newDestination.days);
-    if (newTotal > MAX_TRIP_DAYS) {
-      alert(`El viaje no puede superar ${MAX_TRIP_DAYS} días en total. Ya tienes ${currentTotal} días.`);
-      return;
-    }
     store.addDestination({ ...newDestination, days: Math.max(1, newDestination.days) });
     setNewDestination({ city: "", country: "", days: 1 });
   };
@@ -333,10 +325,24 @@ function CreateTrip() {
               </select>
             </div>
 
+            {showErrors && store.startDate && store.endDate && (() => {
+              const days = Math.round((new Date(store.endDate).getTime() - new Date(store.startDate).getTime()) / 86_400_000);
+              return days > 14 ? (
+                <p className="mt-2 mb-4 text-xs text-red-500">
+                  El viaje dura {days} días. El máximo permitido es 14.
+                </p>
+              ) : null;
+            })()}
+
             <div className="flex justify-end">
               <button
                 onClick={() => {
                   if (!store.name || !store.startDate || !store.endDate) {
+                    setShowErrors(true);
+                    return;
+                  }
+                  const days = Math.round((new Date(store.endDate).getTime() - new Date(store.startDate).getTime()) / 86_400_000);
+                  if (days > 14) {
                     setShowErrors(true);
                     return;
                   }
