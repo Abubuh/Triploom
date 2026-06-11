@@ -41,6 +41,10 @@ async function callClaudeAPIWithToken(prompt: string, token: string): Promise<st
 export const generateItinerary = async (
   params: GenerateItineraryParams,
 ): Promise<GeneratedItinerary> => {
+  const totalDays = params.destinations.reduce((sum, d) => sum + d.days, 0);
+  if (totalDays > 14) {
+    throw new Error(`El viaje tiene ${totalDays} días. El máximo permitido es 14.`);
+  }
   const token = await getAuthToken();
 
   let enriched: EnrichedDestination[] = [];
