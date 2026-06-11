@@ -7,11 +7,19 @@ import { validateItinerary } from "./itinerary/phase2";
 import { postProcess } from "./itinerary/phase3";
 import { enrichDestinations } from "../modules/itinerary/enrichDestinations";
 import type { EnrichedDestination } from "../modules/itinerary/types/itinerary.types";
+import { supabase } from "./supabase";
 
-async function callClaudeAPI(prompt: string): Promise<string> {
+async function getAuthToken(): Promise<string> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error("No hay sesión activa");
+  return token;
+}
+
+async function callClaudeAPIWithToken(prompt: string, token: string): Promise<string> {
   const response = await fetch("/api/generate-itinerary", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
     body: JSON.stringify({ prompt }),
   });
 
@@ -33,9 +41,11 @@ async function callClaudeAPI(prompt: string): Promise<string> {
 export const generateItinerary = async (
   params: GenerateItineraryParams,
 ): Promise<GeneratedItinerary> => {
+  const token = await getAuthToken();
+
   let enriched: EnrichedDestination[] = [];
   try {
-    enriched = await enrichDestinations(params.destinations, params.members);
+    enriched = await enrichDestinations(params.destinations, params.members, token);
   } catch (err) {
     console.warn(
       "enrichDestinations falló, continuando sin enriquecimiento:",
@@ -44,7 +54,7 @@ export const generateItinerary = async (
   }
 
   const prompt = buildPrompt(params, enriched);
-  const raw = await callClaudeAPI(prompt);
+  const raw = await callClaudeAPIWithToken(prompt, token);
 
   const { itinerary, issues, summary, budgetWarnings } = validateItinerary(
     raw,

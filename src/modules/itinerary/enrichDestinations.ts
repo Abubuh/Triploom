@@ -17,6 +17,7 @@ const ENRICH_LIMIT = 30;
 export async function enrichDestinations(
   destinations: Destination[],
   members: Member[],
+  token?: string,
 ): Promise<EnrichedDestination[]> {
   const interests = [
     ...new Set(
@@ -35,7 +36,7 @@ export async function enrichDestinations(
   ];
 
   const results = await Promise.allSettled(
-    destinations.map((dest) => enrichOne(dest, interests, mustSees)),
+    destinations.map((dest) => enrichOne(dest, interests, mustSees, token)),
   );
 
   return results.map((r, i) => {
@@ -54,10 +55,14 @@ async function enrichOne(
   dest: Destination,
   interests: string[],
   mustSees: string[],
+  token?: string,
 ): Promise<EnrichedDestination> {
   const anchor = await resolveAnchor(
     { city: dest.city, country: dest.country, mustSees, interests },
-    geoapifyProvider,
+    {
+      geocode: (text) => geoapifyProvider.geocode(text, token),
+      placesNear: (params) => geoapifyProvider.placesNear(params, token),
+    },
   );
 
   if (!anchor) {
@@ -75,7 +80,7 @@ async function enrichOne(
     categories: types,
     radius: ENRICH_RADIUS_M,
     limit: ENRICH_LIMIT,
-  });
+  }, token);
 
   return { city: dest.city, country: dest.country, anchor, places };
 }

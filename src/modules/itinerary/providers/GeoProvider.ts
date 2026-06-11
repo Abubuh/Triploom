@@ -29,7 +29,7 @@ export interface PlacesNearParams {
  */
 export interface GeoProvider {
   /** Geocodifica un texto a coordenadas. Devuelve null si no hay match. */
-  geocode(text: string): Promise<GeocodeResult | null>;
+  geocode(text: string, token?: string): Promise<GeocodeResult | null>;
   /** POIs reales cerca de un punto, filtrados por categorías Geoapify. */
-  placesNear(params: PlacesNearParams): Promise<Place[]>;
+  placesNear(params: PlacesNearParams, token?: string): Promise<Place[]>;
 }

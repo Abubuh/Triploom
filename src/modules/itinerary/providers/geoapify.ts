@@ -21,12 +21,10 @@ interface GeoapifyGeoResponse {
   features?: { properties: GeoapifyProperties }[];
 }
 
-async function postGeo(body: Record<string, unknown>): Promise<GeoapifyGeoResponse> {
-  const res = await fetch("/api/geo", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+async function postGeo(body: Record<string, unknown>, token?: string): Promise<GeoapifyGeoResponse> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res = await fetch("/api/geo", { method: "POST", headers, body: JSON.stringify(body) });
   if (!res.ok) {
     throw new Error(`/api/geo respondió ${res.status} ${res.statusText}`);
   }
@@ -49,12 +47,10 @@ interface GooglePlacesResponse {
   error?: { message: string };
 }
 
-async function postPlaces(body: Record<string, unknown>): Promise<GooglePlacesResponse> {
-  const res = await fetch("/api/places", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+async function postPlaces(body: Record<string, unknown>, token?: string): Promise<GooglePlacesResponse> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res = await fetch("/api/places", { method: "POST", headers, body: JSON.stringify(body) });
   if (!res.ok) {
     throw new Error(`/api/places respondió ${res.status} ${res.statusText}`);
   }
@@ -66,11 +62,11 @@ async function postPlaces(body: Record<string, unknown>): Promise<GooglePlacesRe
 // ---------------------------------------------------------------------------
 
 export const geoapifyProvider: GeoProvider = {
-  async geocode(text: string): Promise<GeocodeResult | null> {
+  async geocode(text: string, token?: string): Promise<GeocodeResult | null> {
     const trimmed = text.trim();
     if (!trimmed) return null;
 
-    const data = await postGeo({ action: "geocode", text: trimmed, limit: 1 });
+    const data = await postGeo({ action: "geocode", text: trimmed, limit: 1 }, token);
     const props = data.features?.[0]?.properties;
     if (
       !props ||
@@ -95,7 +91,7 @@ export const geoapifyProvider: GeoProvider = {
     categories,
     radius = 2000,
     limit = 20,
-  }: PlacesNearParams): Promise<Place[]> {
+  }: PlacesNearParams, token?: string): Promise<Place[]> {
     if (categories.length === 0) return [];
 
     const data = await postPlaces({
@@ -105,7 +101,7 @@ export const geoapifyProvider: GeoProvider = {
       radius,
       types: categories,   // aquí ya son tipos de Google (restaurant, museum…)
       limit: Math.min(limit, 20),
-    });
+    }, token);
 
     const places: Place[] = [];
     for (const p of data.places ?? []) {
