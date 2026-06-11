@@ -5,6 +5,8 @@ import {
 import { buildPrompt } from "./itinerary/phase1";
 import { validateItinerary } from "./itinerary/phase2";
 import { postProcess } from "./itinerary/phase3";
+import { enrichDestinations } from "../modules/itinerary/enrichDestinations";
+import type { EnrichedDestination } from "../modules/itinerary/types/itinerary.types";
 
 async function callClaudeAPI(prompt: string): Promise<string> {
   const response = await fetch("/api/generate-itinerary", {
@@ -31,7 +33,17 @@ async function callClaudeAPI(prompt: string): Promise<string> {
 export const generateItinerary = async (
   params: GenerateItineraryParams,
 ): Promise<GeneratedItinerary> => {
-  const prompt = buildPrompt(params);
+  let enriched: EnrichedDestination[] = [];
+  try {
+    enriched = await enrichDestinations(params.destinations, params.members);
+  } catch (err) {
+    console.warn(
+      "enrichDestinations falló, continuando sin enriquecimiento:",
+      err,
+    );
+  }
+
+  const prompt = buildPrompt(params, enriched);
   const raw = await callClaudeAPI(prompt);
 
   const { itinerary, issues, summary, budgetWarnings } = validateItinerary(
