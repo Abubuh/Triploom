@@ -21,10 +21,13 @@ export async function requireAuth(req: VercelRequest): Promise<{ id: string }> {
 
   const token = authHeader.slice(7);
 
-  const supabase = createClient(
-    process.env.VITE_SUPABASE_URL!,
-    process.env.VITE_SUPABASE_ANON_KEY!,
-  );
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) {
+    throw new AuthError("Configuración del servidor incompleta", 500);
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
   const { data, error } = await supabase.auth.getUser(token);
   if (error || !data.user) {
