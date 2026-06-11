@@ -3,11 +3,11 @@
 // Si cambian las etiquetas en tripOptions.tsx, hay que actualizar estas llaves.
 
 export const ACTIVITY_TYPES_MAP: Record<string, string[]> = {
-  Gastronomía: ["restaurant", "cafe", "bakery", "food"],
+  Gastronomía: ["restaurant", "cafe", "bakery"],
   Museos: ["museum"],
-  "Atracciones turísticas": ["tourist_attraction", "landmark", "point_of_interest"],
+  "Atracciones turísticas": ["tourist_attraction", "historical_landmark", "monument"],
   Parques: ["park", "national_park"],
-  Naturaleza: ["natural_feature", "campground", "hiking_area"],
+  Naturaleza: ["national_park", "campground", "hiking_area"],
   Playa: ["beach"],
   "Vida nocturna": ["bar", "night_club", "pub"],
   "Parques de diversiones": ["amusement_park", "amusement_center"],
