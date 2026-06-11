@@ -105,9 +105,17 @@ function CreateTrip() {
     );
   };
 
+  const MAX_TRIP_DAYS = 14;
+
   const handleAddDestination = () => {
     if (!newDestination.city) return;
-    store.addDestination(newDestination);
+    const currentTotal = store.destinations.reduce((sum, d) => sum + d.days, 0);
+    const newTotal = currentTotal + Math.max(1, newDestination.days);
+    if (newTotal > MAX_TRIP_DAYS) {
+      alert(`El viaje no puede superar ${MAX_TRIP_DAYS} días en total. Ya tienes ${currentTotal} días.`);
+      return;
+    }
+    store.addDestination({ ...newDestination, days: Math.max(1, newDestination.days) });
     setNewDestination({ city: "", country: "", days: 1 });
   };
 
