@@ -1,5 +1,7 @@
 // Tipos de dominio del motor de itinerarios.
 
+import type { Place } from "../providers/GeoProvider";
+
 export type AnchorSource = "zone" | "must-sees" | "interests" | "city";
 
 /** Entrada para resolver el ancla geográfica de un destino. */
@@ -18,4 +20,12 @@ export interface Anchor {
   label: string;
   source: AnchorSource;
   radiusMeters: number;
+}
+
+/** Destino enriquecido con ancla geográfica y POIs reales. */
+export interface EnrichedDestination {
+  city: string;
+  country: string;
+  anchor: Anchor | null;
+  places: Place[];
 }
