@@ -54,6 +54,8 @@ function TripDetail() {
   const [groupChatOpen, setGroupChatOpen] = useState(false);
   const [editTripOpen, setEditTripOpen] = useState(false);
   const burgerRef = useRef<HTMLDivElement>(null);
+  const lastGeneratedRef = useRef<number>(0);
+  const GENERATION_COOLDOWN_MS = 60_000;
   const [pendingAccommodationExpense, setPendingAccommodationExpense] =
     useState<{
       amount: number;
@@ -223,9 +225,20 @@ function TripDetail() {
 
   const handleGenerateItinerary = async () => {
     if (!trip) return;
+    if (generating) return;
+
+    const now = Date.now();
+    const elapsed = now - lastGeneratedRef.current;
+    if (elapsed < GENERATION_COOLDOWN_MS) {
+      const segundosRestantes = Math.ceil((GENERATION_COOLDOWN_MS - elapsed) / 1000);
+      showToast(`Espera ${segundosRestantes}s antes de volver a generar`);
+      return;
+    }
+
     setGenerating(true);
     try {
       const result = await generateItinerary({ trip, destinations, members });
+      lastGeneratedRef.current = Date.now();
       setItinerary(result);
       await supabase.from("itinerary_days").delete().eq("trip_id", trip.id);
       await supabase.from("itinerary_days").insert(
