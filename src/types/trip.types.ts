@@ -60,6 +60,8 @@ export interface ItineraryActivity {
   place: Place;
   type: "activity" | "food" | "transport" | "buffer";
   full_day: boolean;
+  flagged?: boolean;
+  flag_reason?: string;
 }
 
 export interface ItineraryAccommodation {

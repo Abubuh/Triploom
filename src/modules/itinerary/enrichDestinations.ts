@@ -6,7 +6,11 @@ import { geoapifyProvider } from "./providers/geoapify";
 import { activitiesToTypes } from "./categories";
 
 const ENRICH_RADIUS_M = 2500;
-const ENRICH_LIMIT = 30;
+const ENRICH_LIMIT = 20;
+
+function normalizeStr(s: string): string {
+  return s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
+}
 
 /**
  * Por cada destino, resuelve el ancla geográfica y busca POIs reales
@@ -69,10 +73,7 @@ async function enrichOne(
     return { city: dest.city, country: dest.country, anchor: null, places: [] };
   }
 
-  const types = activitiesToTypes(interests);
-  if (types.length === 0) {
-    return { city: dest.city, country: dest.country, anchor, places: [] };
-  }
+  const types = [...new Set([...activitiesToTypes(interests), "restaurant", "cafe"])];
 
   const places: Place[] = await geoapifyProvider.placesNear({
     lat: anchor.lat,
@@ -82,5 +83,10 @@ async function enrichOne(
     limit: ENRICH_LIMIT,
   }, token);
 
-  return { city: dest.city, country: dest.country, anchor, places };
+  const normalizedCountry = normalizeStr(dest.country);
+  const filtered = places.filter(
+    (p) => !p.address || normalizeStr(p.address).includes(normalizedCountry),
+  );
+
+  return { city: dest.city, country: dest.country, anchor, places: filtered };
 }

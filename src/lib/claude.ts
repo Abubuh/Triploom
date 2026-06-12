@@ -16,11 +16,11 @@ async function getAuthToken(): Promise<string> {
   return token;
 }
 
-async function callClaudeAPIWithToken(prompt: string, token: string): Promise<string> {
+async function callClaudeAPIWithToken(prompt: string, token: string, maxTokens: number): Promise<string> {
   const response = await fetch("/api/generate-itinerary", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, maxTokens }),
   });
 
   if (!response.ok) {
@@ -42,8 +42,8 @@ export const generateItinerary = async (
   params: GenerateItineraryParams,
 ): Promise<GeneratedItinerary> => {
   const totalDays = params.destinations.reduce((sum, d) => sum + d.days, 0);
-  if (totalDays > 14) {
-    throw new Error(`El viaje tiene ${totalDays} días. El máximo permitido es 14.`);
+  if (totalDays > 7) {
+    throw new Error(`El viaje tiene ${totalDays} días. El máximo permitido es 7.`);
   }
   const token = await getAuthToken();
 
@@ -58,14 +58,19 @@ export const generateItinerary = async (
   }
 
   const prompt = buildPrompt(params, enriched);
-  const raw = await callClaudeAPIWithToken(prompt, token);
+  // ~900 tokens per day + 800 overhead, capped at 8000 for very long trips
+  const maxTokens = Math.min(totalDays * 750 + 800, 6000);
+  const raw = await callClaudeAPIWithToken(prompt, token, maxTokens);
 
   const { itinerary, issues, summary, budgetWarnings } = validateItinerary(
     raw,
     params,
   );
 
-  const days = postProcess(itinerary, issues);
+  const countryByCity = Object.fromEntries(
+    params.destinations.map((d) => [d.city, d.country]),
+  );
+  const days = postProcess(itinerary, issues, countryByCity);
 
   const warningMessages = issues
     .filter((i) => i.type !== "hora_limite_excedida")

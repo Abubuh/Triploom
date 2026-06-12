@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import {
   Trip,
@@ -41,6 +41,12 @@ export function ItinerarySection({
   onPendingAccommodationExpense,
 }: Props) {
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+
+  useEffect(() => {
+    if (selectedDayIndex >= itinerary.days.length) {
+      setSelectedDayIndex(0);
+    }
+  }, [itinerary.days.length]);
   const [editingActivity, setEditingActivity] = useState<{
     dayIndex: number;
     activityIndex: number;
@@ -829,6 +835,11 @@ export function ItinerarySection({
                                         <PinIcon /> {activity.place.name}
                                       </p>
                                     ))}
+                                  {activity.flagged && (
+                                    <p className="text-amber-500 text-xs mt-1">
+                                      Este lugar podría estar fuera del destino. Verifica antes de visitarlo.
+                                    </p>
+                                  )}
                                   {getCostDisplay(activity) && (
                                     <p className="text-brand-mid text-sm mt-1">
                                       {getCostDisplay(activity)}
