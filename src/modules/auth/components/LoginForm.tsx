@@ -48,22 +48,22 @@ export function LoginForm({
       )}
 
       <div className="mb-4">
-        <label className="block text-xs  font-semibold text-slate-300 mb-1.5 tracking-wide">
+        <label className="block text-[13px] font-bold text-text-muted mb-1.5">
           Correo
         </label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="input-base "
+          className="input-base"
           placeholder="tu@correo.com"
           required
         />
       </div>
 
       <div className="mb-3">
-        <label className="block text-xs font-semibold text-slate-300 mb-1.5 tracking-wide">
-          Contraseña
+        <label className="block text-[13px] font-bold text-text-muted mb-1.5">
+          Contrasena
         </label>
         <input
           type="password"
@@ -79,9 +79,9 @@ export function LoginForm({
         <button
           type="button"
           onClick={handleForgotPassword}
-          className="text-xs font-semibold text-blue-400 hover:underline"
+          className="text-[13px] font-semibold text-brand-mid hover:text-brand-mid-dark transition-colors"
         >
-          ¿Olvidaste tu contraseña?
+          Olvidaste tu contrasena?
         </button>
       </div>
 

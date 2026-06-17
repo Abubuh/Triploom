@@ -32,21 +32,21 @@ export function RegisterForm({
       )}
 
       <div className="mb-4">
-        <label className="block text-xs font-semibold text-slate-300 mb-1.5 tracking-wide">
+        <label className="block text-[13px] font-bold text-text-muted mb-1.5">
           Nombre
         </label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="input-base "
+          className="input-base"
           placeholder="Tu nombre"
           required
         />
       </div>
 
       <div className="mb-4">
-        <label className="block text-xs font-semibold text-slate-300 mb-1.5 tracking-wide">
+        <label className="block text-[13px] font-bold text-text-muted mb-1.5">
           Moneda base
         </label>
         <select
@@ -63,7 +63,7 @@ export function RegisterForm({
       </div>
 
       <div className="mb-4">
-        <label className="block text-xs font-semibold text-slate-300 mb-1.5 tracking-wide">
+        <label className="block text-[13px] font-bold text-text-muted mb-1.5">
           Correo
         </label>
         <input
@@ -77,15 +77,15 @@ export function RegisterForm({
       </div>
 
       <div className="mb-5">
-        <label className="block text-xs font-semibold text-slate-300 mb-1.5 tracking-wide">
-          Contraseña
+        <label className="block text-[13px] font-bold text-text-muted mb-1.5">
+          Contrasena
         </label>
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="input-base"
-          placeholder="Mínimo 6 caracteres"
+          placeholder="Minimo 6 caracteres"
           required
         />
       </div>

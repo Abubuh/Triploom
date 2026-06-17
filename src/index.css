@@ -1,114 +1,97 @@
 @import "tailwindcss";
 
 @theme {
-  /* Backgrounds */
-  --color-brand-dark: #1b4332;
-  --color-brand-mid: #40916c;
-  --color-brand-light: #95d5b2;
-  --color-brand-subtle: #d8ede5; /* Titles en dark mode*/
+  /* Brand */
+  --color-brand-dark: #0c1a0f;
+  --color-brand-mid: #4d8c6f;
+  --color-brand-mid-dark: #3d7259;
+  --color-brand-light: #c2edd5;
+  --color-brand-subtle: #d8eac8;
 
-  --color-surface-page: #f8faf9;
+  /* Surfaces */
+  --color-surface-page: #f4f8ed;
   --color-surface-card: #ffffff;
-  --color-surface-subtle: #eef7f2;
+  --color-surface-subtle: #f0f8f4;
+  --color-surface-mint: #e8f5ee;
 
-  --color-text-base: #1b4332;
-  --color-text-muted: #52796f;
-  --color-text-faint: #8aada4; /* Titles en dark mode*/
+  /* Text */
+  --color-text-base: #0c1a0f;
+  --color-text-muted: #607a65;
+  --color-text-faint: #aab8aa;
 
-  --color-ready: #95d5b2;
-  --color-readybg: #e8f7ef;
-  --color-readytx: #1b4332;
-
-  --color-plan: #a0522d;
-  --color-ready: #1e8c55;
+  /* Status */
+  --color-ready: #3a6e52;
+  --color-readybg: #c2edd5;
+  --color-readytx: #3a6e52;
+  --color-plan: #92400e;
   --color-planbg: #fde8bc;
   --color-plantx: #7a5010;
 
-  --color-brand-hover: #164a2d;
-  --color-brand-mid-hover: #357a58;
-  /* Botones */
-  --color-btn-bg: #1b4332;
-  --color-btn-bg-dark: "#95d3b2";
-  --color-btn-bg-hover: #40916c;
-  --color-btn-text: #95d5b2;
-
-  --color-btn-outline: #1b4332;
-  --color-btn-outline-hover: #40916c;
+  /* Buttons */
+  --color-btn-bg: #0c1a0f;
+  --color-btn-bg-hover: #4d8c6f;
+  --color-btn-text: #f4f8ed;
+  --color-btn-outline: #0c1a0f;
+  --color-btn-outline-hover: #4d8c6f;
 
   /* Inputs */
   --color-input-bg: #ffffff;
-  --color-input-bg-dark: #161f1a;
-  --color-input-border: #d8ede5;
-  --color-input-border-hover: #40916c;
-  --color-input-border-dark: #2a3f32;
-  --color-input-border-dark-hover: #ffffff;
-  --color-input-border-focus: #1b4332;
-  --color-input-text: #1b4332;
-  --color-input-placeholder: #8aada4;
+  --color-input-border: #d8eac8;
+  --color-input-border-hover: #4d8c6f;
+  --color-input-border-focus: #0c1a0f;
+  --color-input-text: #0c1a0f;
+  --color-input-placeholder: #aab8aa;
 
-  /* Bordes Inputs */
-  --color-border-base: #d8ede5;
-  --color-border-strong: #344d3e;
+  /* Borders */
+  --color-border-base: #d8eac8;
+  --color-border-strong: #3a6e52;
 
-  /* Acento lima-amarillo */
-  --color-accent-lime: #a3e635;
-  --color-accent-lime-dark: #65a30d;
-  --color-accent-lime-soft: #ecfccb;
-
-  /* Tipografía */
-  --font-display: 'Outfit', system-ui, sans-serif;
-  --font-body: 'DM Sans', system-ui, sans-serif;
+  /* Typography */
+  --font-display: "DM Serif Display", Georgia, serif;
+  --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-btn-bg hover:bg-btn-bg-hover text-btn-text 
-           font-semibold rounded-lg transition-all duration-300 
-           hover:-translate-y-px px-6 py-2.5;
+    @apply bg-btn-bg hover:bg-btn-bg-hover text-btn-text
+           font-bold rounded-full transition-all duration-200
+           hover:-translate-y-px px-6 py-3 text-sm cursor-pointer;
   }
 
   .btn-outline {
-    @apply bg-transparent border-2 border-btn-outline text-btn-outline
-           hover:border-btn-outline-hover hover:text-btn-outline-hover
-           dark:border-btn-text dark:text-btn-text
-           font-semibold rounded-lg transition-all duration-300
-           hover:-translate-y-px px-6 py-2.5;
+    @apply bg-transparent border border-border-base text-text-muted
+           hover:border-brand-mid hover:text-brand-mid
+           font-semibold rounded-full transition-all duration-200
+           hover:-translate-y-px px-6 py-3 text-sm cursor-pointer;
   }
+
   .input-base {
-    @apply w-full bg-white dark:bg-[#161f1a]
-           border border-input-border dark:text-white
+    @apply w-full bg-white border border-input-border
            hover:border-input-border-hover
-           text-input-text dark:border-input-border-dark placeholder:text-input-placeholder
-           rounded-lg px-4 py-2.5 text-sm
+           text-input-text placeholder:text-input-placeholder
+           rounded-[14px] px-4 py-3 text-sm
            transition-colors duration-200
-           outline-none;
+           outline-none focus:border-input-border-focus;
   }
 
   .modal-subtitle {
-    @apply text-sm text-text-muted dark:text-brand-subtle;
+    @apply text-sm text-text-muted;
   }
 
   .submit-btn {
-    @apply w-full py-3 bg-surface-subtle dark:bg-btn-text dark:text-btn-bg cursor-pointer text-[#0a0e1a] font-bold rounded-xl text-sm transition hover:-translate-y-px hover:shadow-lg disabled:opacity-50;
+    @apply w-full py-4 bg-brand-mid hover:bg-brand-mid-dark text-white
+           cursor-pointer font-bold rounded-full text-sm
+           transition hover:-translate-y-px disabled:opacity-50;
   }
-}
-
-@variant dark {
-  /* Dark mode — más vibrantes */
-  --color-plan: #e07a50;
-  --color-ready: #4ade80;
 }
 
 @layer base {
-  .dark {
-    --color-surface-page: #111916;
-    --color-surface-card: #203429;
-    --color-surface-subtle: #1a2920;
+  body {
+    font-family: var(--font-body);
+    background-color: var(--color-surface-page);
+    color: var(--color-text-base);
   }
 }
-
-/* Enable class-based dark mode for Tailwind v4 */
-@custom-variant dark (&:where(.dark, .dark *));
 
 @keyframes fadeIn {
   from {
@@ -124,22 +107,45 @@
   animation: fadeIn 0.15s ease-out;
 }
 
-/* Button hover glow */
-.btn-glow:hover {
-  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.4);
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.animate-ticker {
+  animation: ticker 30s linear infinite;
 }
 
-/* Landing — How It Works steps */
-.step {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 5rem;
-  align-items: center;
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fadeUp {
+  animation: fadeUp 0.25s ease;
 }
 
-@media (max-width: 768px) {
-  .step {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 }
