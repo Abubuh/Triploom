@@ -29,8 +29,8 @@ function AppRoutes() {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <p className="text-white">Cargando...</p>
+      <div className="min-h-screen bg-surface-page flex items-center justify-center">
+        <p className="text-text-faint">Cargando...</p>
       </div>
     );
 

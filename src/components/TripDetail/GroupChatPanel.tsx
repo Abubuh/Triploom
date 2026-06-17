@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import GroupIcon from "../Icons/GroupIcon";
 
 const PAGE_SIZE = 20;
 
@@ -239,10 +240,10 @@ export function GroupChatPanel({
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border-base dark:border-[#4a6b57] shrink-0">
           <div>
-            <p className="font-semibold dark:text-brand-subtle text-text-base">
-              Chat del grupo
+            <p className="font-semibold text-lg flex gap-1 items-center text-brand-mid-dark">
+              <GroupIcon /> Chat del grupo
             </p>
-            <p className="text-text-faint text-sm">{tripName}</p>
+            <p className="text-brand-mid">{tripName}</p>
           </div>
           <button
             onClick={onClose}

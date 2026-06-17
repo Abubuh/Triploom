@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { GeneratedItinerary, Trip } from "../../types/trip.types";
+import RobotIcon from "../Icons/RobotIcon";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -176,10 +177,10 @@ Responde siempre en el idioma del usuario.`,
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border-base dark:border-[#4a6b57] shrink-0">
           <div>
-            <p className="font-semibold text-text-base dark:text-brand-subtle">
-              Agente de viajes
+            <p className="flex gap-1 text-lg items-center font-semibold text-brand-mid-dark">
+              <RobotIcon /> Agente de viajes
             </p>
-            <p className="text-text-faint text-sm">{trip.name}</p>
+            <p className="text-brand-mid">{trip.name}</p>
           </div>
           <button
             onClick={onClose}

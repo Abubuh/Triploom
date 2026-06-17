@@ -134,12 +134,10 @@ export function ExpenseDrawer({
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-border-base dark:border-[#4a6b57] shrink-0">
               <div>
-                <h2 className="text-lg flex gap-2 items-center font-bold mb-2 text-text-base dark:text-brand-subtle">
+                <h2 className="text-lg flex gap-2 items-center font-bold mb-2 text-brand-mid-dark">
                   <CoinIcon /> Gastos
                 </h2>
-                <p className="text-text-muted dark:text-text-faint text-sm">
-                  {trip.name}
-                </p>
+                <p className="text-brand-mid">{trip.name}</p>
               </div>
               <button
                 onClick={onClose}
@@ -154,9 +152,7 @@ export function ExpenseDrawer({
               {myBudget && (
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-text-faint dark:text-brand-subtle text-sm">
-                      Presupuesto
-                    </p>
+                    <p className="text-brand-mid-dark text-sm">Presupuesto</p>
                     <p className="text-text-base font-bold text-lg dark:text-text-faint ">
                       {myBudget.toLocaleString("es-MX", {
                         minimumFractionDigits: 2,
@@ -165,9 +161,7 @@ export function ExpenseDrawer({
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-text-faint dark:text-brand-subtle text-sm">
-                      Gastado
-                    </p>
+                    <p className="text-brand-mid-dark text-sm">Gastado</p>
                     <p className="font-bold text-lg text-red-400">
                       {spent.toLocaleString("es-MX", {
                         minimumFractionDigits: 2,
@@ -190,9 +184,7 @@ export function ExpenseDrawer({
 
               {myBudget && (
                 <div className="flex items-center justify-between">
-                  <p className="text-text-faint dark:text-brand-subtle text-sm">
-                    Restante
-                  </p>
+                  <p className="text-brand-mid-dark text-sm">Restante</p>
                   <p
                     className={`font-semibold text-sm ${overBudget ? "text-red-400" : "text-ready"}`}
                   >

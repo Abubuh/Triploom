@@ -303,7 +303,7 @@ function Dashboard() {
         </div>
       </div>
 
-      <main className="max-w-[1200px] mx-auto px-16 py-10">
+      <main className="max-w-[1200px] mx-auto py-10">
         {loading ? (
           <div className="flex items-center justify-center py-40">
             <p className="text-text-faint">Cargando viajes...</p>

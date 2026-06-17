@@ -416,7 +416,7 @@ function TripDetail() {
       </div>
 
       {/* Main 2-column grid */}
-      <div className="max-w-[1200px] mx-auto px-16 py-10 grid grid-cols-[380px_1fr] gap-6 items-start">
+      <div className="max-w-[1200px] mx-auto py-10 grid grid-cols-[380px_1fr] gap-6 items-start">
         {/* Left sidebar */}
         <div className="flex flex-col gap-5">
           {/* Destinations card */}
@@ -430,7 +430,7 @@ function TripDetail() {
             {destinations.map((d, i) => (
               <div
                 key={d.id}
-                className={`py-2.5 text-[15px] font-semibold text-text-base ${
+                className={`py-2.5 text-[15px] font-semibold text-brand-mid ${
                   i < destinations.length - 1
                     ? "border-b border-border-base"
                     : ""
@@ -449,8 +449,6 @@ function TripDetail() {
               </div>
             ))}
           </div>
-
-          {/* Members */}
           <MembersSection
             trip={trip}
             members={members}
@@ -462,8 +460,6 @@ function TripDetail() {
             showToast={showToast}
           />
         </div>
-
-        {/* Right: Itinerary */}
         <div>
           {itinerary ? (
             <div className="relative">

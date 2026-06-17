@@ -81,10 +81,10 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-border-base dark:border-[#4a6b57] shrink-0">
           <div>
-            <h2 className="text-lg flex items-center gap-2 font-bold text-text-base dark:text-brand-subtle">
+            <h2 className="text-lg flex items-center gap-2 font-bold text-brand-mid-dark">
               <DocumentIcon /> Documentos
             </h2>
-            <p className="text-text-muted dark:text-text-faint">{trip.name}</p>
+            <p className="text-brand-mid">{trip.name}</p>
           </div>
           <button
             onClick={onClose}
@@ -119,8 +119,6 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
               Agregar link <LinkIcon />
             </button>
           </div>
-
-          {/* Categorías */}
           <div className="flex gap-1 flex-wrap">
             {CATEGORIES.map((cat) => (
               <button
@@ -129,7 +127,7 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
                 className={`text-xs px-2 py-1 flex items-center gap-2 mb-1 rounded-full transition ${
                   category === cat.value
                     ? "bg-brand-dark text-brand-light"
-                    : "bg-surface-subtle text-text-muted dark:text-text-faint hover:border-brand-mid border border-border-base"
+                    : "bg-surface-subtle text-brand-mid-dark hover:border-brand-mid border border-border-base"
                 }`}
               >
                 {cat.label} {cat.emoji}
@@ -203,10 +201,10 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
                 >
                   <span className="text-lg">{cat.emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-text-base truncate">
+                    <p className="text-sm font-medium text-brand-mid-dark truncate">
                       {doc.name}
                     </p>
-                    <p className="text-text-faint text-xs">{cat.label}</p>
+                    <p className="text-brand-mid-dark text-xs">{cat.label}</p>
                   </div>
                   <a
                     href={doc.url}

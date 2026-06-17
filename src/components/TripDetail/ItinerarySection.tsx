@@ -343,7 +343,7 @@ export function ItinerarySection({
 
   return (
     <section>
-      <h3 className="text-xl font-semibold mb-2 flex items-center gap-2 text-text-base dark:text-slate-300">
+      <h3 className="text-xl font-semibold mb-2 flex items-center gap-2 text-black">
         <CalendarIcon /> Itinerario
       </h3>
       <p className="text-text-muted mb-6">{itinerary.summary}</p>
@@ -431,10 +431,10 @@ export function ItinerarySection({
                     </div>
                   ) : (
                     <>
-                      <span className="text-text-muted text-sm dark:text-text-faint">
+                      <span className="text-brand-dark text-sm ">
                         {formatDate(day.date)}
                       </span>
-                      <span className="text-text-base font-semibold dark:text-slate-300">
+                      <span className="text-brand-mid font-semibold ">
                         {day.destination}
                       </span>
                       {canbEdit && (
@@ -457,7 +457,6 @@ export function ItinerarySection({
                   )}
                 </div>
 
-                {/* Flags */}
                 {day.flags && day.flags.length > 0 && (
                   <div className="flex gap-2 flex-wrap mb-4">
                     {day.flags.map((flag) => (
@@ -470,8 +469,6 @@ export function ItinerarySection({
                     ))}
                   </div>
                 )}
-
-                {/* Resumen del día */}
                 {day.day_summary &&
                   (day.day_summary.total_hours > 0 ||
                     day.day_summary.activity_count > 0) && (
@@ -661,7 +658,7 @@ export function ItinerarySection({
                                 </div>
                               ) : (
                                 <>
-                                  <p className="font-semibold text-text-base dark:text-brand-subtle group-hover:text-brand-mid transition flex gap-2 items-center">
+                                  <p className="font-semibold text-brand-mid group-hover:text-brand-mid transition flex gap-2 items-center">
                                     {activity.title}
                                     {canbEdit && (
                                       <button
@@ -692,7 +689,7 @@ export function ItinerarySection({
                                       </button>
                                     )}
                                   </p>
-                                  <p className="text-text-muted text-sm dark:text-text-faint">
+                                  <p className="text-brand-mid text-sm ">
                                     {activity.description}
                                   </p>
                                   {activity.place?.name &&
