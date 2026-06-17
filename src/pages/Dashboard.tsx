@@ -87,8 +87,7 @@ function TripCard({
         )}
       </div>
 
-      {/* Bottom — white */}
-      <div className="px-7 pt-4 pb-5 flex justify-between">
+            <div className="px-7 pt-4 pb-5 flex justify-between">
         <div className="flex flex-col gap-1.5 mb-4">
           <div className="flex items-center gap-2 text-sm text-text-muted">
             <span className="text-text-faint">
@@ -232,50 +231,50 @@ function Dashboard() {
       className="min-h-screen bg-surface-page text-text-base"
       style={{ fontFamily: "var(--font-body)" }}
     >
-      {/* Nav */}
       <nav
-        className="sticky top-0 z-10 flex items-center justify-between px-16 border-b border-border-base bg-surface-page"
+        className="sticky top-0 z-10 border-b border-border-base bg-surface-page"
         style={{ height: 66 }}
       >
-        <button
-          onClick={() => navigate("/")}
-          className="text-[26px] text-text-base tracking-[-0.5px] bg-transparent cursor-pointer"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          triploom
-        </button>
-        <div className="flex items-center gap-7">
-          <span className="text-sm font-semibold text-text-muted">
-            Hola,{" "}
-            <strong className="text-text-base">
-              {profile?.name ?? "Viajero"}
-            </strong>
-          </span>
-          {currency && (
-            <select
-              value={currency}
-              onChange={(e) => handleCurrencyChange(e.target.value)}
-              className="border border-border-base rounded-full px-4 py-2 text-sm font-bold text-text-base bg-white outline-none cursor-pointer hover:border-brand-mid transition-colors"
-            >
-              {["MXN", "USD", "EUR", "GBP", "CAD", "ARS", "COP", "CLP"].map(
-                (c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ),
-              )}
-            </select>
-          )}
+        <div className="flex items-center max-w-[1200px] justify-between h-full mx-auto">
           <button
-            onClick={handleLogout}
-            className="text-sm font-semibold text-text-muted hover:text-text-base transition-colors"
+            onClick={() => navigate("/")}
+            className="text-[26px] text-text-base tracking-[-0.5px] bg-transparent cursor-pointer"
+            style={{ fontFamily: "var(--font-display)" }}
           >
-            Salir
+            triploom
           </button>
+          <div className="flex items-center gap-7">
+            <span className="text-sm font-semibold text-text-muted">
+              Hola,{" "}
+              <strong className="text-text-base">
+                {profile?.name ?? "Viajero"}
+              </strong>
+            </span>
+            {currency && (
+              <select
+                value={currency}
+                onChange={(e) => handleCurrencyChange(e.target.value)}
+                className="border border-border-base rounded-full px-4 py-2 text-sm font-bold text-text-base bg-white outline-none cursor-pointer hover:border-brand-mid transition-colors"
+              >
+                {["MXN", "USD", "EUR", "GBP", "CAD", "ARS", "COP", "CLP"].map(
+                  (c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ),
+                )}
+              </select>
+            )}
+            <button
+              onClick={handleLogout}
+              className="text-sm font-semibold text-text-muted hover:text-text-base transition-colors"
+            >
+              Salir
+            </button>
+          </div>
         </div>
       </nav>
 
-      {/* Header */}
       <div className="px-16 py-16 border-b border-border-base">
         <div className="max-w-[1200px] mx-auto flex items-end justify-between gap-8">
           <div>
@@ -332,8 +331,7 @@ function Dashboard() {
           </div>
         ) : (
           <>
-            {/* Filtros */}
-            <div className="flex flex-wrap gap-2 mb-9">
+                        <div className="flex flex-wrap gap-2 mb-9">
               {filters.map(({ key, label }) => (
                 <button
                   key={key}
@@ -349,8 +347,7 @@ function Dashboard() {
               ))}
             </div>
 
-            {/* Cards */}
-            <div className="grid grid-cols-2 gap-5">
+                        <div className="grid grid-cols-2 gap-5">
               {filteredTrips.map((trip) => (
                 <TripCard
                   key={trip.id}
@@ -379,8 +376,7 @@ function Dashboard() {
         )}
       </main>
 
-      {/* Modal editar */}
-      {editingTrip && (
+            {editingTrip && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4">
           <div className="rounded-3xl p-8 max-w-md w-full space-y-6 bg-white border border-border-base shadow-[0_40px_120px_rgba(12,26,15,0.15)]">
             <h3
@@ -428,8 +424,7 @@ function Dashboard() {
         </div>
       )}
 
-      {/* Modal eliminar */}
-      {deletingTripId && (
+            {deletingTripId && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4">
           <div className="rounded-3xl p-8 max-w-md w-full space-y-4 bg-white border border-border-base shadow-[0_40px_120px_rgba(12,26,15,0.15)]">
             <h3

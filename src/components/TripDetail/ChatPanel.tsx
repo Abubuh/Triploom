@@ -153,7 +153,6 @@ Responde siempre en el idioma del usuario.`,
 
   return (
     <>
-      {/* Overlay mobile */}
       <div
         className={`fixed inset-0 bg-black/50 z-30 md:hidden transition-opacity duration-300 ${
           isOpen
@@ -162,8 +161,6 @@ Responde siempre en el idioma del usuario.`,
         }`}
         onClick={onClose}
       />
-
-      {/* Panel */}
       <div
         className={`
           fixed z-40 flex flex-col
@@ -174,7 +171,6 @@ Responde siempre en el idioma del usuario.`,
           ${isOpen ? "translate-y-0 md:translate-x-0" : "translate-y-full md:translate-x-full"}
         `}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border-base dark:border-[#4a6b57] shrink-0">
           <div>
             <p className="flex gap-1 text-lg items-center font-semibold text-brand-mid-dark">
@@ -189,8 +185,6 @@ Responde siempre en el idioma del usuario.`,
             ✕
           </button>
         </div>
-
-        {/* Mensajes */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
           {messages.length === 0 && (
             <p className="text-text-faint text-center mt-8">
@@ -232,8 +226,6 @@ Responde siempre en el idioma del usuario.`,
 
           <div ref={messagesEndRef} />
         </div>
-
-        {/* Input */}
         <div className="px-4 py-3 border-t border-border-base dark:border-[#4a6b57] shrink-0">
           <div className="flex gap-2 items-end">
             <textarea

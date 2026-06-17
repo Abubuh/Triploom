@@ -21,13 +21,11 @@ function Auth() {
       </button>
 
       <div className="bg-white rounded-[28px] px-12 py-12 w-full max-w-[480px] shadow-[0_40px_120px_rgba(12,26,15,0.1)] border border-border-base">
-        {/* Badge */}
-        <div className="inline-flex bg-brand-light text-[#3A6E52] px-[18px] py-2 rounded-full text-[11px] font-extrabold tracking-[0.08em] mb-5">
+                <div className="inline-flex bg-brand-light text-[#3A6E52] px-[18px] py-2 rounded-full text-[11px] font-extrabold tracking-[0.08em] mb-5">
           {isLogin ? "BIENVENIDO DE VUELTA" : "UNETE A TRIPLOOM GRATIS"}
         </div>
 
-        {/* Title */}
-        <h1
+                <h1
           className="text-[44px] text-text-base tracking-[-1.5px] leading-[1.0] mb-2"
           style={{ fontFamily: "var(--font-display)" }}
         >
@@ -42,8 +40,7 @@ function Auth() {
             : "Empieza gratis. Tu primer viaje en menos de 60 segundos."}
         </p>
 
-        {/* Tab switcher */}
-        <div className="bg-surface-page rounded-full p-1 flex gap-1 mb-7">
+                <div className="bg-surface-page rounded-full p-1 flex gap-1 mb-7">
           <button
             type="button"
             onClick={() => setMode("login")}
@@ -68,11 +65,9 @@ function Auth() {
           </button>
         </div>
 
-        {/* Google */}
-        <SocialAuthButton />
+                <SocialAuthButton />
 
-        {/* Divider */}
-        <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center gap-3 mb-6">
           <div className="flex-1 h-px bg-border-base" />
           <span className="text-[11px] font-extrabold tracking-[0.1em] text-text-faint">
             O CON TU CORREO
@@ -80,8 +75,7 @@ function Auth() {
           <div className="flex-1 h-px bg-border-base" />
         </div>
 
-        {/* Form */}
-        {isLogin ? (
+                {isLogin ? (
           <LoginForm onSwitchToRegister={() => setMode("register")} />
         ) : (
           <RegisterForm onSwitchToLogin={() => setMode("login")} />

@@ -93,8 +93,7 @@ function Landing() {
       className="min-h-screen overflow-x-hidden bg-surface-page text-text-base"
       style={{ fontFamily: "var(--font-body)" }}
     >
-      {/* Nav */}
-      <nav
+            <nav
         className="sticky top-0 z-50 flex items-center justify-between px-16 border-b border-border-base bg-surface-page"
         style={{ height: 66 }}
       >
@@ -134,8 +133,7 @@ function Landing() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="max-w-[1300px] mx-auto flex items-center gap-[72px] px-16 py-20">
+            <section className="max-w-[1300px] mx-auto flex items-center gap-[72px] px-16 py-20">
         <div className="flex-1 max-w-[560px]">
           <div className="inline-flex items-center gap-2 bg-brand-light text-[#3A6E52] px-[18px] py-2 rounded-full text-[12px] font-extrabold tracking-[0.08em] mb-7">
             PLANIFICACION DE VIAJES CON IA
@@ -172,8 +170,7 @@ function Landing() {
         </div>
       </section>
 
-      {/* Ticker */}
-      <div className="bg-brand-dark py-3.5 overflow-hidden">
+            <div className="bg-brand-dark py-3.5 overflow-hidden">
         <div className="flex animate-ticker w-max">
           <span className="whitespace-nowrap text-brand-light text-xs font-extrabold tracking-[0.12em] pr-8">
             {TICKER_CITIES}
@@ -184,8 +181,7 @@ function Landing() {
         </div>
       </div>
 
-      {/* El proceso */}
-      <section
+            <section
         ref={procesoRef}
         id="proceso"
         className="bg-surface-page border-t border-border-base py-24 px-16"
@@ -234,8 +230,7 @@ function Landing() {
         </div>
       </section>
 
-      {/* Caracteristicas */}
-      <section
+            <section
         ref={featuresRef}
         id="features"
         className="border-t border-border-base py-24 px-16"
@@ -275,8 +270,7 @@ function Landing() {
         </div>
       </section>
 
-      {/* CTA Banner */}
-      <section className="px-16 pb-24">
+            <section className="px-16 pb-24">
         <div className="max-w-[1200px] mx-auto bg-brand-dark rounded-3xl px-16 py-16 flex items-center justify-between gap-8">
           <div>
             <h2
@@ -300,8 +294,7 @@ function Landing() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border-base px-12 py-10 text-center bg-surface-page">
+            <footer className="border-t border-border-base px-12 py-10 text-center bg-surface-page">
         <p className="text-sm text-text-faint">
           &copy; 2026 Triploom. Todos los derechos reservados.
         </p>

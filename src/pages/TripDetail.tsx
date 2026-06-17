@@ -293,66 +293,67 @@ function TripDetail() {
       className="min-h-screen bg-surface-page text-text-base"
       style={{ fontFamily: "var(--font-body)" }}
     >
-      {/* Navbar */}
       <nav
-        className="flex items-center justify-between px-16 sticky top-0 z-10 bg-surface-page border-b border-border-base"
+        className=" px-16 sticky top-0 z-10 bg-surface-page border-b border-border-base "
         style={{ height: 66 }}
       >
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="text-[26px] text-text-base tracking-[-0.5px] bg-transparent cursor-pointer"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          triploom
-        </button>
-        <div className="flex gap-2.5 items-center">
-          {(isOwner || currentUserRole === "co-organizer") && (
-            <button onClick={() => setEditTripOpen(true)} className={btnCls}>
-              <span className="text-text-faint">
-                <EditIcon />
-              </span>{" "}
-              Editar
-            </button>
-          )}
-          {isOwner && (
-            <button
-              onClick={checkBeforeGenerate}
-              disabled={generating}
-              className={`${btnCls} ${generating ? "opacity-75" : ""}`}
-            >
-              <span
-                className="text-text-faint inline-flex"
-                style={{
-                  animation: generating ? "spin 0.9s linear infinite" : "none",
-                }}
-              >
-                {itinerary ? <RegenerateIcon /> : <StarsIcon />}
-              </span>
-              {generating
-                ? "Generando..."
-                : itinerary
-                  ? "Regenerar"
-                  : "Generar itinerario"}
-            </button>
-          )}
-          {isOwner && itinerary && (
-            <button onClick={handleDownloadItinerary} className={btnCls}>
-              <span className="text-text-faint">
-                <DownloadIcon />
-              </span>{" "}
-              Descargar
-            </button>
-          )}
+        <div className="max-w-[1200px] flex items-center h-full justify-between mx-auto">
           <button
             onClick={() => navigate("/dashboard")}
-            className="text-sm font-semibold text-text-muted hover:text-text-base transition-colors ml-1"
+            className="text-[26px] text-text-base tracking-[-0.5px] bg-transparent cursor-pointer"
+            style={{ fontFamily: "var(--font-display)" }}
           >
-            &larr; Mis viajes
+            triploom
           </button>
+          <div className="flex gap-2.5 items-center">
+            {(isOwner || currentUserRole === "co-organizer") && (
+              <button onClick={() => setEditTripOpen(true)} className={btnCls}>
+                <span className="text-text-faint">
+                  <EditIcon />
+                </span>{" "}
+                Editar
+              </button>
+            )}
+            {isOwner && (
+              <button
+                onClick={checkBeforeGenerate}
+                disabled={generating}
+                className={`${btnCls} ${generating ? "opacity-75" : ""}`}
+              >
+                <span
+                  className="text-text-faint inline-flex"
+                  style={{
+                    animation: generating
+                      ? "spin 0.9s linear infinite"
+                      : "none",
+                  }}
+                >
+                  {itinerary ? <RegenerateIcon /> : <StarsIcon />}
+                </span>
+                {generating
+                  ? "Generando..."
+                  : itinerary
+                    ? "Regenerar"
+                    : "Generar itinerario"}
+              </button>
+            )}
+            {isOwner && itinerary && (
+              <button onClick={handleDownloadItinerary} className={btnCls}>
+                <span className="text-text-faint">
+                  <DownloadIcon />
+                </span>{" "}
+                Descargar
+              </button>
+            )}
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="text-sm font-semibold text-text-muted hover:text-text-base transition-colors ml-1"
+            >
+              &larr; Mis viajes
+            </button>
+          </div>
         </div>
       </nav>
-
-      {/* Hero header */}
       <div className="bg-brand-mid px-16 py-16">
         <div className="max-w-[1200px] mx-auto flex items-center justify-between gap-8 flex-wrap">
           <div>
@@ -414,12 +415,8 @@ function TripDetail() {
           </div>
         </div>
       </div>
-
-      {/* Main 2-column grid */}
       <div className="max-w-[1200px] mx-auto py-10 grid grid-cols-[380px_1fr] gap-6 items-start">
-        {/* Left sidebar */}
         <div className="flex flex-col gap-5">
-          {/* Destinations card */}
           <div className="bg-white rounded-3xl p-7 border border-border-base">
             <h2
               className="text-[22px] text-text-base mb-4 font-bold"
@@ -520,7 +517,7 @@ function TripDetail() {
         </div>
       </div>
 
-      {/* FAB burger */}
+      
       <div
         className={`fixed bottom-8 z-30 transition-all duration-300 ${chatOpen || groupChatOpen ? "right-8 md:right-104" : "right-8"}`}
       >
@@ -619,7 +616,7 @@ function TripDetail() {
         />
       )}
 
-      {/* Toast */}
+      
       {toastMessage && (
         <div
           className="fixed bottom-7 left-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold bg-white border border-border-base text-text-base shadow-[0_16px_40px_rgba(12,26,15,0.15)]"

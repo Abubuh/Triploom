@@ -78,7 +78,7 @@ export function RegisterForm({
 
       <div className="mb-5">
         <label className="block text-[13px] font-bold text-text-muted mb-1.5">
-          Contrasena
+          Contraseña
         </label>
         <input
           type="password"

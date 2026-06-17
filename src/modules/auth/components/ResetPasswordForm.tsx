@@ -2,6 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useResetPassword } from "../hooks/useResetPassword";
 
+const inputCls =
+  "w-full px-[18px] py-[13px] border border-border-base rounded-[14px] text-[14px] text-text-base bg-white outline-none transition hover:border-brand-mid focus:border-text-base placeholder-text-faint";
+
+const labelCls = "text-[13px] font-bold text-text-muted block mb-1.5";
+
 export function ResetPasswordForm() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
@@ -20,7 +25,7 @@ export function ResetPasswordForm() {
 
   if (success) {
     return (
-      <div className="bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg p-4 text-center">
+      <div className="bg-brand-light border border-brand-subtle text-[#3A6E52] rounded-[14px] p-4 text-center text-sm font-semibold">
         Contraseña actualizada, redirigiendo...
       </div>
     );
@@ -29,35 +34,31 @@ export function ResetPasswordForm() {
   return (
     <>
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg p-3 mb-6 text-sm">
+        <div className="bg-red-500/10 border border-red-500/20 text-red-500 rounded-[14px] p-3 mb-5 text-sm">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
-          <label className="text-gray-400 text-sm mb-1 block">
-            Nueva contraseña
-          </label>
+          <label className={labelCls}>Nueva contraseña</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+            className={inputCls}
             placeholder="••••••••"
             required
             disabled={loading}
           />
         </div>
         <div>
-          <label className="text-gray-400 text-sm mb-1 block">
-            Confirmar contraseña
-          </label>
+          <label className={labelCls}>Confirmar contraseña</label>
           <input
             type="password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className="w-full bg-gray-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+            className={inputCls}
             placeholder="••••••••"
             required
             disabled={loading}
@@ -66,7 +67,7 @@ export function ResetPasswordForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg py-3 transition disabled:opacity-50"
+          className="w-full bg-brand-mid hover:bg-brand-mid-dark text-white font-extrabold rounded-full py-4 text-[15px] transition-colors mt-1 disabled:opacity-50 cursor-pointer"
         >
           {loading ? "Actualizando..." : "Actualizar contraseña"}
         </button>

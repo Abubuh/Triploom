@@ -63,7 +63,7 @@ export function LoginForm({
 
       <div className="mb-3">
         <label className="block text-[13px] font-bold text-text-muted mb-1.5">
-          Contrasena
+          Contraseña
         </label>
         <input
           type="password"
@@ -81,7 +81,7 @@ export function LoginForm({
           onClick={handleForgotPassword}
           className="text-[13px] font-semibold text-brand-mid hover:text-brand-mid-dark transition-colors"
         >
-          Olvidaste tu contrasena?
+          Olvidaste tu contraseña?
         </button>
       </div>
 

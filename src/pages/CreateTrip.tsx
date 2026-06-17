@@ -158,8 +158,7 @@ function CreateTrip() {
       className="min-h-screen bg-surface-page text-text-base"
       style={{ fontFamily: "var(--font-body)" }}
     >
-      {/* Nav */}
-      <nav
+            <nav
         className="flex items-center justify-between px-16 border-b border-border-base bg-surface-page"
         style={{ height: 66 }}
       >
@@ -180,8 +179,7 @@ function CreateTrip() {
       <main className="max-w-[680px] mx-auto px-8 py-14 w-full">
         <Stepper step={step} />
 
-        {/* Step 0 — Informacion */}
-        {step === 0 && (
+                {step === 0 && (
           <div className="animate-fadeUp">
             <div className="inline-flex bg-brand-light text-[#3A6E52] px-4 py-1.5 rounded-full text-[11px] font-extrabold tracking-[0.08em] mb-4">
               PASO 1 DE 4
@@ -273,8 +271,7 @@ function CreateTrip() {
           </div>
         )}
 
-        {/* Step 1 — Destinos */}
-        {step === 1 && (
+                {step === 1 && (
           <div className="animate-fadeUp">
             <div className="inline-flex bg-brand-light text-[#3A6E52] px-4 py-1.5 rounded-full text-[11px] font-extrabold tracking-[0.08em] mb-4">
               PASO 2 DE 4
@@ -379,8 +376,7 @@ function CreateTrip() {
           </div>
         )}
 
-        {/* Step 2 — Alojamiento */}
-        {step === 2 && (
+                {step === 2 && (
           <div className="animate-fadeUp">
             <div className="inline-flex bg-brand-light text-[#3A6E52] px-4 py-1.5 rounded-full text-[11px] font-extrabold tracking-[0.08em] mb-4">
               PASO 3 DE 4
@@ -465,8 +461,7 @@ function CreateTrip() {
           </div>
         )}
 
-        {/* Step 3 — Preferencias */}
-        {step === 3 && (
+                {step === 3 && (
           <div className="animate-fadeUp">
             <div className="inline-flex bg-brand-light text-[#3A6E52] px-4 py-1.5 rounded-full text-[11px] font-extrabold tracking-[0.08em] mb-4">
               PASO 4 DE 4

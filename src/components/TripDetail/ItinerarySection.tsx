@@ -364,7 +364,7 @@ export function ItinerarySection({
         ))}
       </div>
 
-      {/* Botones agregar día */}
+      
       {canbEdit && (
         <div className="flex gap-4 mb-4">
           <button
@@ -382,7 +382,7 @@ export function ItinerarySection({
         </div>
       )}
 
-      {/* Card del día */}
+      
       {itinerary.days.length > 0 &&
         (() => {
           const day = itinerary.days[selectedDayIndex];
@@ -390,7 +390,7 @@ export function ItinerarySection({
           return (
             <div className="relative group/day">
               <div className="bg-surface-card border border-border-base dark:border-[#4a6b57] rounded-2xl p-6">
-                {/* Header del día */}
+                
                 <div className="flex items-center gap-3 mb-4 flex-wrap">
                   <span className="bg-brand-dark text-brand-light text-sm font-bold px-3 py-1 rounded-full">
                     Día {day.day_number}
@@ -504,7 +504,7 @@ export function ItinerarySection({
                         </div>
                       ) : (
                         <>
-                          {/* Agregar antes */}
+                          
                           {canbEdit && (
                             <div className="flex items-center gap-2 opacity-0 group-hover/activity:opacity-100 transition my-1">
                               <div className="flex-1 h-px bg-border-base" />
@@ -722,7 +722,7 @@ export function ItinerarySection({
                             </div>
                           </div>
 
-                          {/* Agregar después */}
+                          
                           {canbEdit && (
                             <div className="flex items-center gap-2 opacity-0 group-hover/activity:opacity-100 transition my-1">
                               <div className="flex-1 h-px bg-border-base" />
@@ -744,7 +744,7 @@ export function ItinerarySection({
                   ))}
                 </div>
 
-                {/* Alojamiento */}
+                
                 {day.accommodation && (day.accommodation.name || canbEdit) ? (
                   <div className="border-t border-border-base pt-4">
                     <div className="flex items-center justify-between mb-2">

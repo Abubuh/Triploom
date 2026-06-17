@@ -81,7 +81,7 @@ function TravelerPreferences() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      {/* Navbar */}
+      
       <nav className="flex items-center justify-between px-8 py-6 max-w-3xl mx-auto border-b border-gray-800">
         <h1 className="text-2xl font-bold">
           Triploom <PlaneIcon />
@@ -89,7 +89,7 @@ function TravelerPreferences() {
       </nav>
 
       <main className="max-w-3xl mx-auto px-8 py-12">
-        {/* Progress */}
+        
         <div className="flex items-center gap-2 mb-12">
           {STEPS.map((s, i) => (
             <div key={s} className="flex items-center gap-2 flex-1">
@@ -118,7 +118,7 @@ function TravelerPreferences() {
           ))}
         </div>
 
-        {/* Step 1 — Presupuesto */}
+        
         {step === 0 && (
           <div className="space-y-6">
             <div>
@@ -140,7 +140,7 @@ function TravelerPreferences() {
           </div>
         )}
 
-        {/* Step 2 — Preferencias */}
+        
         {step === 1 && (
           <div className="space-y-8">
             <div>
@@ -267,7 +267,7 @@ function TravelerPreferences() {
           </div>
         )}
 
-        {/* Navigation */}
+        
         <div className="flex justify-between mt-12">
           <button
             onClick={() => setStep((s) => s - 1)}

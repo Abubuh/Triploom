@@ -73,12 +73,9 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
 
   return (
     <>
-      {/* Overlay */}
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
 
-      {/* Drawer */}
       <div className="fixed right-0 top-0 h-full w-full max-w-md bg-surface-card border-l border-border-base dark:border-[#4a6b57] z-50 flex flex-col shadow-2xl">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-border-base dark:border-[#4a6b57] shrink-0">
           <div>
             <h2 className="text-lg flex items-center gap-2 font-bold text-brand-mid-dark">
@@ -94,9 +91,7 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
           </button>
         </div>
 
-        {/* Formulario */}
         <div className="px-6 py-4 border-b border-border-base dark:border-[#4a6b57] shrink-0 space-y-3">
-          {/* Tabs */}
           <div className="flex gap-2">
             <button
               onClick={() => setTab("file")}
@@ -135,7 +130,6 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
             ))}
           </div>
 
-          {/* Tab: Subir archivo */}
           {tab === "file" && (
             <div
               onClick={() => fileInputRef.current?.click()}
@@ -154,8 +148,6 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
               />
             </div>
           )}
-
-          {/* Tab: Agregar link */}
           {tab === "link" && (
             <div className="space-y-2">
               <input
@@ -182,8 +174,6 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
             </div>
           )}
         </div>
-
-        {/* Lista de documentos */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
           {loading ? (
             <p className="text-text-faint text-sm">Cargando documentos...</p>

@@ -145,8 +145,7 @@ export function MembersSection({
                   )}
                 </span>
 
-                {/* Menú de rol */}
-                {isOwner && m.role !== "owner" && (
+                                {isOwner && m.role !== "owner" && (
                   <div className="relative">
                     <button
                       onClick={() =>
@@ -180,8 +179,7 @@ export function MembersSection({
                   </div>
                 )}
 
-                {/* Remover miembro */}
-                {isOwner && m.user_id !== currentUserId && (
+                                {isOwner && m.user_id !== currentUserId && (
                   <button
                     onClick={() => handleRemoveMember(m.id, m.user_id)}
                     className="text-text-faint hover:text-red-400 transition text-sm"
@@ -190,8 +188,7 @@ export function MembersSection({
                   </button>
                 )}
 
-                {/* Salir del viaje */}
-                {m.user_id === currentUserId && !isOwner && (
+                                {m.user_id === currentUserId && !isOwner && (
                   <button
                     onClick={handleLeaveTrip}
                     className="text-text-faint hover:text-red-400 text-xs transition"
@@ -202,8 +199,7 @@ export function MembersSection({
               </div>
             </div>
 
-            {/* Preferencias */}
-            {m.member_preferences && (
+                        {m.member_preferences && (
               <div className="space-y-3 border-t border-border-base pt-3">
                 {m.member_preferences.food_preferences?.length > 0 && (
                   <div>
