@@ -147,7 +147,7 @@ export function EditTripModal({
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
       <div className="bg-surface-card border border-border-base dark:border-[#4a6b57] rounded-2xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto space-y-6">
-                <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-text-base">Editar viaje</h2>
           <button
             onClick={onClose}
@@ -156,8 +156,7 @@ export function EditTripModal({
             ✕
           </button>
         </div>
-
-                <div className="space-y-1.5">
+        <div className="space-y-1.5">
           <label className="modal-subtitle">Nombre del viaje</label>
           <input
             type="text"
@@ -167,8 +166,7 @@ export function EditTripModal({
             placeholder="Ej: Vacaciones en Europa"
           />
         </div>
-
-                <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="modal-subtitle">Fecha de inicio</label>
             <input
@@ -188,8 +186,7 @@ export function EditTripModal({
             />
           </div>
         </div>
-
-                <div className="space-y-3">
+        <div className="space-y-3">
           <label className="modal-subtitle">Destinos</label>
 
           {dests.length > 0 && (
@@ -266,10 +263,8 @@ export function EditTripModal({
             </button>
           </div>
         </div>
-
-                {error && <p className="text-red-400 text-sm">{error}</p>}
-
-                <div className="flex gap-3 justify-end pt-2">
+        {error && <p className="text-red-400 text-sm">{error}</p>}
+        <div className="flex gap-3 justify-end pt-2">
           <button onClick={onClose} className="btn-outline px-5 py-2.5 text-sm">
             Cancelar
           </button>
