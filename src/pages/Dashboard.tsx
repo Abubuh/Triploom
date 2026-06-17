@@ -130,7 +130,7 @@ function TripCard({
 
 function Dashboard() {
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, setProfile } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState<string | null>(null);
@@ -178,11 +178,13 @@ function Dashboard() {
 
   const handleCurrencyChange = async (newCurrency: string) => {
     setCurrency(newCurrency);
-    if (user)
+    if (user) {
       await supabase
         .from("profiles")
         .update({ currency: newCurrency })
         .eq("id", user.id);
+      if (profile) setProfile({ ...profile, currency: newCurrency });
+    }
   };
 
   const handleDeleteTrip = async (tripId: string) => {
