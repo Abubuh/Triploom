@@ -1,18 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../context/ThemeContext";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../modules/auth";
 import { Trip } from "../types/trip.types";
-import PlaneIcon from "../components/Icons/PlaneIcon";
 import CalendarIcon from "../components/Icons/CalendarIcon";
 import GroupIcon from "../components/Icons/GroupIcon";
 import UserIcon from "../components/Icons/UserIcon";
 import EditIcon from "../components/Icons/EditIcon";
 import TrashIcon from "../components/Icons/TrashIcon";
 import MapIcon from "../components/Icons/MapIcon";
-import SunIcon from "../components/Icons/SunIcon";
-import MoonIcon from "../components/Icons/MoonIcon";
 
 type FilterKey = "todos" | "listos" | "planificando" | "grupo" | "solo";
 
@@ -46,62 +42,60 @@ function TripCard({
 
   return (
     <div
-      className="rounded-[0.85rem] overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5  hover:border-brand-mid relative bg-surface-card border border-border-base dark:border-[#4a6b57]"
+      className="bg-white rounded-3xl overflow-hidden cursor-pointer border border-border-base transition-all duration-200 hover:-translate-y-1.5 hover:shadow-[0_28px_72px_rgba(12,26,15,0.10)] hover:border-brand-light relative"
       onClick={onClick}
     >
-      {/* Barra de estado */}
-
-      <div className="p-5">
-        <div className="flex items-start justify-between mb-3">
-          <h3 className="text-lg font-bold tracking-tight text-text-base dark:text-brand-light">
-            {trip.name}
-          </h3>
-          {isOwner && (
-            <div
-              ref={menuRef}
-              className="relative"
-              onClick={(e) => e.stopPropagation()}
+      <div className="bg-brand-light px-7 pt-6 pb-5 flex items-start justify-between">
+        <h3 className="text-3xl text-text-base leading-none font-bold tracking-[-0.5px] font-display">
+          {trip.name}
+        </h3>
+        {isOwner && (
+          <div
+            ref={menuRef}
+            className="relative ml-3 shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[#3A6E52] hover:bg-[#b3e4c8] transition text-sm leading-none"
+              onClick={() => setMenuOpen(!menuOpen)}
             >
-              <button
-                className="p-1 rounded text-text-faint hover:text-text-base hover:bg-surface-subtle transition text-lg leading-none"
-                onClick={() => setMenuOpen(!menuOpen)}
-              >
-                ⋮
-              </button>
-              {menuOpen && (
-                <div className="absolute right-0 top-8 z-20 rounded-lg py-1.5 min-w-35 bg-surface-subtle border border-border-base shadow-[0_8px_24px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
-                  <button
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-muted hover:bg-brand-subtle hover:text-text-base transition"
-                    onClick={() => {
-                      onEdit();
-                      setMenuOpen(false);
-                    }}
-                  >
-                    <EditIcon /> Editar
-                  </button>
-                  <button
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition"
-                    onClick={() => {
-                      onDelete();
-                      setMenuOpen(false);
-                    }}
-                  >
-                    <TrashIcon /> Eliminar
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+              &#8942;
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-9 z-20 rounded-2xl py-1.5 min-w-36 bg-white border border-border-base shadow-[0_8px_24px_rgba(12,26,15,0.12)]">
+                <button
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-text-muted hover:bg-surface-page hover:text-text-base transition"
+                  onClick={() => {
+                    onEdit();
+                    setMenuOpen(false);
+                  }}
+                >
+                  <EditIcon /> Editar
+                </button>
+                <button
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-50 transition"
+                  onClick={() => {
+                    onDelete();
+                    setMenuOpen(false);
+                  }}
+                >
+                  <TrashIcon /> Eliminar
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
-        <div className="flex flex-col gap-2 mb-4 ">
-          <div className="flex items-center gap-2 text-sm text-text-muted dark:text-slate-300">
+            <div className="px-7 pt-4 pb-5 flex justify-between">
+        <div className="flex flex-col gap-1.5 mb-4">
+          <div className="flex items-center gap-2 text-sm text-text-muted">
             <span className="text-text-faint">
               <CalendarIcon />
             </span>
-            {trip.start_date} → {trip.end_date}
+            {trip.start_date} &rarr; {trip.end_date}
           </div>
-          <div className="flex items-center gap-2 text-sm text-text-muted dark:text-slate-300">
+          <div className="flex items-center gap-2 text-sm text-text-muted">
             <span className="text-text-faint">
               {trip.accommodation_type === "together" ? (
                 <GroupIcon />
@@ -112,17 +106,21 @@ function TripCard({
             {trip.accommodation_type === "together"
               ? "Todos juntos"
               : "Por separado"}
+            {trip.expected_members && (
+              <span className="text-brand-mid">
+                &middot; {trip.expected_members} personas
+              </span>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-3 border-t border-dashed border-border-base">
+        <div className=" flex flex-col justify-center">
           <span
-            className={`flex items-center gap-1.5 font-semibold ${isPlanning ? "text-plan" : "text-ready"}`}
+            className={`text-[11px] font-extrabold px-3.5 py-1.5 rounded-full border border-border-base bg-surface-page tracking-[0.04em] ${
+              isPlanning ? "text-plan" : "text-ready"
+            }`}
           >
             {isPlanning ? "Sin itinerario" : "Listo"}
-          </span>
-          <span className="text-blue-500 dark:text-brand-light text-xs font-semibold">
-            Ver detalles →
           </span>
         </div>
       </div>
@@ -132,8 +130,7 @@ function TripCard({
 
 function Dashboard() {
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { user, profile, signOut, setProfile } = useAuth();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState<string | null>(null);
@@ -181,11 +178,13 @@ function Dashboard() {
 
   const handleCurrencyChange = async (newCurrency: string) => {
     setCurrency(newCurrency);
-    if (user)
+    if (user) {
       await supabase
         .from("profiles")
         .update({ currency: newCurrency })
         .eq("id", user.id);
+      if (profile) setProfile({ ...profile, currency: newCurrency });
+    }
   };
 
   const handleDeleteTrip = async (tripId: string) => {
@@ -230,67 +229,98 @@ function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-surface-page text-text-base">
-      {/* Header */}
-      <header className="flex items-center justify-between px-10 py-5 sticky top-0 z-10 bg-surface-page/90 backdrop-blur-sm border-b border-border-base dark:border-[#4a6b57]">
-        <span className="flex items-center gap-2 text-2xl font-bold tracking-tight text-brand-dark dark:text-brand-light">
-          <PlaneIcon /> Triploom
-        </span>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-card border border-border-base dark:border-[#4a6b57]">
-            <span className="text-sm text-text-muted dark:text-brand-light">
+    <div
+      className="min-h-screen bg-surface-page text-text-base"
+      style={{ fontFamily: "var(--font-body)" }}
+    >
+      <nav
+        className="sticky top-0 z-10 border-b border-border-base bg-surface-page"
+        style={{ height: 66 }}
+      >
+        <div className="flex items-center max-w-[1200px] justify-between h-full mx-auto">
+          <button
+            onClick={() => navigate("/")}
+            className="text-[26px] text-text-base tracking-[-0.5px] bg-transparent cursor-pointer"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            triploom
+          </button>
+          <div className="flex items-center gap-7">
+            <span className="text-sm font-semibold text-text-muted">
               Hola,{" "}
-              <strong className="text-text-base dark:text-slate-300">
+              <strong className="text-text-base">
                 {profile?.name ?? "Viajero"}
               </strong>
             </span>
-          </div>
-
-          {currency && (
-            <select
-              value={currency}
-              onChange={(e) => handleCurrencyChange(e.target.value)}
-              className="text-sm font-semibold rounded-lg px-3 py-2 outline-none cursor-pointer transition bg-surface-card border border-border-base dark:border-[#4a6b57] text-text-base dark:text-brand-light"
+            {currency && (
+              <select
+                value={currency}
+                onChange={(e) => handleCurrencyChange(e.target.value)}
+                className="border border-border-base rounded-full px-4 py-2 text-sm font-bold text-text-base bg-white outline-none cursor-pointer hover:border-brand-mid transition-colors"
+              >
+                {["MXN", "USD", "EUR", "GBP", "CAD", "ARS", "COP", "CLP"].map(
+                  (c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ),
+                )}
+              </select>
+            )}
+            <button
+              onClick={handleLogout}
+              className="text-sm font-semibold text-text-muted hover:text-text-base transition-colors"
             >
-              {["MXN", "USD", "EUR", "GBP", "CAD", "ARS", "COP", "CLP"].map(
-                (c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ),
-              )}
-            </select>
-          )}
+              Salir
+            </button>
+          </div>
+        </div>
+      </nav>
 
+      <div className="px-16 py-16 border-b border-border-base">
+        <div className="max-w-[1200px] mx-auto flex items-end justify-between gap-8">
+          <div>
+            <div className="inline-flex bg-brand-light text-[#3A6E52] px-[18px] py-2 rounded-full text-[11px] font-extrabold tracking-[0.08em] mb-5">
+              {trips.length} VIAJE{trips.length !== 1 ? "S" : ""} GUARDADO
+              {trips.length !== 1 ? "S" : ""}
+            </div>
+            <h1
+              className="text-[64px] text-text-base font-bold leading-[1.0] tracking-[-2px] mb-3"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Mis viajes
+            </h1>
+            <p className="text-[17px] text-text-muted leading-[1.6]">
+              {planning} esperando planificacion &middot; {ready} listo
+              {ready !== 1 ? "s" : ""}.
+            </p>
+          </div>
           <button
-            onClick={toggleTheme}
-            title="Cambiar tema"
-            className="w-9 h-9 flex justify-center items-center rounded-lg text-base transition bg-surface-card border border-border-base dark:border-[#4a6b57] text-text-muted hover:border-brand-mid hover:text-brand-mid dark:text-brand-light"
+            onClick={() => navigate("/trips/new")}
+            className="shrink-0 bg-text-base text-btn-text px-8 py-4 rounded-full text-[15px] font-extrabold whitespace-nowrap transition-all duration-150 hover:bg-brand-mid hover:-translate-y-px"
           >
-            {isDark ? <SunIcon /> : <MoonIcon />}
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="px-3 py-2 rounded-lg text-sm font-medium transition bg-surface-card border border-border-base dark:border-[#4a6b57] text-text-muted hover:border-red-400 hover:text-red-400 dark:text-brand-light"
-          >
-            Salir
+            + Nuevo viaje
           </button>
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-325 mx-auto px-10 py-10 w-full">
+      <main className="max-w-[1200px] mx-auto py-10">
         {loading ? (
           <div className="flex items-center justify-center py-40">
             <p className="text-text-faint">Cargando viajes...</p>
           </div>
         ) : trips.length === 0 ? (
-          <div className="text-center py-20 px-8 rounded-2xl bg-surface-card border border-dashed border-border-base">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center text-brand-mid bg-brand-subtle">
+          <div className="text-center py-20 px-8 rounded-3xl bg-white border border-border-base">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center text-brand-mid bg-brand-light">
               <MapIcon />
             </div>
-            <h2 className="text-2xl font-bold mb-2">Aún no tienes viajes</h2>
-            <p className="text-text-muted mb-6 max-w-sm mx-auto">
+            <h2
+              className="text-2xl mb-2 text-text-base"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Aun no tienes viajes
+            </h2>
+            <p className="text-text-muted mb-6 max-w-sm mx-auto text-sm">
               Empieza creando tu primer viaje y deja que la IA te ayude a
               planificarlo.
             </p>
@@ -303,37 +333,15 @@ function Dashboard() {
           </div>
         ) : (
           <>
-            {/* Hero */}
-            <div className="flex items-center justify-between gap-8 p-8 rounded-2xl mb-8 border border-border-base dark:border-[#4a6b57] bg-surface-subtle">
-              <div>
-                <h1 className="text-[2.1rem] dark:text-slate-200 font-bold tracking-tight mb-1">
-                  Mis viajes
-                </h1>
-                <p className="text-text-muted dark:text-brand-subtle text-sm max-w-lg">
-                  Tienes {trips.length} viaje{trips.length !== 1 ? "s" : ""}{" "}
-                  guardado{trips.length !== 1 ? "s" : ""} — {planning} esperando
-                  planificación y {ready} listo{ready !== 1 ? "s" : ""} para
-                  vivir.
-                </p>
-              </div>
-              <button
-                onClick={() => navigate("/trips/new")}
-                className="btn-primary shrink-0 flex items-center gap-2"
-              >
-                + Nuevo viaje
-              </button>
-            </div>
-
-            {/* Filtros */}
-            <div className="flex flex-wrap gap-2 mb-6">
+                        <div className="flex flex-wrap gap-2 mb-9">
               {filters.map(({ key, label }) => (
                 <button
                   key={key}
                   onClick={() => setFilter(key)}
-                  className={`px-4 py-1.5 rounded-full text-sm transition border ${
+                  className={`px-[22px] py-2.5 rounded-full border text-sm font-bold transition-all duration-150 cursor-pointer ${
                     filter === key
-                      ? "border-brand-mid bg-brand-subtle dark:bg-brand-dark text-brand-dark dark:text-brand-light"
-                      : "bg-transparent border-border-base dark:border-[#4a6b57] text-text-muted  hover:border-brand-mid"
+                      ? "border-text-base bg-text-base text-white"
+                      : "border-border-base bg-white text-text-muted hover:border-brand-mid"
                   }`}
                 >
                   {label}
@@ -341,8 +349,7 @@ function Dashboard() {
               ))}
             </div>
 
-            {/* Cards */}
-            <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <div className="grid grid-cols-2 gap-5">
               {filteredTrips.map((trip) => (
                 <TripCard
                   key={trip.id}
@@ -371,11 +378,15 @@ function Dashboard() {
         )}
       </main>
 
-      {/* Modal editar */}
-      {editingTrip && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
-          <div className="rounded-2xl p-8 max-w-md w-full space-y-6 bg-surface-card border border-border-base dark:border-[#4a6b57]">
-            <h3 className="text-xl font-bold text-text-base">Editar viaje</h3>
+            {editingTrip && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4">
+          <div className="rounded-3xl p-8 max-w-md w-full space-y-6 bg-white border border-border-base shadow-[0_40px_120px_rgba(12,26,15,0.15)]">
+            <h3
+              className="text-[26px] text-text-base"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Editar viaje
+            </h3>
             <div className="space-y-4">
               {[
                 { label: "Nombre", key: "name", type: "text" },
@@ -383,7 +394,7 @@ function Dashboard() {
                 { label: "Fecha de fin", key: "end_date", type: "date" },
               ].map(({ label, key, type }) => (
                 <div key={key}>
-                  <label className="text-sm mb-1 block text-text-muted">
+                  <label className="text-[13px] font-bold text-text-muted block mb-1.5">
                     {label}
                   </label>
                   <input
@@ -415,15 +426,17 @@ function Dashboard() {
         </div>
       )}
 
-      {/* Modal eliminar */}
-      {deletingTripId && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
-          <div className="rounded-2xl p-8 max-w-md w-full space-y-4 bg-surface-card border border-border-base dark:border-[#4a6b57]">
-            <h3 className="text-xl font-bold text-text-base">
-              ¿Eliminar viaje?
+            {deletingTripId && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4">
+          <div className="rounded-3xl p-8 max-w-md w-full space-y-4 bg-white border border-border-base shadow-[0_40px_120px_rgba(12,26,15,0.15)]">
+            <h3
+              className="text-[26px] text-text-base"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Eliminar viaje?
             </h3>
             <p className="text-text-muted text-sm">
-              Esta acción no se puede deshacer. Se eliminará el viaje y todos
+              Esta accion no se puede deshacer. Se eliminara el viaje y todos
               sus datos.
             </p>
             <div className="flex gap-3 justify-end pt-2">
@@ -435,7 +448,7 @@ function Dashboard() {
               </button>
               <button
                 onClick={() => handleDeleteTrip(deletingTripId)}
-                className="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition"
+                className="px-5 py-2 rounded-full bg-red-500 hover:bg-red-600 text-white text-sm font-bold transition cursor-pointer"
               >
                 Eliminar
               </button>

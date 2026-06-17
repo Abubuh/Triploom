@@ -73,18 +73,15 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
 
   return (
     <>
-      {/* Overlay */}
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
 
-      {/* Drawer */}
       <div className="fixed right-0 top-0 h-full w-full max-w-md bg-surface-card border-l border-border-base dark:border-[#4a6b57] z-50 flex flex-col shadow-2xl">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-border-base dark:border-[#4a6b57] shrink-0">
           <div>
-            <h2 className="text-lg flex items-center gap-2 font-bold text-text-base dark:text-brand-subtle">
+            <h2 className="text-lg flex items-center gap-2 font-bold text-brand-mid-dark">
               <DocumentIcon /> Documentos
             </h2>
-            <p className="text-text-muted dark:text-text-faint">{trip.name}</p>
+            <p className="text-brand-mid">{trip.name}</p>
           </div>
           <button
             onClick={onClose}
@@ -94,9 +91,7 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
           </button>
         </div>
 
-        {/* Formulario */}
         <div className="px-6 py-4 border-b border-border-base dark:border-[#4a6b57] shrink-0 space-y-3">
-          {/* Tabs */}
           <div className="flex gap-2">
             <button
               onClick={() => setTab("file")}
@@ -119,8 +114,6 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
               Agregar link <LinkIcon />
             </button>
           </div>
-
-          {/* Categorías */}
           <div className="flex gap-1 flex-wrap">
             {CATEGORIES.map((cat) => (
               <button
@@ -129,7 +122,7 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
                 className={`text-xs px-2 py-1 flex items-center gap-2 mb-1 rounded-full transition ${
                   category === cat.value
                     ? "bg-brand-dark text-brand-light"
-                    : "bg-surface-subtle text-text-muted dark:text-text-faint hover:border-brand-mid border border-border-base"
+                    : "bg-surface-subtle text-brand-mid-dark hover:border-brand-mid border border-border-base"
                 }`}
               >
                 {cat.label} {cat.emoji}
@@ -137,7 +130,6 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
             ))}
           </div>
 
-          {/* Tab: Subir archivo */}
           {tab === "file" && (
             <div
               onClick={() => fileInputRef.current?.click()}
@@ -156,8 +148,6 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
               />
             </div>
           )}
-
-          {/* Tab: Agregar link */}
           {tab === "link" && (
             <div className="space-y-2">
               <input
@@ -184,8 +174,6 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
             </div>
           )}
         </div>
-
-        {/* Lista de documentos */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
           {loading ? (
             <p className="text-text-faint text-sm">Cargando documentos...</p>
@@ -203,10 +191,10 @@ export function DocumentDrawer({ trip, isOpen, onClose }: Props) {
                 >
                   <span className="text-lg">{cat.emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-text-base truncate">
+                    <p className="text-sm font-medium text-brand-mid-dark truncate">
                       {doc.name}
                     </p>
-                    <p className="text-text-faint text-xs">{cat.label}</p>
+                    <p className="text-brand-mid-dark text-xs">{cat.label}</p>
                   </div>
                   <a
                     href={doc.url}

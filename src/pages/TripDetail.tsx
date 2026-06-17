@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { useTheme } from "../context/ThemeContext";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { Trip, Destination, Member } from "../types/trip.types";
@@ -13,10 +12,8 @@ import { ItinerarySection } from "../components/TripDetail/ItinerarySection";
 import { ChatPanel } from "../components/TripDetail/ChatPanel";
 import { GroupChatPanel } from "../components/TripDetail/GroupChatPanel";
 import { EditTripModal } from "../components/TripDetail/EditTripModal";
-import PlaneIcon from "../components/Icons/PlaneIcon";
 import House from "../components/Icons/House";
 import HotelIcon from "../components/Icons/HotelIcon.tsx";
-import Hourglass from "../components/Icons/Hourglass.tsx";
 import RegenerateIcon from "../components/Icons/RegenerateIcon.tsx";
 import StarsIcon from "../components/Icons/StarsIcon.tsx";
 import DownloadIcon from "../components/Icons/DownloadIcon.tsx";
@@ -26,11 +23,9 @@ import MoneyIcon from "../components/Icons/MoneyIcon.tsx";
 import EditIcon from "../components/Icons/EditIcon.tsx";
 import CheckIcon from "../components/Icons/CheckIcon.tsx";
 import GroupIcon from "../components/Icons/GroupIcon.tsx";
-import MoonIcon from "../components/Icons/MoonIcon.tsx";
-import SunIcon from "../components/Icons/SunIcon.tsx";
 
 const btnCls =
-  "inline-flex items-center gap-2 px-[1.1rem] py-[0.65rem] bg-surface-card border border-border-base dark:border-[#4a6b57] text-text-base rounded-[0.65rem] text-[0.9rem] font-semibold cursor-pointer transition-all hover:bg-surface-subtle hover:border-brand-mid dark:text-text-faint";
+  "inline-flex items-center gap-2 px-[1.1rem] py-[0.65rem] bg-white border border-border-base text-text-base rounded-full text-[0.9rem] font-semibold cursor-pointer transition-all hover:bg-surface-subtle hover:border-brand-mid";
 
 function TripDetail() {
   const { id } = useParams();
@@ -68,8 +63,6 @@ function TripDetail() {
   const currentUserRole = useMemo(() => {
     return members.find((m) => m.user_id === currentUserId)?.role ?? null;
   }, [members, currentUserId]);
-
-  const { isDark, toggleTheme } = useTheme();
 
   const currentUserName = useMemo(
     () =>
@@ -309,186 +302,247 @@ function TripDetail() {
     );
 
   return (
-    <div className="min-h-screen bg-surface-page text-text-base">
-      {/* Navbar */}
-      <nav className="flex items-center justify-between px-10 py-5 sticky top-0 z-10 bg-surface-page/90 backdrop-blur-sm border-b border-border-base dark:border-[#4a6b57]">
-        <span
-          className="flex items-center gap-2 text-2xl font-bold tracking-tight cursor-pointer text-brand-dark dark:text-brand-light"
-          onClick={() => navigate("/dashboard")}
-        >
-          <PlaneIcon /> Triploom
-        </span>
-        <div className="flex gap-3 items-center">
-          <button
-            onClick={toggleTheme}
-            title="Cambiar tema"
-            className="w-9 h-9 flex justify-center items-center rounded-lg text-base transition bg-surface-card border border-border-base dark:border-[#4a6b57] text-text-muted hover:border-brand-mid hover:text-brand-mid"
-          >
-            {isDark ? <SunIcon /> : <MoonIcon />}
-          </button>
+    <div
+      className="min-h-screen bg-surface-page text-text-base"
+      style={{ fontFamily: "var(--font-body)" }}
+    >
+      <nav
+        className=" px-16 sticky top-0 z-10 bg-surface-page border-b border-border-base "
+        style={{ height: 66 }}
+      >
+        <div className="max-w-[1200px] flex items-center h-full justify-between mx-auto">
           <button
             onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-1.5 text-sm font-medium transition text-text-muted hover:text-text-base"
+            className="text-[26px] text-text-base tracking-[-0.5px] bg-transparent cursor-pointer"
+            style={{ fontFamily: "var(--font-display)" }}
           >
-            ← Mis viajes
+            triploom
           </button>
-        </div>
-      </nav>
-
-      <main className="max-w-270 mx-auto px-10 py-10 w-full space-y-11 dark:text-text-faint">
-        <div className="flex items-start justify-between gap-8">
-          <div>
-            <h1
-              className="font-bold tracking-tight mb-2 dark:text-brand-subtle"
-              style={{ fontSize: "2.4rem", letterSpacing: "-0.02em" }}
-            >
-              {trip.name}
-            </h1>
-            <p className="text-sm mb-3 text-text-muted dark:text-text-faint">
-              {trip.start_date} <span className="text-text-faint mx-1">→</span>{" "}
-              {trip.end_date}
-            </p>
-            <span className="inline-flex items-center gap-2 text-sm font-semibold px-3 py-1.5 rounded-full border border-border-base bg-surface-subtle text-text-muted dark:text-text-faint">
-              {trip.accommodation_type === "together" ? (
-                <>
-                  <House /> Todos juntos
-                </>
-              ) : (
-                <>
-                  <HotelIcon /> Por separado
-                </>
-              )}
-            </span>
-          </div>
-
-          {(isOwner || currentUserRole === "co-organizer") && (
-            <div className="flex gap-2 shrink-0 flex-wrap ">
+          <div className="flex gap-2.5 items-center">
+            {(isOwner || currentUserRole === "co-organizer") && (
               <button onClick={() => setEditTripOpen(true)} className={btnCls}>
-                <span className="text-text-faint ">
+                <span className="text-text-faint">
                   <EditIcon />
                 </span>{" "}
                 Editar
               </button>
-
+            )}
+            {isOwner && (
+              <button
+                onClick={checkBeforeGenerate}
+                disabled={generating}
+                className={`${btnCls} ${generating ? "opacity-75" : ""}`}
+              >
+                <span
+                  className="text-text-faint inline-flex"
+                  style={{
+                    animation: generating
+                      ? "spin 0.9s linear infinite"
+                      : "none",
+                  }}
+                >
+                  {itinerary ? <RegenerateIcon /> : <StarsIcon />}
+                </span>
+                {generating
+                  ? "Generando..."
+                  : itinerary
+                    ? "Regenerar"
+                    : "Generar itinerario"}
+              </button>
+            )}
+            {isOwner && itinerary && (
+              <button onClick={handleDownloadItinerary} className={btnCls}>
+                <span className="text-text-faint">
+                  <DownloadIcon />
+                </span>{" "}
+                Descargar
+              </button>
+            )}
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="text-sm font-semibold text-text-muted hover:text-text-base transition-colors ml-1"
+            >
+              &larr; Mis viajes
+            </button>
+          </div>
+        </div>
+      </nav>
+      <div className="bg-brand-mid px-16 py-16">
+        <div className="max-w-[1200px] mx-auto flex items-center justify-between gap-8 flex-wrap">
+          <div>
+            <div
+              className="inline-flex mb-5 px-[18px] py-2 rounded-full text-[11px] font-extrabold tracking-[0.08em]"
+              style={{
+                background: "rgba(255,255,255,0.2)",
+                color: "rgba(255,255,255,0.9)",
+                border: "1px solid rgba(255,255,255,0.2)",
+              }}
+            >
+              {trip.accommodation_type === "together"
+                ? "TODOS JUNTOS"
+                : "POR SEPARADO"}
+            </div>
+            <h1
+              className="text-[64px] text-white leading-[1.0] tracking-[-2px] mb-3"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              {trip.name}
+            </h1>
+            {destinations.length > 0 && (
+              <p
+                className="text-[18px] mb-4"
+                style={{ color: "rgba(255,255,255,0.7)" }}
+              >
+                {destinations.map((d) => d.city).join(" · ")}
+              </p>
+            )}
+            <div
+              className="flex items-center gap-5 text-[15px] font-semibold flex-wrap"
+              style={{ color: "rgba(255,255,255,0.88)" }}
+            >
+              <span>
+                {trip.start_date} &rarr; {trip.end_date}
+              </span>
+              <span style={{ opacity: 0.35 }}>&middot;</span>
+              <span>
+                {members.length} {members.length === 1 ? "miembro" : "miembros"}
+              </span>
+            </div>
+          </div>
+          <div
+            className="shrink-0 rounded-[20px] px-8 py-5 text-center"
+            style={{
+              background: "rgba(255,255,255,0.15)",
+              border: "1px solid rgba(255,255,255,0.25)",
+            }}
+          >
+            <div
+              className="text-[11px] font-extrabold tracking-[0.1em] mb-2"
+              style={{ color: "rgba(255,255,255,0.5)" }}
+            >
+              ESTADO
+            </div>
+            <div className="text-[22px] font-extrabold text-white">
+              {trip.status === "planning" ? "Sin itinerario" : "Listo"}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="max-w-[1200px] mx-auto py-10 grid grid-cols-[380px_1fr] gap-6 items-start">
+        <div className="flex flex-col gap-5">
+          <div className="bg-white rounded-3xl p-7 border border-border-base">
+            <h2
+              className="text-[22px] text-text-base mb-4 font-bold"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Destino(s)
+            </h2>
+            {destinations.map((d, i) => (
+              <div
+                key={d.id}
+                className={`py-2.5 text-[15px] font-semibold text-brand-mid ${
+                  i < destinations.length - 1
+                    ? "border-b border-border-base"
+                    : ""
+                }`}
+              >
+                {d.city}
+                <span className="text-text-muted font-normal">
+                  , {d.country}
+                </span>
+                {d.days && (
+                  <span className="text-text-faint font-normal">
+                    {" "}
+                    &middot; {d.days} dias
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+          <MembersSection
+            trip={trip}
+            members={members}
+            isOwner={isOwner}
+            currentUserId={currentUserId}
+            currentUserRole={currentUserRole}
+            userCurrency={userCurrency}
+            onMembersChange={setMembers}
+            showToast={showToast}
+          />
+        </div>
+        <div>
+          {itinerary ? (
+            <div className="relative">
+              {updatingItinerary && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-surface-page/70">
+                  <p className="text-sm font-semibold animate-pulse text-brand-mid">
+                    Actualizando itinerario...
+                  </p>
+                </div>
+              )}
+              <ItinerarySection
+                trip={trip}
+                itinerary={itinerary}
+                isOwner={isOwner}
+                currentUserRole={currentUserRole}
+                userCurrency={userCurrency}
+                onItineraryChange={setItinerary}
+                onPendingAccommodationExpense={setPendingAccommodationExpense}
+              />
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl border border-border-base p-10 flex flex-col items-center justify-center text-center min-h-[320px]">
+              <div className="w-14 h-14 rounded-full bg-brand-light flex items-center justify-center text-brand-mid mb-4">
+                <StarsIcon />
+              </div>
+              <h3
+                className="text-[22px] text-text-base mb-2"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                Sin itinerario aun
+              </h3>
+              <p className="text-text-muted text-sm max-w-[280px]">
+                {isOwner
+                  ? "Genera el itinerario cuando todos los viajeros hayan completado sus preferencias."
+                  : "El organizador aun no ha generado el itinerario."}
+              </p>
               {isOwner && (
                 <button
                   onClick={checkBeforeGenerate}
                   disabled={generating}
-                  className={`${btnCls} ${generating ? "opacity-75" : ""}`}
+                  className="mt-6 btn-primary flex items-center gap-2"
                 >
                   <span
-                    className="text-text-faint inline-flex"
+                    className="inline-flex"
                     style={{
                       animation: generating
                         ? "spin 0.9s linear infinite"
                         : "none",
                     }}
                   >
-                    {itinerary ? <RegenerateIcon /> : <StarsIcon />}
+                    <StarsIcon />
                   </span>
-                  {generating
-                    ? "Generando…"
-                    : itinerary
-                      ? "Regenerar"
-                      : "Generar itinerario"}
-                </button>
-              )}
-
-              {isOwner && itinerary && (
-                <button onClick={handleDownloadItinerary} className={btnCls}>
-                  <span className="text-text-faint">
-                    <DownloadIcon />
-                  </span>{" "}
-                  Descargar
+                  {generating ? "Generando..." : "Generar itinerario"}
                 </button>
               )}
             </div>
           )}
         </div>
+      </div>
 
-        {/* Destinos */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="flex items-center gap-2 font-bold text-[1.35rem] tracking-tight text-text-base dark:text-brand-subtle">
-              <span className="text-brand-mid">
-                <MapIcon />
-              </span>
-              Destino(s)
-            </h3>
-          </div>
-
-          {destinations.length === 1 ? (
-            <p className="text-[1.25rem] font-bold">
-              {destinations[0].city},{" "}
-              <span className="font-medium dark:text-text-faint">
-                {destinations[0].country}
-              </span>
-            </p>
-          ) : (
-            <div className="flex flex-wrap gap-3">
-              {destinations.map((d, i) => (
-                <div key={d.id} className="flex items-center gap-2">
-                  <div className="px-4 py-3 rounded-xl bg-surface-card border border-border-base dark:border-[#4a6b57]">
-                    <p className="font-semibold text-text-base">{d.city}</p>
-                    <p className="text-sm text-text-faint">
-                      {d.country} · {d.days} días
-                    </p>
-                  </div>
-                  {i < destinations.length - 1 && (
-                    <span className="text-text-faint">→</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <MembersSection
-          trip={trip}
-          members={members}
-          isOwner={isOwner}
-          currentUserId={currentUserId}
-          currentUserRole={currentUserRole}
-          userCurrency={userCurrency}
-          onMembersChange={setMembers}
-          showToast={showToast}
-        />
-
-        {itinerary && (
-          <div className="relative">
-            {updatingItinerary && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-surface-page/70">
-                <p className="text-sm font-semibold animate-pulse text-brand-mid">
-                  Actualizando itinerario...
-                </p>
-              </div>
-            )}
-            <ItinerarySection
-              trip={trip}
-              itinerary={itinerary}
-              isOwner={isOwner}
-              currentUserRole={currentUserRole}
-              userCurrency={userCurrency}
-              onItineraryChange={setItinerary}
-              onPendingAccommodationExpense={setPendingAccommodationExpense}
-            />
-          </div>
-        )}
-      </main>
-
-      {/* FAB burger */}
+      
       <div
         className={`fixed bottom-8 z-30 transition-all duration-300 ${chatOpen || groupChatOpen ? "right-8 md:right-104" : "right-8"}`}
       >
         <div ref={burgerRef} className="relative">
           {burgerOpen && (
-            <div className="absolute bottom-full mb-3 right-0 w-52 z-40 animate-fadeIn shadow-xl bg-surface-card border border-border-base dark:border-[#4a6b57] rounded-[14px] p-2">
+            <div className="absolute bottom-full mb-3 right-0 w-52 z-40 animate-fadeIn shadow-[0_20px_60px_rgba(12,26,15,0.15)] bg-white border border-border-base rounded-[20px] p-2">
               <button
                 onClick={() => {
                   setDocumentDrawerOpen(true);
                   setBurgerOpen(false);
                 }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-text-muted hover:bg-surface-subtle hover:text-text-base transition"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-text-muted hover:bg-surface-page hover:text-text-base transition"
               >
                 <DocumentIcon /> Documentos
               </button>
@@ -497,7 +551,7 @@ function TripDetail() {
                   setExpenseDrawerOpen(true);
                   setBurgerOpen(false);
                 }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-text-muted hover:bg-surface-subtle hover:text-text-base transition"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-text-muted hover:bg-surface-page hover:text-text-base transition"
               >
                 <MoneyIcon /> Gastos
               </button>
@@ -508,7 +562,7 @@ function TripDetail() {
                   setChatOpen(false);
                   setBurgerOpen(false);
                 }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-text-muted hover:bg-surface-subtle hover:text-text-base transition"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-text-muted hover:bg-surface-page hover:text-text-base transition"
               >
                 <GroupIcon /> Chat del grupo
               </button>
@@ -518,7 +572,7 @@ function TripDetail() {
                   setGroupChatOpen(false);
                   setBurgerOpen(false);
                 }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-text-muted hover:bg-surface-subtle hover:text-text-base transition"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-text-muted hover:bg-surface-page hover:text-text-base transition"
               >
                 <StarsIcon /> Agente
               </button>
@@ -526,11 +580,11 @@ function TripDetail() {
           )}
           <button
             onClick={() => setBurgerOpen((prev) => !prev)}
-            className="flex flex-col items-center justify-center gap-1 px-4 py-3 rounded-2xl shadow-lg transition bg-surface-card border border-border-base dark:border-[#4a6b57] hover:border-brand-mid"
+            className="w-[52px] h-[52px] rounded-full shadow-[0_8px_28px_rgba(12,26,15,0.28)] flex flex-col items-center justify-center gap-1 transition-colors bg-brand-dark hover:bg-brand-mid cursor-pointer"
           >
-            <span className="block w-4 h-0.5 rounded-full bg-text-faint" />
-            <span className="block w-4 h-0.5 rounded-full bg-text-faint" />
-            <span className="block w-4 h-0.5 rounded-full bg-text-faint" />
+            <span className="block w-4 h-0.5 rounded-full bg-white" />
+            <span className="block w-4 h-0.5 rounded-full bg-white" />
+            <span className="block w-4 h-0.5 rounded-full bg-white" />
           </button>
         </div>
       </div>
@@ -575,16 +629,16 @@ function TripDetail() {
         />
       )}
 
-      {/* Toast */}
+      
       {toastMessage && (
         <div
-          className="fixed bottom-7 left-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium bg-surface-card border border-border-base dark:border-[#4a6b57] text-text-base shadow-[0_16px_40px_rgba(0,0,0,0.3)] dark:text-text-faint"
+          className="fixed bottom-7 left-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold bg-white border border-border-base text-text-base shadow-[0_16px_40px_rgba(12,26,15,0.15)]"
           style={{
             transform: "translateX(-50%)",
             animation: "toast-in 0.25s cubic-bezier(.2,.8,.2,1)",
           }}
         >
-          <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-ready/15 text-ready">
+          <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-brand-light text-brand-mid">
             <CheckIcon />
           </span>
           {toastMessage}
@@ -608,14 +662,6 @@ function TripDetail() {
           currentUserName={currentUserName}
         />
       )}
-
-      <style>{`
-        @keyframes toast-in {
-          from { opacity: 0; transform: translateX(-50%) translateY(12px); }
-          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
     </div>
   );
 }

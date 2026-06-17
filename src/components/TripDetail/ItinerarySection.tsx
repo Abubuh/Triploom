@@ -394,7 +394,7 @@ export function ItinerarySection({
 
   return (
     <section>
-      <h3 className="text-xl font-semibold mb-2 flex items-center gap-2 text-text-base dark:text-slate-300">
+      <h3 className="text-xl font-semibold mb-2 flex items-center gap-2 text-black">
         <CalendarIcon /> Itinerario
       </h3>
       <p className="text-text-muted mb-6">{itinerary.summary}</p>
@@ -415,7 +415,7 @@ export function ItinerarySection({
         ))}
       </div>
 
-      {/* Botones agregar día */}
+      
       {canbEdit && (
         <div className="flex gap-4 mb-4">
           <button
@@ -433,7 +433,7 @@ export function ItinerarySection({
         </div>
       )}
 
-      {/* Card del día */}
+      
       {itinerary.days.length > 0 &&
         (() => {
           const day = itinerary.days[selectedDayIndex];
@@ -441,7 +441,7 @@ export function ItinerarySection({
           return (
             <div className="relative group/day">
               <div className="bg-surface-card border border-border-base dark:border-[#4a6b57] rounded-2xl p-6">
-                {/* Header del día */}
+                
                 <div className="flex items-center gap-3 mb-4 flex-wrap">
                   <span className="bg-brand-dark text-brand-light text-sm font-bold px-3 py-1 rounded-full">
                     Día {day.day_number}
@@ -482,10 +482,10 @@ export function ItinerarySection({
                     </div>
                   ) : (
                     <>
-                      <span className="text-text-muted text-sm dark:text-text-faint">
+                      <span className="text-brand-dark text-sm ">
                         {formatDate(day.date)}
                       </span>
-                      <span className="text-text-base font-semibold dark:text-slate-300">
+                      <span className="text-brand-mid font-semibold ">
                         {day.destination}
                       </span>
                       {canbEdit && (
@@ -508,7 +508,6 @@ export function ItinerarySection({
                   )}
                 </div>
 
-                {/* Flags */}
                 {day.flags && day.flags.length > 0 && (
                   <div className="flex gap-2 flex-wrap mb-4">
                     {day.flags.map((flag) => (
@@ -521,8 +520,6 @@ export function ItinerarySection({
                     ))}
                   </div>
                 )}
-
-                {/* Resumen del día */}
                 {day.day_summary &&
                   (day.day_summary.total_hours > 0 ||
                     day.day_summary.activity_count > 0) && (
@@ -626,7 +623,7 @@ export function ItinerarySection({
                         </div>
                       ) : (
                         <>
-                          {/* Agregar antes */}
+                          
                           {canbEdit && (
                             <div className="flex items-center gap-2 opacity-0 group-hover/activity:opacity-100 transition my-1">
                               <div className="flex-1 h-px bg-border-base" />
@@ -780,7 +777,7 @@ export function ItinerarySection({
                                 </div>
                               ) : (
                                 <>
-                                  <p className="font-semibold text-text-base dark:text-brand-subtle group-hover:text-brand-mid transition flex gap-2 items-center">
+                                  <p className="font-semibold text-brand-mid group-hover:text-brand-mid transition flex gap-2 items-center">
                                     {activity.title}
                                     {canbEdit && (
                                       <button
@@ -811,7 +808,7 @@ export function ItinerarySection({
                                       </button>
                                     )}
                                   </p>
-                                  <p className="text-text-muted text-sm dark:text-text-faint">
+                                  <p className="text-brand-mid text-sm ">
                                     {activity.description}
                                   </p>
                                   {activity.place?.name &&
@@ -844,7 +841,7 @@ export function ItinerarySection({
                             </div>
                           </div>
 
-                          {/* Agregar después */}
+                          
                           {canbEdit && (
                             <div className="flex items-center gap-2 opacity-0 group-hover/activity:opacity-100 transition my-1">
                               <div className="flex-1 h-px bg-border-base" />
@@ -885,7 +882,7 @@ export function ItinerarySection({
                   ))}
                 </div>
 
-                {/* Alojamiento */}
+                
                 {day.accommodation && (day.accommodation.name || canbEdit) ? (
                   <div className="border-t border-border-base pt-4">
                     <div className="flex items-center justify-between mb-2">

@@ -131,15 +131,12 @@ export function ExpenseDrawer({
           <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
 
           <div className="fixed right-0 top-0 h-full w-full max-w-md bg-surface-card border-l border-border-base dark:border-[#4a6b57] z-50 flex flex-col shadow-2xl">
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-border-base dark:border-[#4a6b57] shrink-0">
               <div>
-                <h2 className="text-lg flex gap-2 items-center font-bold mb-2 text-text-base dark:text-brand-subtle">
+                <h2 className="text-lg flex gap-2 items-center font-bold mb-2 text-brand-mid-dark">
                   <CoinIcon /> Gastos
                 </h2>
-                <p className="text-text-muted dark:text-text-faint text-sm">
-                  {trip.name}
-                </p>
+                <p className="text-brand-mid">{trip.name}</p>
               </div>
               <button
                 onClick={onClose}
@@ -148,15 +145,11 @@ export function ExpenseDrawer({
                 ✕
               </button>
             </div>
-
-            {/* Totales */}
             <div className="px-6 py-4 border-b border-border-base dark:border-[#4a6b57] shrink-0 space-y-3">
               {myBudget && (
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-text-faint dark:text-brand-subtle text-sm">
-                      Presupuesto
-                    </p>
+                    <p className="text-brand-mid-dark text-sm">Presupuesto</p>
                     <p className="text-text-base font-bold text-lg dark:text-text-faint ">
                       {myBudget.toLocaleString("es-MX", {
                         minimumFractionDigits: 2,
@@ -165,9 +158,7 @@ export function ExpenseDrawer({
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-text-faint dark:text-brand-subtle text-sm">
-                      Gastado
-                    </p>
+                    <p className="text-brand-mid-dark text-sm">Gastado</p>
                     <p className="font-bold text-lg text-red-400">
                       {spent.toLocaleString("es-MX", {
                         minimumFractionDigits: 2,
@@ -177,8 +168,6 @@ export function ExpenseDrawer({
                   </div>
                 </div>
               )}
-
-              {/* Barra de progreso */}
               {myBudget && (
                 <div className="w-full bg-surface-subtle rounded-full h-2">
                   <div
@@ -190,9 +179,7 @@ export function ExpenseDrawer({
 
               {myBudget && (
                 <div className="flex items-center justify-between">
-                  <p className="text-text-faint dark:text-brand-subtle text-sm">
-                    Restante
-                  </p>
+                  <p className="text-brand-mid-dark text-sm">Restante</p>
                   <p
                     className={`font-semibold text-sm ${overBudget ? "text-red-400" : "text-ready"}`}
                   >
@@ -203,8 +190,6 @@ export function ExpenseDrawer({
                   </p>
                 </div>
               )}
-
-              {/* Otras monedas */}
               {Object.entries(totalsByCurrency)
                 .filter(([currency]) => currency !== userCurrency)
                 .map(([currency, total]) => (
@@ -230,8 +215,6 @@ export function ExpenseDrawer({
                 </p>
               )}
             </div>
-
-            {/* Lista de días */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
               {loading ? (
                 <p className="text-text-faint text-sm">Cargando gastos...</p>
@@ -250,7 +233,6 @@ export function ExpenseDrawer({
 
                   return (
                     <div key={day.day_number}>
-                      {/* Header del día */}
                       <div className="flex items-center justify-between mb-3">
                         <div>
                           <span className="text-sm font-bold text-brand- dark:text-brand-subtle uppercase tracking-wide">
@@ -272,8 +254,6 @@ export function ExpenseDrawer({
                           </p>
                         )}
                       </div>
-
-                      {/* Gastos del día */}
                       {dayExpenses.length > 0 && (
                         <div className="space-y-2 mb-3">
                           {dayExpenses.map((expense) => {
@@ -316,8 +296,6 @@ export function ExpenseDrawer({
                           })}
                         </div>
                       )}
-
-                      {/* Formulario inline */}
                       {isFormOpen ? (
                         <div className="bg-surface-subtle border border-border-base dark:border-[#4a6b57] rounded-xl p-4 space-y-3">
                           <div className="flex gap-2">
@@ -407,8 +385,6 @@ export function ExpenseDrawer({
           </div>
         </>
       )}
-
-      {/* Modal alojamiento pendiente */}
       {pendingAccommodationExpense && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
           <div className="bg-surface-card border border-border-base dark:border-[#4a6b57] rounded-2xl p-8 max-w-sm w-full space-y-4">

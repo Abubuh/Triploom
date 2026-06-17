@@ -27,19 +27,17 @@ export function SocialAuthButton() {
   return (
     <>
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg p-3 mb-4 text-sm">
+        <div className="bg-red-500/10 border border-red-500/20 text-red-500 rounded-[14px] p-3 mb-4 text-sm">
           {error}
         </div>
       )}
-      <div className="flex justify-center items-center mb-5">
-        <button
-          type="button"
-          onClick={loginWithGoogle}
-          className="input-base flex justify-center gap-2 rounded-xl py-3 cursor-pointer"
-        >
-          <GoogleLogo /> Google
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={loginWithGoogle}
+        className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-full border border-border-base bg-white text-text-base text-sm font-semibold mb-6 hover:border-brand-mid transition-colors cursor-pointer"
+      >
+        <GoogleLogo /> Continuar con Google
+      </button>
     </>
   );
 }

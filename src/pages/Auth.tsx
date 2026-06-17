@@ -1,74 +1,81 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { LoginForm, RegisterForm, SocialAuthButton } from "../modules/auth";
-import PlaneIcon from "../components/Icons/PlaneIcon";
-import { useTheme } from "../context/ThemeContext";
-import SunIcon from "../components/Icons/SunIcon";
-import MoonIcon from "../components/Icons/MoonIcon";
 
 function Auth() {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "register">("login");
-  const { isDark, toggleTheme } = useTheme();
+  const isLogin = mode === "login";
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-10 bg-surface-page">
-      <div className="w-full max-w-110 rounded-[1.1rem] px-9 py-10 flex flex-col bg-surface-card border-2 border-border-base shadow-[0_24px_60px_rgba(0,0,0,0.08)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.45)] dark:border-border-strong">
-        {" "}
-        <div className="flex justify-center mb-6">
-          <span className="flex items-center gap-2 text-2xl font-bold tracking-tight text-brand-dark dark:text-brand-light">
-            <PlaneIcon />
-            Triploom
-          </span>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-5 py-12 bg-surface-page"
+      style={{ fontFamily: "var(--font-body)" }}
+    >
+      <button
+        onClick={() => navigate("/")}
+        className="mb-10 text-[28px] text-text-base tracking-[-0.5px] bg-transparent cursor-pointer"
+        style={{ fontFamily: "var(--font-display)" }}
+      >
+        triploom
+      </button>
+
+      <div className="bg-white rounded-[28px] px-12 py-12 w-full max-w-[480px] shadow-[0_40px_120px_rgba(12,26,15,0.1)] border border-border-base">
+                <div className="inline-flex bg-brand-light text-[#3A6E52] px-[18px] py-2 rounded-full text-[11px] font-extrabold tracking-[0.08em] mb-5">
+          {isLogin ? "BIENVENIDO DE VUELTA" : "UNETE A TRIPLOOM GRATIS"}
         </div>
-        <div className="flex justify-center items-center gap-4">
-          <h2 className="text-[1.85rem] font-bold tracking-tight text-center mb-1 text-text-base dark:text-text-faint">
-            {mode === "login" ? "Inicia sesión" : "Crea tu cuenta"}
-          </h2>
-          <button
-            onClick={toggleTheme}
-            className="w-9 h-9 rounded-lg justify-center items-center flex border text-base transition-colors duration-300 border-border-base text-text-muted hover:border-brand-mid hover:text-brand-mid dark:border-slate-600 dark:text-slate-400 dark:hover:border-brand-light dark:hover:text-brand-light"
-            title="Cambiar tema"
-          >
-            {isDark ? <SunIcon /> : <MoonIcon />}
-          </button>
-        </div>
-        <p className="text-sm text-center mb-6 text-text-muted">
-          {mode === "login"
-            ? "Bienvenido de vuelta. Ingresa tus datos para continuar."
+
+                <h1
+          className="text-[44px] text-text-base tracking-[-1.5px] leading-[1.0] mb-2"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          {isLogin ? "Inicia sesion" : "Crea tu cuenta"}
+        </h1>
+        <p
+          className="text-[14px] leading-[1.6] mb-8"
+          style={{ color: isLogin ? "#607A65" : "#4D8C6F" }}
+        >
+          {isLogin
+            ? "Ingresa tus datos para continuar donde lo dejaste."
             : "Empieza gratis. Tu primer viaje en menos de 60 segundos."}
         </p>
-        <div className="grid grid-cols-2 gap-1 p-1 rounded-xl mb-7 bg-surface-subtle border border-border-base  dark:border-border-strong">
+
+                <div className="bg-surface-page rounded-full p-1 flex gap-1 mb-7">
           <button
             type="button"
             onClick={() => setMode("login")}
-            className={`py-2.5 rounded-lg text-sm font-semibold transition cursor-pointer ${
-              mode === "login"
-                ? "bg-brand-subtle text-brand-dark  dark:bg-brand-dark/40 dark:text-brand-light"
+            className={`flex-1 py-[11px] rounded-full text-sm font-bold transition-all duration-150 cursor-pointer ${
+              isLogin
+                ? "bg-white text-text-base shadow-[0_2px_8px_rgba(12,26,15,0.08)]"
                 : "bg-transparent text-text-muted"
             }`}
           >
-            Iniciar sesión
+            Iniciar sesion
           </button>
           <button
             type="button"
             onClick={() => setMode("register")}
-            className={`py-2.5 rounded-lg text-sm font-semibold transition cursor-pointer  ${
-              mode === "register"
-                ? "bg-brand-subtle text-brand-dark dark:bg-brand-dark/40 dark:text-brand-light"
+            className={`flex-1 py-[11px] rounded-full text-sm font-bold transition-all duration-150 cursor-pointer ${
+              !isLogin
+                ? "bg-white text-text-base shadow-[0_2px_8px_rgba(12,26,15,0.08)]"
                 : "bg-transparent text-text-muted"
             }`}
           >
             Crear cuenta
           </button>
         </div>
-        <SocialAuthButton />
-        <div className="flex items-center gap-3 mb-5">
+
+                <SocialAuthButton />
+
+                <div className="flex items-center gap-3 mb-6">
           <div className="flex-1 h-px bg-border-base" />
-          <span className="text-xs font-semibold tracking-widest uppercase text-text-faint">
-            o con tu correo
+          <span className="text-[11px] font-extrabold tracking-[0.1em] text-text-faint">
+            O CON TU CORREO
           </span>
           <div className="flex-1 h-px bg-border-base" />
         </div>
-        {mode === "login" ? (
+
+                {isLogin ? (
           <LoginForm onSwitchToRegister={() => setMode("register")} />
         ) : (
           <RegisterForm onSwitchToLogin={() => setMode("login")} />

@@ -92,8 +92,7 @@ export function PreferencesModal({
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
       <div className="bg-surface-card border border-border-base dark:border-[#4a6b57] rounded-2xl p-8 max-w-lg w-full space-y-6 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-text-base flex items-center gap-2">
             <EditIcon /> Editar preferencias
           </h2>
@@ -105,8 +104,7 @@ export function PreferencesModal({
           </button>
         </div>
 
-        {/* Presupuesto */}
-        <div>
+                <div>
           <label className="text-text-base font-semibold mb-2 block">
             Presupuesto ({userCurrency})
           </label>
@@ -120,8 +118,7 @@ export function PreferencesModal({
           />
         </div>
 
-        {/* Comida */}
-        <div>
+                <div>
           <label className="text-text-base font-semibold mb-2 block">
             Comida
           </label>
@@ -149,8 +146,7 @@ export function PreferencesModal({
           </div>
         </div>
 
-        {/* Actividades */}
-        <div>
+                <div>
           <label className="text-text-base font-semibold mb-2 block">
             Actividades
           </label>
@@ -178,8 +174,7 @@ export function PreferencesModal({
           </div>
         </div>
 
-        {/* Lugares de interés */}
-        <div>
+                <div>
           <label className="text-text-base font-semibold mb-2 block">
             Lugares de interés
           </label>
@@ -231,8 +226,7 @@ export function PreferencesModal({
           )}
         </div>
 
-        {/* Ritmo de viaje */}
-        <div>
+                <div>
           <label className="text-text-base font-semibold mb-2 block">
             Ritmo de viaje
           </label>
@@ -262,8 +256,7 @@ export function PreferencesModal({
           </div>
         </div>
 
-        {/* Botones */}
-        <div className="flex gap-3 justify-end">
+                <div className="flex gap-3 justify-end">
           <button onClick={onClose} className="btn-outline px-5 py-2 text-sm">
             Cancelar
           </button>

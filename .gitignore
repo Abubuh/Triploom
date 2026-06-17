@@ -26,3 +26,7 @@ dist-ssr
 
 .vercel
 .env*.local
+
+check-origin.mjs
+docs
+.claude

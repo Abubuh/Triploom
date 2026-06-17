@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import GroupIcon from "../Icons/GroupIcon";
 
 const PAGE_SIZE = 20;
 
@@ -219,14 +220,12 @@ export function GroupChatPanel({
 
   return (
     <>
-      {/* Overlay mobile */}
-      <div
+            <div
         className={`fixed inset-0 bg-black/50 z-30 md:hidden transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
         onClick={onClose}
       />
 
-      {/* Panel */}
-      <div
+            <div
         className={`
           fixed z-40 flex flex-col
           bg-surface-card border-border-base dark:border-[#4a6b57]
@@ -236,13 +235,12 @@ export function GroupChatPanel({
           ${isOpen ? "translate-y-0 md:translate-x-0" : "translate-y-full md:translate-x-full"}
         `}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border-base dark:border-[#4a6b57] shrink-0">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border-base dark:border-[#4a6b57] shrink-0">
           <div>
-            <p className="font-semibold dark:text-brand-subtle text-text-base">
-              Chat del grupo
+            <p className="font-semibold text-lg flex gap-1 items-center text-brand-mid-dark">
+              <GroupIcon /> Chat del grupo
             </p>
-            <p className="text-text-faint text-sm">{tripName}</p>
+            <p className="text-brand-mid">{tripName}</p>
           </div>
           <button
             onClick={onClose}
@@ -252,8 +250,7 @@ export function GroupChatPanel({
           </button>
         </div>
 
-        {/* Mensajes */}
-        <div
+                <div
           ref={messagesContainerRef}
           onScroll={handleScroll}
           className="flex-1 overflow-y-auto px-4 py-4 space-y-4"
@@ -323,8 +320,7 @@ export function GroupChatPanel({
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input */}
-        <div className="px-4 py-3 border-t border-border-base dark:border-[#4a6b57] shrink-0">
+                <div className="px-4 py-3 border-t border-border-base dark:border-[#4a6b57] shrink-0">
           {sendError && (
             <p className="text-xs mb-2 text-red-400">{sendError}</p>
           )}
