@@ -21,7 +21,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     throw err;
   }
 
-  const { prompt } = req.body;
+  const { prompt, maxTokens } = req.body;
+  const safeMaxTokens = Math.min(Math.max(Number(maxTokens) || 3500, 2000), 8000);
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -32,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     },
     body: JSON.stringify({
       model: "claude-haiku-4-5",
-      max_tokens: 8000,
+      max_tokens: safeMaxTokens,
       messages: [{ role: "user", content: prompt }],
     }),
   });

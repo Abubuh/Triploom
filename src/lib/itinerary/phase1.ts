@@ -22,8 +22,15 @@ export function buildPrompt(
   const uniqueAttractions = [...new Set(allAttractions)];
 
   const destinationsText = destinations
-    .map((d) => `${d.city}, ${d.country} (${d.days} días)`)
+    .map((d) => `${d.city}, ${d.country} (${d.days} días) — SOLO lugares dentro de ${d.country}`)
     .join(" → ");
+
+  const uniqueCountries = [...new Set(destinations.map((d) => d.country))];
+  const geoRestriction = `RESTRICCIÓN GEOGRÁFICA ABSOLUTA:
+Cada actividad debe estar dentro del país del destino del día.
+Países permitidos en este itinerario: ${uniqueCountries.join(", ")}.
+Está PROHIBIDO sugerir lugares en cualquier otro país, aunque estén a minutos del destino (ej: si el destino es Matamoros, México, no incluyas nada en Brownsville, Texas, EUA — cruzar requiere visa y documentos).
+No hay excepciones. Si no conoces un lugar real dentro del país correcto, usa una zona conocida de esa ciudad.`;
 
   const membersText = members
     .filter((m) => m.member_preferences)
@@ -69,7 +76,9 @@ export function buildPrompt(
     ? `\nLUGARES REALES VERIFICADOS (úsalos como actividades; prioriza estos sobre lugares que inventes):\nPara cada lugar de esta lista, usa EXACTAMENTE el search_query indicado — no lo modifiques:\n${enrichedSection}\n`
     : "";
 
-  return `Genera un itinerario día a día basado en estos datos:
+  return `${geoRestriction}
+
+Genera un itinerario día a día basado en estos datos:
 VIAJE: ${trip.name}
 FECHAS: ${trip.start_date} al ${trip.end_date}
 ALOJAMIENTO: ${accommodationInstruction}
@@ -80,76 +89,25 @@ ${attractionsSection}${realPlacesSection}
 VIAJEROS:
 ${membersText}
 
-REGLAS OBLIGATORIAS:
+REGLAS:
 1. El día inicia a las 09:00. Encadena actividades desde ahí.
-2. Máximo ${maxActivities} actividades por día (ritmo del grupo: ${pace}). No incluyas buffers en este conteo.
-3. Mínimo 45 minutos entre inicio de actividades. Considera duración realista según el tipo:
-   - Museo / galería: 2h
-   - Parque / zona al aire libre: 1.5h
-   - Restaurante / comida: 1h
-   - Tour guiado: 3h
-   - Playa / cenote: 2.5h
-   - Parque temático o excursión de día: 6-8h (marcar full_day: true)
-4. Agrupa actividades geográficamente cercanas para minimizar traslados.
-5. Si una actividad es parque temático, excursión larga o tour de día completo: marcarla con full_day: true. En ese día SOLO puede haber un desayuno antes (≈09:00) y una cena después (≈20:00). Ninguna actividad intermedia.
-6. Los costos deben ser rangos realistas en ${currency}: { "min": N, "max": N }. Para actividades gratuitas usa { "min": 0, "max": 0 }.
-7. Prioriza los LUGARES PRIORITARIOS — inclúyelos antes de añadir otras actividades.
-8. Usa precios reales del destino.
-9. Cada actividad debe ser UNA sola cosa — no mezcles desayuno con traslado, 
-ni visita con vida nocturna. Si son dos cosas distintas, son dos actividades separadas.
-10. Cada día debe incluir:
-   - 1 desayuno (morning)
-   - 1 comida (afternoon)
-   - 1 cena (evening)
-   (Excepción: en días de excursión completa, solo desayuno y cena — sin comida intermedia)
+2. Máximo ${maxActivities} actividades por día (ritmo: ${pace}). No cuentes traslados.
+3. Duración mínima entre actividades: 45 min. Referencias de duración:
+   - Museo/galería: 2h | Parque/exterior: 1.5h | Comida: 1h | Tour guiado: 3h | Playa/cenote: 2.5h | Excursión día completo: 6-8h (full_day: true)
+4. Agrupa actividades cercanas. Máximo 15-20 min de traslado entre ellas.
+5. Días full_day: solo desayuno (09:00) + actividad + cena (20:00). Sin intermedias.
+6. Costos en ${currency}: { "min": N, "max": N }. Gratuito: { "min": 0, "max": 0 }.
+7. Cada día incluye: 1 desayuno (morning) + 1 comida (afternoon) + 1 cena (evening).
+8. Coherencia de campos:
+   - breakfast → type: "food", time_of_day: "morning"
+   - lunch → type: "food", time_of_day: "afternoon"
+   - dinner → type: "food", time_of_day: "evening"
+9. search_query: "<nombre>, <ciudad>, <país>". Si es zona: "restaurantes en el centro de <ciudad>, <país>".
+10. Lugares: reales, verificables, dentro del país del destino del día. Si no conoces un lugar específico, usa una zona real — nunca inventes un negocio.
 
-11. Las actividades de tipo comida deben clasificarse como:
-   - breakfast: cafeterías, panaderías, brunch
-   - lunch: restaurantes casuales o locales
-   - dinner: restaurantes formales o experiencias nocturnas
+Valores válidos: type: ["activity","food","transport"] | category: ["breakfast","lunch","dinner","attraction","experience"] | time_of_day: ["morning","afternoon","evening"]
 
-12. Las comidas deben ser lugares reales, específicos y reconocibles.
-
-13. Coherencia obligatoria:
-- Si category es "breakfast", entonces type debe ser "food" y time_of_day "morning"
-- Si category es "lunch", entonces type debe ser "food" y time_of_day "afternoon"
-- Si category es "dinner", entonces type debe ser "food" y time_of_day "evening"
-
-14. El campo search_query debe ser específico, preciso y listo para búsqueda en mapas:
-- Formato: "<nombre del lugar>, <ciudad>, <país>"
-- Ejemplo: "Terras Urban Mexican Kitchen, Brownsville, Texas, USA"
-- Si es una zona:
-  "restaurantes en Downtown Brownsville Texas USA"
-15. Todos los lugares deben ser reales, verificables y ubicados en la ciudad del día.
-
-- NO uses nombres genéricos como "Sunrise Bakery", "City Cafe", "Central Park Restaurant".
-- Usa nombres únicos y específicos que claramente existan en esa ciudad.
-- Si no estás seguro de un lugar real, usa una zona o área reconocida en lugar de inventar un negocio.
-16. Todas las actividades del día deben estar geográficamente cercanas entre sí.
-17. Si no puedes garantizar un lugar específico real:
-
-- Usa una zona conocida en lugar de un negocio inventado.
-- Ejemplo:
-  - En lugar de: "Sunrise Bakery"
-  - Usa: "Cafetería local en el centro de Brownsville"
-
-Y en place:
-- name: "Cafetería en Downtown Brownsville"
-- search_query: "cafetería en Downtown Brownsville Texas"
-- Asume un máximo de 15–20 minutos de traslado entre actividades.
-- NO incluyas lugares en otras ciudades o zonas lejanas.
-- Si una ubicación conocida está a más de 20 minutos, NO la uses.
-- NO uses nombres genéricos como "Sunrise Bakery", "City Cafe", "Central Park Restaurant".
-- Usa nombres únicos y específicos que claramente existan en esa ciudad.
-- Si no estás seguro de un lugar real, usa una zona o área reconocida en lugar de inventar un negocio.
-No inventes lugares. Es preferible usar una zona real que un negocio falso.
-La precisión geográfica es más importante que la creatividad.
-Los campos deben cumplir:
-- type: uno de ["activity", "food", "transport"]
-- category: uno de ["breakfast", "lunch", "dinner", "attraction", "experience"]
-- time_of_day: uno de ["morning", "afternoon", "evening"]
-
-SCHEMA EXACTO — devuelve ÚNICAMENTE este JSON, sin markdown, sin texto adicional:
+SCHEMA EXACTO — devuelve ÚNICAMENTE este JSON, sin markdown ni texto adicional:
 {
   "summary": "resumen breve del viaje en 1-2 oraciones",
   "budgetWarnings": [],
@@ -165,35 +123,17 @@ SCHEMA EXACTO — devuelve ÚNICAMENTE este JSON, sin markdown, sin texto adicio
           "time_start": "09:00",
           "time_end": "10:30",
           "title": "Nombre actividad",
-          "description": "Descripción breve y útil",
+          "description": "Descripción breve",
           "estimated_cost": { "min": 0, "max": 0 },
-          "place": {
-            "name": "Nombre del lugar",
-            "address": "Dirección o zona",
-            "search_query": "Nombre + ciudad + país",
-            "lat": null,
-            "lng": null
-          },
+          "place": { "name": "Nombre", "address": "Dirección o zona", "search_query": "Nombre, ciudad, país", "lat": null, "lng": null },
           "type": "activity",
-            "category": "attraction",
-            "time_of_day": "morning",
-            "full_day": false
-          }
+          "category": "attraction",
+          "time_of_day": "morning",
+          "full_day": false
+        }
       ],
-      "accommodation": {
-        "name": "Nombre del alojamiento sugerido",
-        "zone": "Zona recomendada",
-        "amount": 0,
-        "currency": "${currency}",
-        "airbnb_url": null,
-        "booking_url": null
-      },
-      "day_summary": {
-        "total_hours": 0,
-        "total_cost_min": 0,
-        "total_cost_max": 0,
-        "activity_count": 0
-      }
+      "accommodation": { "name": "...", "zone": "...", "amount": 0, "currency": "${currency}", "airbnb_url": null, "booking_url": null },
+      "day_summary": { "total_hours": 0, "total_cost_min": 0, "total_cost_max": 0, "activity_count": 0 }
     }
   ]
 }`;

@@ -249,6 +249,9 @@ function TripDetail() {
         .eq("id", trip.id);
     } catch (error) {
       console.error("Error generando itinerario:", error);
+      showToast(
+        error instanceof Error ? error.message : "Error al generar el itinerario. Intenta de nuevo.",
+      );
     } finally {
       setGenerating(false);
     }

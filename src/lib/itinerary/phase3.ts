@@ -177,9 +177,38 @@ function computeFlags(
   return flags;
 }
 
+function flagCrossBorderActivities(
+  activities: ItineraryActivity[],
+  expectedCountry: string,
+): ItineraryActivity[] {
+  const normalized = expectedCountry.toLowerCase().trim();
+  return activities.map((a) => {
+    if (a.type === "buffer") return a;
+    const searchable = [a.place?.search_query, a.place?.address, a.place?.name]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    if (!searchable) return a;
+    // Only flag if we can detect a clear country mismatch (contains "usa", "united states", etc. when not expected)
+    const crossBorderPatterns: Record<string, string[]> = {
+      méxico: ["usa", "united states", "texas", "california", "arizona", "new mexico", "eua", "estados unidos", "brownsville", ", tx", ", tx,", "texas,"],
+      mexico: ["usa", "united states", "texas", "california", "arizona", "new mexico", "eua", "estados unidos", "brownsville", ", tx", ", tx,", "texas,"],
+      "estados unidos": ["méxico", "mexico"],
+      usa: ["méxico", "mexico"],
+    };
+    const patterns = crossBorderPatterns[normalized] ?? [];
+    const isCrossBorder = patterns.some((p) => searchable.includes(p));
+    if (isCrossBorder) {
+      return { ...a, flagged: true, flag_reason: "El lugar podría estar fuera del país del destino" };
+    }
+    return a;
+  });
+}
+
 export function postProcess(
   days: ItineraryDay[],
   issues: ValidationIssue[],
+  countryByCity: Record<string, string> = {},
 ): ItineraryDay[] {
   const daysWithHoraIssue = new Set(
     issues
@@ -200,6 +229,17 @@ export function postProcess(
 
     // Insert travel buffers between activities
     activities = insertBuffers(activities);
+
+    // Flag activities that appear to be in a different country than the destination
+    const expectedCountry =
+      countryByCity[day.destination] ??
+      Object.entries(countryByCity).find(([city]) =>
+        day.destination.toLowerCase().includes(city.toLowerCase()),
+      )?.[1] ??
+      "";
+    if (expectedCountry) {
+      activities = flagCrossBorderActivities(activities, expectedCountry);
+    }
 
     // Compute summary (on activities without buffers for cost, with buffers for time)
     const summary = computeDaySummary(activities);

@@ -258,9 +258,9 @@ function CreateTrip() {
 
             {showErrors && store.startDate && store.endDate && (() => {
               const days = Math.round((new Date(store.endDate).getTime() - new Date(store.startDate).getTime()) / 86_400_000);
-              return days > 14 ? (
+              return days > 7 ? (
                 <p className="mt-2 mb-4 text-xs text-red-500">
-                  El viaje dura {days} días. El máximo permitido es 14.
+                  El viaje dura {days} días. El máximo permitido es 7.
                 </p>
               ) : null;
             })()}
@@ -273,7 +273,7 @@ function CreateTrip() {
                     return;
                   }
                   const days = Math.round((new Date(store.endDate).getTime() - new Date(store.startDate).getTime()) / 86_400_000);
-                  if (days > 14) {
+                  if (days > 7) {
                     setShowErrors(true);
                     return;
                   }
