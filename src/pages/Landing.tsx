@@ -93,7 +93,7 @@ function Landing() {
       className="min-h-screen overflow-x-hidden bg-surface-page text-text-base"
       style={{ fontFamily: "var(--font-body)" }}
     >
-            <nav
+      <nav
         className="sticky top-0 z-50 flex items-center justify-between px-16 border-b border-border-base bg-surface-page"
         style={{ height: 66 }}
       >
@@ -133,7 +133,7 @@ function Landing() {
         </div>
       </nav>
 
-            <section className="max-w-[1300px] mx-auto flex items-center gap-[72px] px-16 py-20">
+      <section className="max-w-[1300px] mx-auto flex items-center gap-[72px] px-16 py-20">
         <div className="flex-1 max-w-[560px]">
           <div className="inline-flex items-center gap-2 bg-brand-light text-[#3A6E52] px-[18px] py-2 rounded-full text-[12px] font-extrabold tracking-[0.08em] mb-7">
             PLANIFICACION DE VIAJES CON IA
@@ -146,7 +146,7 @@ function Landing() {
             <br />
             <em className="text-brand-mid not-italic">va a amar.</em>
           </h1>
-          <p className="text-[18px] leading-[1.7] text-text-muted mt-6">
+          <p className=" leading-[1.7] text-text-muted mt-6">
             Invita amigos, comparte preferencias y deja que la IA disene el
             itinerario perfecto para todo el grupo.
           </p>
@@ -170,7 +170,7 @@ function Landing() {
         </div>
       </section>
 
-            <div className="bg-brand-dark py-3.5 overflow-hidden">
+      <div className="bg-brand-dark py-3.5 overflow-hidden">
         <div className="flex animate-ticker w-max">
           <span className="whitespace-nowrap text-brand-light text-xs font-extrabold tracking-[0.12em] pr-8">
             {TICKER_CITIES}
@@ -181,7 +181,7 @@ function Landing() {
         </div>
       </div>
 
-            <section
+      <section
         ref={procesoRef}
         id="proceso"
         className="bg-surface-page border-t border-border-base py-24 px-16"
@@ -210,18 +210,18 @@ function Landing() {
                 className="bg-white border border-border-base rounded-3xl p-10 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(12,26,15,0.08)]"
               >
                 <div
-                  className="text-[56px] leading-none text-brand-mid opacity-70 mb-5"
+                  className="text-6xl leading-none text-brand-mid opacity-70 mb-5"
                   style={{ fontFamily: "var(--font-display)" }}
                 >
                   {String(i + 1).padStart(2, "0")}
                 </div>
                 <h3
-                  className="text-[26px] text-text-base mb-2.5"
+                  className="text-3xl font-bold text-text-base mb-2.5"
                   style={{ fontFamily: "var(--font-display)" }}
                 >
                   {step.title}
                 </h3>
-                <p className="text-[15px] text-text-muted leading-[1.7]">
+                <p className="text-lg text-text-muted leading-[1.7]">
                   {step.desc}
                 </p>
               </div>
@@ -230,7 +230,7 @@ function Landing() {
         </div>
       </section>
 
-            <section
+      <section
         ref={featuresRef}
         id="features"
         className="border-t border-border-base py-24 px-16"
@@ -256,12 +256,12 @@ function Landing() {
                 className="bg-white border border-border-base rounded-3xl p-8 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(12,26,15,0.08)]"
               >
                 <h3
-                  className="text-[22px] text-text-base mb-3"
+                  className="text-3xl font-bold text-text-base mb-3"
                   style={{ fontFamily: "var(--font-display)" }}
                 >
                   {f.title}
                 </h3>
-                <p className="text-[14px] text-text-muted leading-[1.7]">
+                <p className="text-lg text-text-muted leading-[1.7]">
                   {f.desc}
                 </p>
               </div>
@@ -270,7 +270,7 @@ function Landing() {
         </div>
       </section>
 
-            <section className="px-16 pb-24">
+      <section className="px-16 pb-24">
         <div className="max-w-[1200px] mx-auto bg-brand-dark rounded-3xl px-16 py-16 flex items-center justify-between gap-8">
           <div>
             <h2
@@ -294,7 +294,7 @@ function Landing() {
         </div>
       </section>
 
-            <footer className="border-t border-border-base px-12 py-10 text-center bg-surface-page">
+      <footer className="border-t border-border-base px-12 py-10 text-center bg-surface-page">
         <p className="text-sm text-text-faint">
           &copy; 2026 Triploom. Todos los derechos reservados.
         </p>

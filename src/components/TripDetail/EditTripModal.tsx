@@ -197,13 +197,13 @@ export function EditTripModal({
                   className="flex items-center justify-between bg-surface-subtle border border-border-base dark:border-[#4a6b57] rounded-xl px-4 py-3"
                 >
                   <div className="flex items-center gap-3 text-sm ">
-                    <span className="font-semibold dark:text-brand-subtle">
+                    <span className="font-semibold text-brand-mid-dark">
                       #{i + 1}
                     </span>
-                    <span className="text-text-base dark:text-brand-subtle">
+                    <span className="text-brand-mid">
                       {d.city}, {d.country}
                     </span>
-                    <span className="text-text-faint dark:text-brand-subtle">
+                    <span className="text-brand-mid">
                       {d.days} día{d.days !== 1 ? "s" : ""}
                     </span>
                   </div>
@@ -257,7 +257,7 @@ export function EditTripModal({
             <button
               onClick={handleAddDest}
               disabled={!newDest.city.trim() || !newDest.country.trim()}
-              className="w-full border border-dashed border-border-base hover:border-brand-mid text-text-faint hover:text-brand-mid rounded-xl py-2.5 text-sm transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full border border-dashed border-border-base hover:border-brand-mid text-brand-mid-dark cursor-pointer hover:text-brand-mid rounded-xl py-2.5 text-sm transition disabled:opacity-70 disabled:cursor-not-allowed"
             >
               + Agregar destino
             </button>
