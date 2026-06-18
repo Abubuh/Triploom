@@ -58,8 +58,7 @@ export const generateItinerary = async (
   }
 
   const prompt = buildPrompt(params, enriched);
-  // ~900 tokens per day + 800 overhead, capped at 8000 for very long trips
-  const maxTokens = Math.min(totalDays * 750 + 800, 6000);
+  const maxTokens = Math.min(totalDays * 1400 + 1000, 8000);
   const raw = await callClaudeAPIWithToken(prompt, token, maxTokens);
 
   const { itinerary, issues, summary, budgetWarnings } = validateItinerary(
