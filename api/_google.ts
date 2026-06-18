@@ -19,6 +19,11 @@ export interface GooglePlacesRawPlace {
   location?: { latitude: number; longitude: number };
   types?: string[];
   formattedAddress?: string;
+  rating?: number;            // 1.0 – 5.0
+  userRatingCount?: number;   // número de reseñas
+  regularOpeningHours?: {
+    weekdayDescriptions?: string[];  // ["Monday: 9:00 AM – 6:00 PM", ...]
+  };
 }
 
 export interface GooglePlacesResponse {
@@ -37,9 +42,8 @@ export async function callGooglePlaces(
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": apiKey,
-        // FieldMask: solo campos Essentials (los más baratos)
         "X-Goog-FieldMask":
-          "places.displayName,places.location,places.types,places.formattedAddress",
+          "places.displayName,places.location,places.types,places.formattedAddress,places.rating,places.userRatingCount,places.regularOpeningHours",
       },
       body: JSON.stringify({
         includedTypes: body.types,

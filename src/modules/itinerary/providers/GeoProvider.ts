@@ -12,6 +12,9 @@ export interface Place extends GeoPoint {
   name: string;
   category: string | null;
   address: string | null;
+  openingHours?: string | null;
+  rating?: number | null;
+  userRatingCount?: number | null;
 }
 
 export interface PlacesNearParams {
