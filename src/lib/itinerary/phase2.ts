@@ -56,7 +56,6 @@ function normalizeActivity(a: Partial<Activity>): Activity {
   return {
     id: a.id ?? crypto.randomUUID(),
     title: a.title ?? "",
-    description: a.description ?? "",
     time_start: a.time_start ?? "",
     time_end: a.time_end ?? "",
     full_day: a.full_day ?? false,
@@ -143,7 +142,6 @@ export function validateItinerary(
       (Array.isArray(day.activities) ? day.activities : []).some(
         (a) =>
           (a.title ?? "").toLowerCase().includes(attraction) ||
-          (a.description ?? "").toLowerCase().includes(attraction) ||
           (a.place?.name ?? "").toLowerCase().includes(attraction) ||
           (a.place?.search_query ?? "").toLowerCase().includes(attraction),
       ),

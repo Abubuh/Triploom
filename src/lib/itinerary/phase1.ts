@@ -63,17 +63,18 @@ No hay excepciones. Si no conoces un lugar real dentro del país correcto, usa u
     .filter((e) => e.places.length > 0)
     .map((e) => {
       const list = e.places
-        .map(
-          (p) =>
-            `  - ${p.name}${p.address ? ` | ${p.address}` : ""} → search_query: "${p.name}, ${e.city}, ${e.country}"`,
-        )
+        .map((p) => {
+          let line = `  - ${p.name}${p.address ? ` | ${p.address}` : ""} → search_query: "${p.name}, ${e.city}, ${e.country}"`;
+          if (p.openingHours) line += ` | horarios: ${p.openingHours}`;
+          return line;
+        })
         .join("\n");
       return `### ${e.city}, ${e.country}\n${list}`;
     })
     .join("\n\n");
 
   const realPlacesSection = enrichedSection
-    ? `\nLUGARES REALES VERIFICADOS (úsalos como actividades; prioriza estos sobre lugares que inventes):\nPara cada lugar de esta lista, usa EXACTAMENTE el search_query indicado — no lo modifiques:\n${enrichedSection}\n`
+    ? `\nLUGARES REALES VERIFICADOS (úsalos como actividades; prioriza estos sobre lugares que inventes):\nPara cada lugar de esta lista, usa EXACTAMENTE el search_query indicado — no lo modifiques.\nCuando se indican horarios, respétalos estrictamente — no programes una visita si el lugar está cerrado en ese horario o día:\n${enrichedSection}\n`
     : "";
 
   return `${geoRestriction}
@@ -104,6 +105,7 @@ REGLAS:
    - dinner → type: "food", time_of_day: "evening"
 9. search_query: "<nombre>, <ciudad>, <país>". Si es zona: "restaurantes en el centro de <ciudad>, <país>".
 10. Lugares: reales, verificables, dentro del país del destino del día. Si no conoces un lugar específico, usa una zona real — nunca inventes un negocio.
+11. Horarios de apertura: si un lugar de la lista verificada tiene horarios indicados, NO lo programes fuera de ese horario ni en un día en que esté cerrado. Si no hay otro lugar disponible a esa hora, sustitúyelo por una actividad al aire libre o zona pública que no tenga restricción de horario.
 
 Valores válidos: type: ["activity","food","transport"] | category: ["breakfast","lunch","dinner","attraction","experience"] | time_of_day: ["morning","afternoon","evening"]
 
@@ -123,7 +125,6 @@ SCHEMA EXACTO — devuelve ÚNICAMENTE este JSON, sin markdown ni texto adiciona
           "time_start": "09:00",
           "time_end": "10:30",
           "title": "Nombre actividad",
-          "description": "Descripción breve",
           "estimated_cost": { "min": 0, "max": 0 },
           "place": { "name": "Nombre", "address": "Dirección o zona", "search_query": "Nombre, ciudad, país", "lat": null, "lng": null },
           "type": "activity",

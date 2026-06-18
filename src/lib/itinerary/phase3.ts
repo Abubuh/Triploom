@@ -38,9 +38,7 @@ function hasLunchActivity(activities: ItineraryActivity[]): boolean {
     const startMin = timeToMinutes(a.time_start);
     const isMidDay = startMin >= timeToMinutes("12:00") && startMin <= timeToMinutes("15:00");
     const isFood = FOOD_KEYWORDS.some(
-      (kw) =>
-        a.title.toLowerCase().includes(kw) ||
-        a.description.toLowerCase().includes(kw),
+      (kw) => a.title.toLowerCase().includes(kw),
     );
     return isMidDay && isFood;
   });
@@ -67,7 +65,6 @@ function insertBuffers(activities: ItineraryActivity[]): ItineraryActivity[] {
           time_start: activities[i].time_end,
           time_end: activities[i + 1].time_start,
           title: "Traslado",
-          description: "Tiempo de desplazamiento entre actividades",
           estimated_cost: { min: 0, max: 0 },
           place: { name: "", address: "", search_query: "", lat: null, lng: null },
           type: "buffer",

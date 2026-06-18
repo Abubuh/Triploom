@@ -99,7 +99,6 @@ export function ItinerarySection({
     time_start: start,
     time_end: end,
     title: "Traslado",
-    description: "Tiempo de desplazamiento entre actividades",
     estimated_cost: { min: 0, max: 0 },
     place: { name: "", address: "", search_query: "", lat: null, lng: null },
     type: "buffer",
@@ -125,7 +124,7 @@ export function ItinerarySection({
     activityIndex: number,
     field: keyof Pick<
       ItineraryActivity,
-      "title" | "description" | "time_start" | "time_end"
+      "title" | "time_start" | "time_end"
     >,
     value: string,
   ) => {
@@ -195,7 +194,6 @@ export function ItinerarySection({
       time_start: "12:00",
       time_end: "13:00",
       title: "Nueva actividad",
-      description: "Descripción de la actividad",
       estimated_cost: { min: 0, max: 0 },
       place: { name: "", address: "", search_query: "", lat: null, lng: null },
       type: "activity",
@@ -714,19 +712,6 @@ export function ItinerarySection({
                                     }
                                     className={inputCls}
                                   />
-                                  <textarea
-                                    value={activity.description}
-                                    onChange={(e) =>
-                                      handleUpdateActivity(
-                                        dayIndex,
-                                        i,
-                                        "description",
-                                        e.target.value,
-                                      )
-                                    }
-                                    className={`${inputCls} resize-none`}
-                                    rows={2}
-                                  />
                                   <input
                                     type="text"
                                     value={activity.place?.name ?? ""}
@@ -813,9 +798,6 @@ export function ItinerarySection({
                                         Eliminar <TrashIcon />
                                       </button>
                                     )}
-                                  </p>
-                                  <p className="text-brand-mid text-sm ">
-                                    {activity.description}
                                   </p>
                                   {activity.place?.name &&
                                     (activity.place.search_query ? (

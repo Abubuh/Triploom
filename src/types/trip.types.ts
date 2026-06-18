@@ -55,7 +55,6 @@ export interface ItineraryActivity {
   time_start: string;
   time_end: string;
   title: string;
-  description: string;
   estimated_cost: ActivityCost;
   place: Place;
   type: "activity" | "food" | "transport" | "buffer";

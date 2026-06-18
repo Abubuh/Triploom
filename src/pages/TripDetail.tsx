@@ -160,7 +160,6 @@ function TripDetail() {
       content += `## Día ${day.day_number} — ${day.destination} (${day.date})\n\n`;
       day.activities.forEach((activity) => {
         content += `**${activity.time_start}–${activity.time_end} — ${activity.title}**\n`;
-        content += `${activity.description}\n`;
         if (
           activity.estimated_cost &&
           (activity.estimated_cost.min > 0 || activity.estimated_cost.max > 0)

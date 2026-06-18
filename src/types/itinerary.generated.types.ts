@@ -11,7 +11,6 @@ export type Activity = {
   type: string;
   category?: string;
   title: string;
-  description: string;
   full_day: boolean;
   time_start: string;
   time_end: string;
