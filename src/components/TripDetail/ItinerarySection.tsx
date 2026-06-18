@@ -44,7 +44,7 @@ export function ItinerarySection({
 
   useEffect(() => {
     if (selectedDayIndex >= itinerary.days.length) {
-      setSelectedDayIndex(0);
+      setSelectedDayIndex(Math.max(0, itinerary.days.length - 1));
     }
   }, [itinerary.days.length]);
   const [editingActivity, setEditingActivity] = useState<{
@@ -442,8 +442,8 @@ export function ItinerarySection({
       
       {itinerary.days.length > 0 &&
         (() => {
-          const day = itinerary.days[selectedDayIndex];
-          const dayIndex = selectedDayIndex;
+          const dayIndex = Math.min(selectedDayIndex, itinerary.days.length - 1);
+          const day = itinerary.days[dayIndex];
           return (
             <div className="relative group/day">
               <div className="bg-surface-card border border-border-base dark:border-[#4a6b57] rounded-2xl p-6">
