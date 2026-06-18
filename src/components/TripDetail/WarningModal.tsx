@@ -12,18 +12,18 @@ export function WarningModal({ isOpen, warnings, onClose, onConfirm }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-md w-full space-y-6">
+      <div className="bg-surface-mint border border-gray-800 rounded-2xl p-8 max-w-md w-full space-y-6">
         <div>
-          <p className="text-xl font-bold mb-1 flex gap-2">
+          <p className="text-xl items-center text-brand-mid-dark font-bold mb-1 flex gap-2">
             <WarningIcon /> Antes de continuar
           </p>
-          <p className="text-gray-400 text-sm">
+          <p className="text-brand-mid-dark text-sm">
             El itinerario se generará sin considerar a los viajeros que faltan.
           </p>
         </div>
-        <ul className="space-y-2">
+        <ul className="space-y-2 text-brand-mid">
           {warnings.map((w, i) => (
-            <li key={i} className="text-yellow-400 text-sm flex gap-2">
+            <li key={i} className="text-sm flex gap-2">
               <span>•</span>
               <span>{w}</span>
             </li>
@@ -32,13 +32,13 @@ export function WarningModal({ isOpen, warnings, onClose, onConfirm }: Props) {
         <div className="flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold transition"
+            className="px-5 py-2 rounded-xl bg-btn-bg hover:opacity-80 cursor-pointer text-white text-sm font-semibold transition"
           >
             Cancelar
           </button>
           <button
             onClick={onConfirm}
-            className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+            className="px-5 py-2 rounded-xl bg-btn-bg-hover hover:opacity-80 cursor-pointer text-white text-sm font-semibold transition"
           >
             Generar de todas formas
           </button>
