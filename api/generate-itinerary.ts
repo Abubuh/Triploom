@@ -21,8 +21,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     throw err;
   }
 
-  const { prompt, maxTokens } = req.body;
-  const safeMaxTokens = Math.min(Math.max(Number(maxTokens) || 3500, 2000), 8000);
+  const { prompt, maxTokens } = req.body ?? {};
+  if (typeof prompt !== "string" || prompt.length === 0 || prompt.length > 40000) {
+    return res.status(400).json({ error: "Prompt inválido" });
+  }
+  const safeMaxTokens = Math.min(Math.max(Number(maxTokens) || 4000, 2000), 8192);
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
