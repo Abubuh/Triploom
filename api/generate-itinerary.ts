@@ -1,12 +1,15 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { isAllowedOrigin } from "./_origin";
-import { requireAuth, handleAuthError } from "./_auth";
+import { isAllowedOrigin } from "./_origin.js";
+import { requireAuth, handleAuthError } from "./_auth.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === "OPTIONS") {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization",
+    );
     return res.status(200).end();
   }
 
@@ -22,10 +25,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const { prompt, maxTokens } = req.body ?? {};
-  if (typeof prompt !== "string" || prompt.length === 0 || prompt.length > 40000) {
+  if (
+    typeof prompt !== "string" ||
+    prompt.length === 0 ||
+    prompt.length > 40000
+  ) {
     return res.status(400).json({ error: "Prompt inválido" });
   }
-  const safeMaxTokens = Math.min(Math.max(Number(maxTokens) || 4000, 2000), 8192);
+  const safeMaxTokens = Math.min(
+    Math.max(Number(maxTokens) || 4000, 2000),
+    8192,
+  );
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",

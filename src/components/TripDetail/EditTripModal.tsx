@@ -88,15 +88,18 @@ export function EditTripModal({
       return;
     }
     const rangeDays = Math.round(
-      (new Date(endDate).getTime() - new Date(startDate).getTime()) / 86_400_000,
+      (new Date(endDate).getTime() - new Date(startDate).getTime()) /
+        86_400_000,
     );
-    if (rangeDays > 7) {
+    if (rangeDays > 6) {
       setError("El viaje no puede durar más de 7 días.");
       return;
     }
     const totalDestDays = dests.reduce((sum, d) => sum + d.days, 0);
-    if (totalDestDays > 7) {
-      setError(`La suma de días de los destinos es ${totalDestDays}. El máximo permitido es 7.`);
+    if (totalDestDays > 6) {
+      setError(
+        `La suma de días de los destinos es ${totalDestDays}. El máximo permitido es 7.`,
+      );
       return;
     }
 
