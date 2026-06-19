@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { callGooglePlaces, type GooglePlacesRequest } from "./_google";
-import { isAllowedOrigin } from "./_origin";
-import { requireAuth, handleAuthError } from "./_auth";
+import { callGooglePlaces, type GooglePlacesRequest } from "./_google.js";
+import { isAllowedOrigin } from "./_origin.js";
+import { requireAuth, handleAuthError } from "./_auth.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === "OPTIONS") {

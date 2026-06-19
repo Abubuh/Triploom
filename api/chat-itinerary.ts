@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { isAllowedOrigin } from "./_origin";
-import { requireAuth, handleAuthError } from "./_auth";
+import { isAllowedOrigin } from "./_origin.js";
+import { requireAuth, handleAuthError } from "./_auth.js";
 
 const MAX_INSTRUCTIONS_LEN = 4000;
 const MAX_ITINERARY_LEN = 80000;
